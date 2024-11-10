@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowRight, RefreshCw } from 'lucide-react';
+import {AlertCircle, ArrowRight, RefreshCw} from 'lucide-react';
 import { FormData } from './OnboardingForm';
 
 interface Props {
   formData: FormData;
   updateFormData: (data: Partial<FormData>) => void;
   onNext: () => void;
+    error: string | null;
 }
 
-export function OtpValidation({ formData, updateFormData, onNext }: Props) {
+export function OtpValidation({ formData, updateFormData, onNext, error }: Props) {
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
 
@@ -74,6 +75,12 @@ export function OtpValidation({ formData, updateFormData, onNext }: Props) {
         )}
       </div>
 
+        {error && (
+            <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                <p className="text-sm">{error}</p>
+            </div>
+        )}
       <button
         type="submit"
         className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

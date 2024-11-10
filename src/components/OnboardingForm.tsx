@@ -1,90 +1,132 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Check } from 'lucide-react';
-import { PersonalInfo } from './PersonalInfo';
-import { OtpValidation } from './OtpValidation';
-import { StoreSetup } from './StoreSetup';
+import React, {useState} from 'react';
+import {Check} from 'lucide-react';
+import {PersonalInfo} from './PersonalInfo';
+import {OtpValidation} from './OtpValidation';
+import {StoreSetup} from './StoreSetup';
+import apiService from "../services/api";
 
 export type FormData = {
-  firstName: string;
-  lastName: string;
-  password: string;
-  mobile: string;
-  otp: string;
-  storeName: string;
-  email: string;
-  state: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+    mobile: string;
+    otp: string;
+    storeName: string;
+    email: string;
+    state: string;
 };
 
 export function OnboardingForm() {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
-    password: '',
-    mobile: '',
-    otp: '',
-    storeName: '',
-    email: '',
-    state: '',
-  });
+    const [step, setStep] = useState(1);
+    const [error, setError] = useState<string | null>(null);
 
-  const updateFormData = (data: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
+    const [formData, setFormData] = useState<FormData>({
+        firstName: '',
+        lastName: '',
+        password: '',
+        mobile: '',
+        otp: '',
+        storeName: '',
+        email: '',
+        state: '',
+    });
 
-  const nextStep = () => setStep(prev => prev + 1);
+    const updateFormData = (data: Partial<FormData>) => {
+        setFormData(prev => ({...prev, ...data}));
+    };
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return <PersonalInfo formData={formData} updateFormData={updateFormData} onNext={nextStep} />;
-      case 2:
-        return <OtpValidation formData={formData} updateFormData={updateFormData} onNext={nextStep} />;
-      case 3:
-        return <StoreSetup formData={formData} updateFormData={updateFormData} onNext={nextStep} />;
-      default:
-        return null;
-    }
-  };
+    const nextStep = () => setStep(prev => prev + 1);
+    const registerAccount = async () => {
+        try {
+            const response = await apiService.auth.register({
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                password: formData.password,
+                phone: formData.mobile
+            });
 
-  return (
-    <>
-      {/* Progress Steps */}
-      <div className="flex items-center justify-center mb-8">
-        {[1, 2, 3].map((item) => (
-          <React.Fragment key={item}>
-            <div className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= item
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
-              >
-                {step > item ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  <span>{item}</span>
-                )}
-              </div>
-              {item < 3 && (
-                <div
-                  className={`w-20 h-1 ${
-                    step > item ? 'bg-indigo-600' : 'bg-gray-200'
-                  }`}
-                />
-              )}
+            if (response.successful) {
+                nextStep();
+            } else {
+                alert("Here?")
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError(err.response.data.message);
+        }
+    };
+
+    const renderStep = () => {
+        switch (step) {
+            case 1:
+                return (
+                    <PersonalInfo
+                        formData={formData}
+                        updateFormData={updateFormData}
+                        onNext={registerAccount}
+                        error={error}
+                    />
+                );
+            case 2:
+                return (
+                    <OtpValidation
+                        formData={formData}
+                        updateFormData={updateFormData}
+                        onNext={nextStep}
+                        error={error}
+                    />
+                );
+            case 3:
+                return (
+                    <StoreSetup
+                        formData={formData}
+                        updateFormData={updateFormData}
+                        onNext={nextStep}
+                    />
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <>
+            {/* Progress Steps */}
+            <div className="flex items-center justify-center mb-8">
+                {[1, 2, 3].map((item) => (
+                    <React.Fragment key={item}>
+                        <div className="flex items-center">
+                            <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    step >= item
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-gray-200 text-gray-500'
+                                }`}
+                            >
+                                {step > item ? (
+                                    <Check className="w-5 h-5"/>
+                                ) : (
+                                    <span>{item}</span>
+                                )}
+                            </div>
+                            {item < 3 && (
+                                <div
+                                    className={`w-20 h-1 ${
+                                        step > item ? 'bg-indigo-600' : 'bg-gray-200'
+                                    }`}
+                                />
+                            )}
+                        </div>
+                    </React.Fragment>
+                ))}
             </div>
-          </React.Fragment>
-        ))}
-      </div>
 
-      {/* Form Container */}
-      <div className="bg-white rounded-xl shadow-lg p-8 transition-all duration-300">
-        {renderStep()}
-      </div>
-    </>
-  );
+            {/* Form Container */}
+            <div className="bg-white rounded-xl shadow-lg p-8 transition-all duration-300">
+                {renderStep()}
+            </div>
+        </>
+    );
 }
