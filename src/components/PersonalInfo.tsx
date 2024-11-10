@@ -1,0 +1,83 @@
+'use client';
+
+import { ArrowRight } from 'lucide-react';
+import { FormData } from './OnboardingForm';
+
+interface Props {
+  formData: FormData;
+  updateFormData: (data: Partial<FormData>) => void;
+  onNext: () => void;
+}
+
+export function PersonalInfo({ formData, updateFormData, onNext }: Props) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onNext();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">First Name</label>
+          <input
+            type="text"
+            required
+            value={formData.firstName}
+            onChange={(e) => updateFormData({ firstName: e.target.value })}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="John"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Last Name</label>
+          <input
+            type="text"
+            required
+            value={formData.lastName}
+            onChange={(e) => updateFormData({ lastName: e.target.value })}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Doe"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Password</label>
+        <input
+          type="password"
+          required
+          value={formData.password}
+          onChange={(e) => updateFormData({ password: e.target.value })}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="••••••••"
+          minLength={8}
+        />
+        <p className="mt-1 text-sm text-gray-500">Minimum 8 characters</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Mobile Number</label>
+        <div className="mt-1 relative rounded-md shadow-sm">
+          <input
+            type="tel"
+            required
+            value={formData.mobile}
+            onChange={(e) => updateFormData({ mobile: e.target.value })}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="+1 (555) 000-0000"
+            pattern="[0-9+\s()-]+"
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
+        Continue
+        <ArrowRight className="ml-2 h-5 w-5" />
+      </button>
+    </form>
+  );
+}
