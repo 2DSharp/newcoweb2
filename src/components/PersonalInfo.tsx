@@ -2,6 +2,8 @@
 
 import { ArrowRight, AlertCircle } from 'lucide-react';
 import { FormData } from './OnboardingForm';
+import Link from "next/link";
+import React from "react";
 
 interface Props {
     formData: FormData;
@@ -74,7 +76,7 @@ export function PersonalInfo({ formData, updateFormData, onNext, error }: Props)
 
             {error && (
                 <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
+                    <AlertCircle className="h-5 w-5 text-red-500"/>
                     <p className="text-sm">{error}</p>
                 </div>
             )}
@@ -86,6 +88,16 @@ export function PersonalInfo({ formData, updateFormData, onNext, error }: Props)
                 Continue
                 <ArrowRight className="ml-2 h-5 w-5"/>
             </button>
+
+            <p className="text-center text-sm text-gray-600">
+                Already have an account?{' '}
+                <br />
+                <Link href="/">
+                    <span className="text-indigo-600 hover:text-indigo-500 font-medium">
+                    Login to your seller account
+                    </span>
+                </Link>
+            </p>
         </form>
     );
 }

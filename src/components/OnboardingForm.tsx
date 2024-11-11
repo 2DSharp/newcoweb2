@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, {useState} from 'react';
 import {Check} from 'lucide-react';
@@ -6,6 +6,8 @@ import {PersonalInfo} from './PersonalInfo';
 import {OtpValidation} from './OtpValidation';
 import {StoreSetup} from './StoreSetup';
 import apiService from "../services/api";
+import { motion, AnimatePresence } from 'framer-motion';
+
 
 export type FormData = {
     firstName: string;
@@ -65,7 +67,7 @@ export function OnboardingForm() {
                     <PersonalInfo
                         formData={formData}
                         updateFormData={updateFormData}
-                        onNext={registerAccount}
+                        onNext={nextStep}
                         error={error}
                     />
                 );
@@ -75,6 +77,7 @@ export function OnboardingForm() {
                         formData={formData}
                         updateFormData={updateFormData}
                         onNext={nextStep}
+                        onBack={() => setStep(step - 1)}
                         error={error}
                     />
                 );
@@ -124,9 +127,24 @@ export function OnboardingForm() {
             </div>
 
             {/* Form Container */}
-            <div className="bg-white rounded-xl shadow-lg p-8 transition-all duration-300">
+            <div className="transition-all duration-300">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={step}
+                        initial={{ x: '100%', opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: '-80%', opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full max-w-md"
+
+                    >
                 {renderStep()}
+
+                    </motion.div>
+                </AnimatePresence>
             </div>
+
+
         </>
     );
 }
