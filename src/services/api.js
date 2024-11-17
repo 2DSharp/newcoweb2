@@ -1,5 +1,6 @@
 import { ApiResponse } from '../types/api';
 import axios from 'axios';
+import {AuthService} from "@/services/authService";
 
 // API Configuration
 const API_CONFIG = {
@@ -28,9 +29,11 @@ authenticatedApiClient.interceptors.request.use(
         if (!localStorage.getItem('auth_data')) {
             return config;
         }
-        const token = localStorage.getItem('auth_data').accessToken;
+
+        const token = JSON.parse(localStorage.getItem('auth_data')).accessToken;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+
         }
         return config;
     },
@@ -39,19 +42,49 @@ authenticatedApiClient.interceptors.request.use(
     }
 );
 
-// Response Interceptor
+// Response Interceptor with token refresh
 authenticatedApiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
-        // if (error.response?.status === 401) {
-        //     // Handle unauthorized access
-        //     localStorage.removeItem('auth_token');
-        //     window.location.href = '/login';
-        // }
+        const originalRequest = error.config;
+
+        // Check if error is 401 and we haven't tried refreshing yet
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                // Attempt to refresh the token
+                const authService = AuthService.getInstance();
+                const refreshSuccess = await authService.refreshTokens();
+
+                if (refreshSuccess) {
+                    // Update the authorization header with new token
+                    const newToken = authService.getAuthData()?.accessToken;
+                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+                    // Retry the original request with new token
+                    return authenticatedApiClient(originalRequest);
+                } else {
+                    // If refresh failed, clear auth and redirect to login
+                    authService.clearAuth();
+
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    return Promise.reject(error);
+                }
+            } catch (refreshError) {
+                // If refresh throws an error, clear auth and redirect to login
+                const authService = AuthService.getInstance();
+                authService.clearAuth();
+                localStorage.clear();
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+
         return Promise.reject(error);
     }
 );
-
 // API Services
 const apiService = {
 
@@ -86,7 +119,7 @@ const apiService = {
     // Store endpoints
     store: {
         create: async (storeData) => {
-            const response = await authenticatedApiClient.post('/stores', storeData);
+            const response = await authenticatedApiClient.post('/seller/store/', storeData);
             return response.data;
         },
         update: async (storeId, storeData) => {

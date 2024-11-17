@@ -1,5 +1,4 @@
 import { AuthResponse, TokenPayload, RefreshTokenRequest } from '@/types/auth.types';
-// @ts-ignore
 import apiService from "@/services/api";
 
 export class AuthService {
@@ -24,6 +23,7 @@ export class AuthService {
             },
             body: JSON.stringify({ refreshToken: response.refreshToken }),
         });
+
         const expiresAt = new Date(response.expiry).getTime();
 
         // Store other data (except refresh token) in localStorage
@@ -33,7 +33,6 @@ export class AuthService {
             loginType: response.loginType,
             expiresAt: expiresAt
         };
-
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(payload));
     }
 
@@ -42,6 +41,7 @@ export class AuthService {
             const authData = this.getAuthData();
             if (!authData) {
                 console.error('No Auth data found');
+                return false;
             }
 
             // Get refresh token from cookie by making a request to Next.js API
@@ -54,13 +54,10 @@ export class AuthService {
                 token: refreshToken
             };
 
-            const response = await apiService.auth.refreshToken(refreshTokenRequest);
+            // Use apiService to refresh token and get response data directly
+            const data: AuthResponse = await apiService.auth.refreshToken(refreshTokenRequest);
 
-            if (!response.ok) {
-                throw new Error('Failed to refresh token');
-            }
-
-            const data: AuthResponse = await response.json();
+            // If we got here, the refresh was successful
             await this.setAuthData(data);
             return true;
         } catch (error) {
@@ -72,7 +69,6 @@ export class AuthService {
     getAuthData(): TokenPayload | null {
         const data = localStorage.getItem(this.STORAGE_KEY);
         if (!data) return null;
-
         try {
             const parsed = JSON.parse(data) as TokenPayload;
             return parsed;

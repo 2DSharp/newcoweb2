@@ -31,9 +31,14 @@ export function StoreSetup({formData, updateFormData, onNext}: Props) {
     useEffect(() => {
         fetchStates().then(res => setStates(res));
     }, []);
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onNext();
+        const res : any = await apiService.store.create({
+            "name": formData.storeName,
+            "state": formData.state,
+            "email": formData.email
+        })
+        window.location.href = "/products/create"
     };
 
     return (

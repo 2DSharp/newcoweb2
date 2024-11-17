@@ -1,13 +1,13 @@
+// components/OnboardingForm.tsx
 "use client";
 
-import React, {useState} from 'react';
-import {Check} from 'lucide-react';
-import {PersonalInfo} from './PersonalInfo';
-import {OtpValidation} from './OtpValidation';
-import {StoreSetup} from './StoreSetup';
-import apiService from "../services/api";
-import {motion, AnimatePresence} from 'framer-motion';
-
+import React, { useState, useEffect } from 'react';
+import { Check } from 'lucide-react';
+import { PersonalInfo } from './PersonalInfo';
+import { OtpValidation } from './OtpValidation';
+import { StoreSetup } from './StoreSetup';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export type FormData = {
     firstName: string;
@@ -21,28 +21,83 @@ export type FormData = {
     otpToken: string;
 };
 
-export function OnboardingForm() {
-    const [step, setStep] = useState(1);
-    const [error, setError] = useState<string | null>(null);
-    const [formData, setFormData] = useState<FormData>({
-        firstName: '',
-        lastName: '',
-        password: '',
-        mobile: '',
-        otp: '',
-        storeName: '',
-        email: '',
-        state: '',
-        otpToken: ''
+type Props = {
+    initialStep: number;
+};
+
+export function OnboardingForm({ initialStep }: Props) {
+
+    const [formData, setFormData] = useState<FormData>(() => {
+        // Initialize form data from localStorage if available
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('onboardingFormData');
+            return saved ? JSON.parse(saved) : {
+                firstName: '',
+                lastName: '',
+                password: '',
+                mobile: '',
+                otp: '',
+                storeName: '',
+                email: '',
+                state: '',
+                otpToken: ''
+            };
+        }
+        return {
+            firstName: '',
+            lastName: '',
+            password: '',
+            mobile: '',
+            otp: '',
+            storeName: '',
+            email: '',
+            state: '',
+            otpToken: ''
+        };
     });
+
+    // Save form data to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('onboardingFormData', JSON.stringify(formData));
+    }, [formData]);
 
     const updateFormData = (data: Partial<FormData>) => {
         setFormData(prev => ({...prev, ...data}));
     };
 
+    const router = useRouter();
+    const [step, setStep] = useState(initialStep);
+
     const nextStep = () => {
-        setStep(prev => prev + 1);
-    }
+        // Only update the URL, let the useEffect handle the step update
+        const newStep = step + 1;
+        switch (newStep) {
+            case 2:
+                router.push('/onboarding/verify-otp');
+                break;
+            case 3:
+                router.push('/onboarding/store-setup');
+                break;
+        }
+    };
+
+    const goBack = () => {
+        // Only update the URL, let the useEffect handle the step update
+        const newStep = step - 1;
+        switch (newStep) {
+            case 1:
+                router.push('/onboarding/personal-info');
+                break;
+            case 2:
+                router.push('/onboarding/verify-otp');
+                break;
+        }
+    };
+
+// components/OnboardingForm.tsx
+    useEffect(() => {
+        setStep(initialStep);
+    }, [initialStep]); // Simplified useEffect
 
     const renderStep = () => {
         switch (step) {
@@ -64,14 +119,12 @@ export function OnboardingForm() {
                             exit={{x: '-80%', opacity: 0}}
                             transition={{duration: 0.3}}
                             className="w-full max-w-md"
-
                         >
-
                             <OtpValidation
                                 formData={formData}
                                 updateFormData={updateFormData}
                                 onNext={nextStep}
-                                onBack={() => setStep(step - 1)}
+                                onBack={goBack}
                             />
                         </motion.div>
                     </AnimatePresence>
@@ -91,7 +144,6 @@ export function OnboardingForm() {
 
     return (
         <>
-            {/* Progress Steps */}
             <div className="flex items-center justify-center mb-8">
                 {[1, 2, 3].map((item) => (
                     <React.Fragment key={item}>
@@ -121,14 +173,9 @@ export function OnboardingForm() {
                 ))}
             </div>
 
-            {/* Form Container */}
             <div className="transition-all duration-300">
-
                 {renderStep()}
-
             </div>
-
-
         </>
     );
 }
