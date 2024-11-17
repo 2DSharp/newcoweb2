@@ -6,7 +6,7 @@ import {PersonalInfo} from './PersonalInfo';
 import {OtpValidation} from './OtpValidation';
 import {StoreSetup} from './StoreSetup';
 import apiService from "../services/api";
-import { motion, AnimatePresence } from 'framer-motion';
+import {motion, AnimatePresence} from 'framer-motion';
 
 
 export type FormData = {
@@ -18,12 +18,12 @@ export type FormData = {
     storeName: string;
     email: string;
     state: string;
+    otpToken: string;
 };
 
 export function OnboardingForm() {
     const [step, setStep] = useState(1);
     const [error, setError] = useState<string | null>(null);
-
     const [formData, setFormData] = useState<FormData>({
         firstName: '',
         lastName: '',
@@ -33,32 +33,16 @@ export function OnboardingForm() {
         storeName: '',
         email: '',
         state: '',
+        otpToken: ''
     });
 
     const updateFormData = (data: Partial<FormData>) => {
         setFormData(prev => ({...prev, ...data}));
     };
 
-    const nextStep = () => setStep(prev => prev + 1);
-    const registerAccount = async () => {
-        try {
-            const response = await apiService.auth.register({
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                password: formData.password,
-                phone: formData.mobile
-            });
-
-            if (response.successful) {
-                nextStep();
-            } else {
-                alert("Here?")
-                setError(response.data.message);
-            }
-        } catch (err) {
-            setError(err.response.data.message);
-        }
-    };
+    const nextStep = () => {
+        setStep(prev => prev + 1);
+    }
 
     const renderStep = () => {
         switch (step) {
@@ -68,18 +52,29 @@ export function OnboardingForm() {
                         formData={formData}
                         updateFormData={updateFormData}
                         onNext={nextStep}
-                        error={error}
                     />
                 );
             case 2:
                 return (
-                    <OtpValidation
-                        formData={formData}
-                        updateFormData={updateFormData}
-                        onNext={nextStep}
-                        onBack={() => setStep(step - 1)}
-                        error={error}
-                    />
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={step}
+                            initial={{x: '100%', opacity: 0}}
+                            animate={{x: 0, opacity: 1}}
+                            exit={{x: '-80%', opacity: 0}}
+                            transition={{duration: 0.3}}
+                            className="w-full max-w-md"
+
+                        >
+
+                            <OtpValidation
+                                formData={formData}
+                                updateFormData={updateFormData}
+                                onNext={nextStep}
+                                onBack={() => setStep(step - 1)}
+                            />
+                        </motion.div>
+                    </AnimatePresence>
                 );
             case 3:
                 return (
@@ -128,20 +123,9 @@ export function OnboardingForm() {
 
             {/* Form Container */}
             <div className="transition-all duration-300">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={step}
-                        initial={{ x: '100%', opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: '-80%', opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="w-full max-w-md"
 
-                    >
                 {renderStep()}
 
-                    </motion.div>
-                </AnimatePresence>
             </div>
 
 

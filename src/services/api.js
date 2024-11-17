@@ -13,14 +13,22 @@ const API_CONFIG = {
 
 
 // Create Axios instance
-const apiClient = axios.create({
+const authenticatedApiClient = axios.create({
     baseURL: "http://localhost:8080"
 });
 
+const unauthenticatedApiClient = axios.create({
+    baseURL: "http://localhost:8080"
+});
+
+
 // Request Interceptor
-apiClient.interceptors.request.use(
+authenticatedApiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('auth_token');
+        if (!localStorage.getItem('auth_data')) {
+            return config;
+        }
+        const token = localStorage.getItem('auth_data').accessToken;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -32,32 +40,45 @@ apiClient.interceptors.request.use(
 );
 
 // Response Interceptor
-apiClient.interceptors.response.use(
+authenticatedApiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
-        if (error.response?.status === 401) {
-            // Handle unauthorized access
-            localStorage.removeItem('auth_token');
-            window.location.href = '/login';
-        }
+        // if (error.response?.status === 401) {
+        //     // Handle unauthorized access
+        //     localStorage.removeItem('auth_token');
+        //     window.location.href = '/login';
+        // }
         return Promise.reject(error);
     }
 );
 
 // API Services
 const apiService = {
+
+    cms: {
+        getStateList: async () => {
+            const response = await unauthenticatedApiClient.get('/public/cms/states');
+            return response.data;
+        }
+    },
+
     // Auth endpoints
     auth: {
         login: async (credentials) => {
-            const response = await apiClient.post(API_CONFIG.baseURL + '/auth/login', credentials);
+            const response = await unauthenticatedApiClient.post('/auth/login', credentials);
+            return response.data;
+        },
+
+        refreshToken: async (credentials) => {
+            const response = await unauthenticatedApiClient.post( '/identity/refresh-token', credentials);
             return response.data;
         },
         register: async (userData) => {
-            const response = await apiClient.post('/seller/accounts/register', userData);
+            const response = await unauthenticatedApiClient.post('/seller/accounts/register', userData);
             return response.data;
         },
         verifyOtp: async (data) => {
-            const response = await apiClient.post('/auth/verify-otp', data);
+            const response = await unauthenticatedApiClient.post('/seller/accounts/verify-contact', data);
             return response.data;
         },
     },
@@ -65,15 +86,15 @@ const apiService = {
     // Store endpoints
     store: {
         create: async (storeData) => {
-            const response = await apiClient.post('/stores', storeData);
+            const response = await authenticatedApiClient.post('/stores', storeData);
             return response.data;
         },
         update: async (storeId, storeData) => {
-            const response = await apiClient.put(`/stores/${storeId}`, storeData);
+            const response = await authenticatedApiClient.put(`/stores/${storeId}`, storeData);
             return response.data;
         },
         getDetails: async (storeId) => {
-            const response = await apiClient.get(`/stores/${storeId}`);
+            const response = await authenticatedApiClient.get(`/stores/${storeId}`);
             return response.data;
         },
     },
@@ -81,11 +102,11 @@ const apiService = {
     // User profile endpoints
     profile: {
         get: async () => {
-            const response = await apiClient.get('/profile');
+            const response = await authenticatedApiClient.get('/profile');
             return response.data;
         },
         update: async (profileData) => {
-            const response = await apiClient.put('/profile', profileData);
+            const response = await authenticatedApiClient.put('/profile', profileData);
             return response.data;
         },
     },

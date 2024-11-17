@@ -1,21 +1,47 @@
 'use client';
 
-import { ArrowRight, AlertCircle } from 'lucide-react';
-import { FormData } from './OnboardingForm';
+import {ArrowRight, AlertCircle} from 'lucide-react';
+import {FormData} from './OnboardingForm';
 import Link from "next/link";
-import React from "react";
+import React, {useEffect, useState} from "react";
+import {AnimatingButton} from "@/components/animatingbutton";
+import apiService from "@/services/api";
+import type { InferGetServerSidePropsType, GetServerSideProps } from 'next'
 
 interface Props {
     formData: FormData;
     updateFormData: (data: Partial<FormData>) => void;
     onNext: () => any;
-    error: string | null;
 }
 
-export function PersonalInfo({ formData, updateFormData, onNext, error }: Props) {
+export function PersonalInfo({formData, updateFormData, onNext}: Props) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onNext();
+        setIsLoading(true)
+        setError(null);
+        try {
+            const response = await apiService.auth.register({
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                password: formData.password,
+                phone: formData.mobile
+            });
+
+            if (response.successful) {
+                updateFormData({otpToken: response.data})
+                await onNext();
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            console.log(err)
+            setError(err.response.data.message);
+        }
+
+        setIsLoading(false);
     };
 
     return (
@@ -45,19 +71,6 @@ export function PersonalInfo({ formData, updateFormData, onNext, error }: Props)
                 </div>
             </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Password</label>
-                <input
-                    type="password"
-                    required
-                    value={formData.password}
-                    onChange={(e) => updateFormData({password: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="••••••••"
-                    minLength={8}
-                />
-                <p className="mt-1 text-sm text-gray-500">Minimum 8 characters</p>
-            </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700">Mobile Number</label>
@@ -74,6 +87,19 @@ export function PersonalInfo({ formData, updateFormData, onNext, error }: Props)
                 </div>
             </div>
 
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => updateFormData({password: e.target.value})}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="••••••••"
+                    minLength={8}
+                />
+                <p className="mt-1 text-sm text-gray-500">Minimum 8 characters</p>
+            </div>
             {error && (
                 <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
                     <AlertCircle className="h-5 w-5 text-red-500"/>
@@ -81,17 +107,13 @@ export function PersonalInfo({ formData, updateFormData, onNext, error }: Props)
                 </div>
             )}
 
-            <button
-                type="submit"
-                className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
+            <AnimatingButton isLoading={isLoading}>
                 Continue
-                <ArrowRight className="ml-2 h-5 w-5"/>
-            </button>
+            </AnimatingButton>
 
             <p className="text-center text-sm text-gray-600">
                 Already have an account?{' '}
-                <br />
+                <br/>
                 <Link href="/">
                     <span className="text-indigo-600 hover:text-indigo-500 font-medium">
                     Login to your seller account
