@@ -1,11 +1,61 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Info, Tag, Package, Cog } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import CategorySearch, { Category } from '@/components/CategorySearch'
+import apiService from '@/services/api'
 
+const sampleCategories: Category[] = [
+    {
+      id: 1,
+      name: "Electronics",
+      path: "electronics",
+      children: [
+        {
+          id: 2,
+          name: "Computers",
+          path: "electronics/computers",
+          children: [
+            { id: 3, name: "Laptops", path: "electronics/computers/laptops" },
+            { id: 4, name: "Desktops", path: "electronics/computers/desktops" }
+          ]
+        },
+        { id: 5, name: "Smartphones", path: "electronics/smartphones" }
+      ]
+    },
+    {
+      id: 6,
+      name: "Clothing",
+      path: "clothing",
+      children: [
+        { id: 7, name: "Men's", path: "clothing/mens" },
+        { id: 8, name: "Women's", path: "clothing/womens" }
+      ]
+    }
+  ]
+  
 export default function ProductInfoForm({ formData, updateFormData }) {
+    const [categories, setCategories] = useState<Category[]>([])
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+
+                const response = await apiService.cms.getCategories(3);
+
+                setCategories(response);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+            };
+
+        fetchCategories();
+    }, []);
+
+    const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+
     return (
         <div className="space-y-6 p-4 bg-white rounded-lg">
             <div className="space-y-2">
@@ -50,46 +100,12 @@ export default function ProductInfoForm({ formData, updateFormData }) {
                         </Tooltip>
                     </TooltipProvider>
                 </div>
-                <Select onValueChange={(value) => updateFormData('category', value)}>
-                    <SelectTrigger className="focus:ring-2 focus:ring-green-200 transition-all">
-                        <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Clothing">Clothing</SelectItem>
-                        <SelectItem value="Electronics">Electronics</SelectItem>
-                        <SelectItem value="Home">Home</SelectItem>
-                    </SelectContent>
-                </Select>
                 <p className="text-sm text-gray-500 flex items-center">
                     Helps customers find your product more easily
                 </p>
-            </div>
-
-            <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                    <Label htmlFor="subCategory" className="flex items-center">
-                        <Tag className="mr-2 text-purple-500" size={16} />
-                        Sub Category
-                    </Label>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger><Info size={16} className="text-gray-400" /></TooltipTrigger>
-                            <TooltipContent>
-                                <p>Provide a more specific subcategory to help with precise product classification</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
-                <Input
-                    id="subCategory"
-                    value={formData.subCategory}
-                    onChange={(e) => updateFormData('subCategory', e.target.value)}
-                    placeholder="E.g., Men's T-Shirts, Smart Home Devices"
-                    className="focus:ring-2 focus:ring-purple-200 transition-all"
-                />
-                <p className="text-sm text-gray-500 flex items-center">
-                    Add more context to your product's classification
-                </p>
+            
+                <CategorySearch categories={categories} onCategorySelect={setSelectedCategories} />
+              
             </div>
 
             <div className="space-y-2">
@@ -101,7 +117,7 @@ export default function ProductInfoForm({ formData, updateFormData }) {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger><Info size={16} className="text-gray-400" /></TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent> 
                                 <p>Specify whether your product is handmade or machine-produced</p>
                             </TooltipContent>
                         </Tooltip>
