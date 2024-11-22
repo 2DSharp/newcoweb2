@@ -1,0 +1,31 @@
+/* RichTextEditor.css */
+.EditorContent {
+    min-height: 150px;
+    outline: none;
+    white-space: pre-wrap;
+}
+
+button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #f1f1f1;
+}
+
+button:focus {
+    outline: none;
+}
+
+.EditorContent:focus {
+    outline: 2px solid #6b46c1; /* Custom focus outline */
+    border-radius: 6px;
+}
+
+/* Remove default focus outline */
+.ProseMirror:focus {
+    outline: none;
+}

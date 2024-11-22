@@ -53,31 +53,46 @@ authenticatedApiClient.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                // Attempt to refresh the token
-                const authService = AuthService.getInstance();
-                const refreshSuccess = await authService.refreshTokens();
+                // Get refresh token from HTTP-only cookie via Next.js API
+                const refreshTokenResponse = await fetch('/api/auth/get-refresh-token');
+                const { refreshToken } = await refreshTokenResponse.json();
 
-                if (refreshSuccess) {
-                    // Update the authorization header with new token
-                    const newToken = authService.getAuthData()?.accessToken;
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-                    // Retry the original request with new token
-                    return authenticatedApiClient(originalRequest);
-                } else {
-                    // If refresh failed, clear auth and redirect to login
-                    authService.clearAuth();
-
-                    localStorage.clear();
-                    window.location.href = '/login';
-                    return Promise.reject(error);
+                if (!refreshToken) {
+                    throw new Error('No refresh token found');
                 }
+
+                // Call backend refresh token endpoint
+                const response = await unauthenticatedApiClient.post('/identity/refresh-token', {
+                    refreshToken
+                });
+
+                const { accessToken, userId, loginType, newRefreshToken } = response.data;
+
+                // Store new refresh token in HTTP-only cookie
+                await fetch('/api/auth/set-refresh-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refreshToken: newRefreshToken }),
+                });
+
+                // Update localStorage with new access token and user info
+                localStorage.setItem('auth_data', JSON.stringify({
+                    accessToken,
+                    userId,
+                    loginType
+                }));
+
+                // Update the authorization header
+                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+                // Retry the original request
+                return authenticatedApiClient(originalRequest);
             } catch (refreshError) {
-                // If refresh throws an error, clear auth and redirect to login
-                const authService = AuthService.getInstance();
-                authService.clearAuth();
+                // Clear auth data and redirect to login
                 localStorage.clear();
-                window.location.href = '/login';
+                window.location.href = '/';
                 return Promise.reject(refreshError);
             }
         }
@@ -92,14 +107,50 @@ const apiService = {
         getStateList: async () => {
             const response = await unauthenticatedApiClient.get('/public/cms/states');
             return response.data;
-        }
+        },
+        
+        getCategories: async (level) => {
+            const response = await unauthenticatedApiClient.get(`/public/cms/categories?level=${level}`);
+            return response.data;
+        },
     },
 
     // Auth endpoints
     auth: {
         login: async (credentials) => {
-            const response = await unauthenticatedApiClient.post('/auth/login', credentials);
-            return response.data;
+            try {
+                const response = await unauthenticatedApiClient.post('/identity/login', {
+                    phone: credentials.phone,
+                    password: credentials.password,
+                    loginType: credentials.loginType
+                });
+
+                if (response.data.successful) {
+                    const { accessToken, refreshToken, userId, loginType } = response.data.data;
+
+                    // Store refresh token in HTTP-only cookie
+                    await fetch('/api/auth/set-refresh-token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ refreshToken }),
+                    });
+
+                    // Store access token and user info in localStorage
+                    localStorage.setItem('auth_data', JSON.stringify({
+                        accessToken,
+                        userId,
+                        loginType
+                    }));
+
+                    return response.data;
+                }
+                
+                throw new Error('Login failed');
+            } catch (error) {
+                throw error;
+            }
         },
 
         refreshToken: async (credentials) => {
@@ -140,6 +191,13 @@ const apiService = {
         },
         update: async (profileData) => {
             const response = await authenticatedApiClient.put('/profile', profileData);
+            return response.data;
+        },
+    },
+
+    products: {
+        createDraft: async (productData) => {
+            const response = await authenticatedApiClient.post('/seller/products/drafts', productData);
             return response.data;
         },
     },

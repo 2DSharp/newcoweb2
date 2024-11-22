@@ -3,19 +3,41 @@
 import {useState} from 'react';
 import {Phone, Lock, ArrowRight} from 'lucide-react';
 import Link from "next/link";
+import apiService from '@/services/api';
+import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Add your login logic here
-        window.location.href = '/onboarding';
+        setError('');
+        setIsLoading(true);
+
+        try {
+            const response = await apiService.auth.login({
+                phone,
+                password,
+                loginType: 'SELLER'
+            });
+
+            if (response.successful) {
+                router.push('/products/create-new');
+            } else {
+                setError(response.message || 'Login failed. Please try again.');
+            }
+        } catch (error) {
+            setError(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-
         <div className="max-w-md w-full mx-auto">
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -77,13 +99,24 @@ const LoginPage = () => {
                         Forgot password?
                     </a>
                 </div>
-
+                {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {error}
+                </div>
+            )}
                 <button
                     type="submit"
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <span>Login to Dashboard</span>
-                    <ArrowRight className="ml-2 h-5 w-5"/>
+                    {isLoading ? (
+                        <span>Logging in...</span>
+                    ) : (
+                        <>
+                            <span>Login to Dashboard</span>
+                            <ArrowRight className="ml-2 h-5 w-5"/>
+                        </>
+                    )}
                 </button>
 
                 <p className="text-center text-sm text-gray-600">
@@ -94,7 +127,6 @@ const LoginPage = () => {
                 </p>
             </form>
         </div>
-
     );
 };
 

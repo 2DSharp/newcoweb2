@@ -22,6 +22,13 @@ export default function OnboardingHome({ params }: { params: { step: string } })
     }
 
     useEffect(() => {
+        // Check if user is logged in using auth_data
+        const authData = localStorage.getItem('auth_data');
+        if (authData) {
+            window.location.href = '/products/create-new';
+            return;
+        }
+
         // Check localStorage for progress
         const savedData = localStorage.getItem('onboardingFormData')
         if (savedData) {
