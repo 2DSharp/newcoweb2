@@ -204,7 +204,7 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
           <Button
             type="button"
             onClick={() => handleCategoryClick(category)}
-            className={`w-full justify-start mb-2 ${
+            className={`w-full justify-start min-h-[2.5rem] h-auto mb-2 ${
               isLeafSelected ? 'ring-2 ring-blue-500' : 
               isSelected ? 'text-blue-500' : ''
             }`}
@@ -215,10 +215,10 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
               <ChevronDown className="mr-2 h-4 w-4" /> : 
               <ChevronRight className="mr-2 h-4 w-4" />
             )}
-            {displayName}
+           <span style={{textAlign: 'left'}} className="break-words whitespace-pre-wrap"> {displayName} </span> 
           </Button>
           {shouldShowChildren && (
-            <div>{renderCategories(category.children, level + 1)}</div>
+            <div >{renderCategories(category.children, level + 1)}</div>
           )}
         </div>
       );
@@ -229,7 +229,7 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
     <div className="w-full space-y-4">
       {/* Top section: Input and selected categories */}
       <div className="space-y-4">
-        <div className="relative w-[600px]">
+        <div className="relative w-full max-w-[600px]">
           <Input
             type="text"
             placeholder="Search categories..."
@@ -243,8 +243,9 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
           />
         </div>
         {selectedCategories.length > 0 && (
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Button 
+        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                    {isListVisible && (
+  <Button 
             type="button"
             onClick={handleBackClick} 
             disabled={selectedCategories.length === 0 && currentCategories === categories}
@@ -253,8 +254,9 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
+                    )}
           {selectedCategories.map((category, index) => (
-            <div key={category.id} className="flex items-center space-x-2">
+            <div key={category.id} className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -272,7 +274,7 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
 
       {/* Bottom section: Category list */}
       {isListVisible && (
-        <ScrollArea className="h-[300px] w-[600px] rounded-md border p-4">
+        <ScrollArea className="h-[300px] w-full max-w-[600px] rounded-md border p-4">
           {(searchTerm ? filteredCategories : currentCategories).length > 0 ? (
             renderCategories(searchTerm ? filteredCategories : currentCategories)
           ) : (

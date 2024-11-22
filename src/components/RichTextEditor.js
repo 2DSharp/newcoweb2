@@ -25,6 +25,7 @@ export default function RichTextEditor({ value, onChange }) {
             onClick={(e) => {
                 e.preventDefault();
                 action();
+                editor.commands.focus();
             }}
         >
             {icon}

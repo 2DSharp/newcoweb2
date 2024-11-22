@@ -1,13 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowRight, ArrowLeft } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Store, Clipboard, Layers, Check } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
 import ProductInfoForm from './product-info-form'
 import ProductDetailsForm from './product-details-form'
 import ProductVariationsForm from './product-variations-form'
-import ProgressIndicator from './progress-indicator'
 import apiService from '@/services/api'
 
 export default function ProductCreationWizard() {
@@ -103,15 +103,15 @@ export default function ProductCreationWizard() {
     }
 
     const steps = [
-        'Product Info',
-        'Details & Description',
-        'Variations'
+        { title: "Product Info", icon: <Store className="w-4 h-4" /> },
+        { title: "Details", icon: <Clipboard className="w-4 h-4" /> },
+        { title: "Variations", icon: <Layers className="w-4 h-4" /> }
     ]
 
     const renderStepContent = () => {
         switch (step) {
             case 1:
-                return <ProductInfoForm formData={formData} updateFormData={updateFormData} />
+                return <ProductInfoForm handleSubmit={handleSubmit} formData={formData} updateFormData={updateFormData} />
             case 2:
                 return <ProductDetailsForm formData={formData} updateFormData={updateFormData} />
             case 3:
@@ -126,9 +126,39 @@ export default function ProductCreationWizard() {
             <div className="max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Create New Product</h1>
 
-                <ProgressIndicator steps={steps} currentStep={step} />
+                {/* Progress and Steps Indicator */}
+                <div className="mb-8">
+                    <Progress 
+                        value={(step) * (100 / steps.length)} 
+                        className="w-full bg-indigo-100" 
+                    />
+                    <div className="flex justify-between mt-2">
+                        {steps.map((stepItem, index) => (
+                            <button
+                                key={index}
+                                type="button"
+                                onClick={() => index < step && setStep(index + 1)}
+                                className={`flex flex-col items-center ${
+                                    index < step ? 'text-indigo-600' : 'text-muted-foreground'
+                                }`}
+                                disabled={index > step - 1}
+                            >
+                                <div className={`rounded-full p-2 ${
+                                    index < step ? 'bg-indigo-600 text-white' : 'bg-muted'
+                                }`}>
+                                    {index < step - 1 ? (
+                                        <Check className="w-4 h-4" />
+                                    ) : (
+                                        stepItem.icon
+                                    )}
+                                </div>
+                                <span className="mt-2 text-sm font-medium">{stepItem.title}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-                <div className="mt-10 bg-white rounded-lg p-6 space-y-8">
+                <div className="mt-10 bg-white rounded-lg space-y-8">
                     {renderStepContent()}
 
                     {step === 3 && !validateVariations() && (
@@ -144,6 +174,7 @@ export default function ProductCreationWizard() {
                             variant="outline"
                             onClick={() => setStep(prev => prev - 1)}
                             disabled={step === 1}
+                            className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Back
@@ -152,6 +183,7 @@ export default function ProductCreationWizard() {
                         <Button
                             onClick={handleNextStep}
                             disabled={step === 3 && !validateVariations()}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
                         >
                             {step === 3 ? 'Submit Product' : (
                                 <>
