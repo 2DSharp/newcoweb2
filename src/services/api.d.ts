@@ -9,6 +9,20 @@ interface ApiService {
   cms: {
     getCategories: (depth: number) => Promise<Category[]>;
   };
+  auth: {
+    refreshToken: (credentials: { refreshToken: string }) => Promise<{
+      data: {
+        accessToken: string;
+        userId: string;
+        loginType: string;
+        newRefreshToken: string;
+      };
+    }>;
+    // ... other auth methods
+  };
+  products: {
+    createDraft: (productData: any) => Promise<any>;
+  };
   // ... other API methods
 }
 

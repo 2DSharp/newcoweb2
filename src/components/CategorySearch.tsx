@@ -131,18 +131,26 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
 
   const handleBackClick = () => {
     if (selectedCategories.length > 1) {
-      const newSelected = selectedCategories.slice(0, -1)
-      setSelectedCategories(newSelected)
-      setCurrentCategories(newSelected[newSelected.length - 1].children || [newSelected[newSelected.length - 1]])
+      // Get the parent category (second to last in the array)
+      const parentCategory = selectedCategories[selectedCategories.length - 2];
+      const newSelected = selectedCategories.slice(0, -1);
+
+      // Update states
+      setSelectedCategories(newSelected);
+      setCurrentCategories(parentCategory.children || [parentCategory]);
+      setIsListVisible(true);
+      setSearchTerm(parentCategory.name);
       
-      const parentId = newSelected[newSelected.length - 1].id
-      setExpandedCategories(new Set([parentId]))
+      // Expand the parent category to show its children
+      setExpandedCategories(new Set([parentCategory.id]));
       
-      onCategorySelect(newSelected)
+      onCategorySelect(newSelected);
     } else {
-      resetSearch()
+      // If at root level, reset everything
+      resetSearch();
+      setIsListVisible(true);
     }
-  }
+  };
 
   const handleSelectedCategoryClick = (category: Category, index: number) => {
     if (index === selectedCategories.length - 1 && !category.children) {
@@ -167,6 +175,7 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
     setSelectedCategories([])
     setCurrentCategories(categories)
     setExpandedCategories(new Set())
+    setIsListVisible(true)
     onCategorySelect([])
   }
 
@@ -193,6 +202,7 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
       return (
         <div key={category.id} style={{ marginLeft: `${level * 24}px` }}>
           <Button
+            type="button"
             onClick={() => handleCategoryClick(category)}
             className={`w-full justify-start mb-2 ${
               isLeafSelected ? 'ring-2 ring-blue-500' : 
@@ -235,6 +245,7 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
         {selectedCategories.length > 0 && (
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <Button 
+            type="button"
             onClick={handleBackClick} 
             disabled={selectedCategories.length === 0 && currentCategories === categories}
             size="icon"
@@ -245,6 +256,7 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
           {selectedCategories.map((category, index) => (
             <div key={category.id} className="flex items-center space-x-2">
               <Button
+                type="button"
                 variant="ghost"
                 className="p-1 hover:text-blue-500"
                 onClick={() => handleSelectedCategoryClick(category, index)}

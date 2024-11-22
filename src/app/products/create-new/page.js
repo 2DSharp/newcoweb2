@@ -43,10 +43,10 @@ export default function ProductCreationWizard() {
         }
     }, [])
 
-    const handleSubmit = () => {
-        console.log('Form submitted:', formData)
-        // Here you would make your API call with the formData
-    }
+    // const handleSubmit = () => {
+    //     console.log('Form submitted:', formData)
+    //     // Here you would make your API call with the formData
+    // }
 
     const validateVariations = () => {
         return formData.variations.every(variation =>
@@ -66,17 +66,31 @@ export default function ProductCreationWizard() {
         }))
     }
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        handleNextStep();
+
+    };
+
     const createProductDraft = async () => {
-        const formRef = document.querySelector('form');
-        if (formRef) {
-            const event = new Event('submit', { cancelable: true });
-            const success = await formRef.dispatchEvent(event);
-            
-            if (success) {
-                setStep(prev => prev + 1);
-            }
+        const draftData = {
+            name: formData.name,
+            category: formData.category,
+            subCategory: formData.subCategory,
+            finalCategory: formData.finalCategory,
+            manufacturingType: formData.manufacturingType
+        };
+
+        try {
+            const response = await apiService.products.createDraft(draftData);
+            updateFormData('draftId', response.data);
+            setStep(prev => prev + 1);
+        } catch (error) {
+            console.error('Failed to create draft:', error);
+            return false;
         }
     };
+
 
     const handleNextStep = () => {
         if (step === 1) {

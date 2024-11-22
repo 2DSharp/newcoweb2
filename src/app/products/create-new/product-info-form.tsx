@@ -8,7 +8,7 @@ import CategorySearch, { Category } from '@/components/CategorySearch'
 import apiService from '@/services/api'
 
   
-export default function ProductInfoForm({ formData, updateFormData }) {
+export default function ProductInfoForm({ formData, updateFormData, handleSubmit }) {
     const [categories, setCategories] = useState<Category[]>([])
     const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
 
@@ -33,26 +33,7 @@ export default function ProductInfoForm({ formData, updateFormData }) {
         }
     }, [selectedCategories]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        const draftData = {
-            name: formData.name,
-            category: formData.category,
-            subCategory: formData.subCategory,
-            finalCategory: formData.finalCategory,
-            manufacturingType: formData.manufacturingType
-        };
 
-        try {
-            const response = await apiService.products.createDraft(draftData);
-            updateFormData('draftId', response.data);
-            return true;
-        } catch (error) {
-            console.error('Failed to create draft:', error);
-            return false;
-        }
-    };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 p-4 bg-white rounded-lg">
