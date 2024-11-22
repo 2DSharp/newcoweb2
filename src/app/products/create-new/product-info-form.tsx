@@ -7,57 +7,55 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import CategorySearch, { Category } from '@/components/CategorySearch'
 import apiService from '@/services/api'
 
-const sampleCategories: Category[] = [
-    {
-      id: 1,
-      name: "Electronics",
-      path: "electronics",
-      children: [
-        {
-          id: 2,
-          name: "Computers",
-          path: "electronics/computers",
-          children: [
-            { id: 3, name: "Laptops", path: "electronics/computers/laptops" },
-            { id: 4, name: "Desktops", path: "electronics/computers/desktops" }
-          ]
-        },
-        { id: 5, name: "Smartphones", path: "electronics/smartphones" }
-      ]
-    },
-    {
-      id: 6,
-      name: "Clothing",
-      path: "clothing",
-      children: [
-        { id: 7, name: "Men's", path: "clothing/mens" },
-        { id: 8, name: "Women's", path: "clothing/womens" }
-      ]
-    }
-  ]
   
 export default function ProductInfoForm({ formData, updateFormData }) {
     const [categories, setCategories] = useState<Category[]>([])
+    const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-
                 const response = await apiService.cms.getCategories(3);
-
                 setCategories(response);
             } catch (error) {
                 console.error('Error fetching categories:', error);
             }
-            };
-
+        };
         fetchCategories();
     }, []);
 
-    const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+    useEffect(() => {
+        if (selectedCategories.length > 0) {
+            const [category, subCategory, finalCategory] = selectedCategories;
+            updateFormData('category', category?.name || '');
+            updateFormData('subCategory', subCategory?.name || '');
+            updateFormData('finalCategory', finalCategory?.name || '');
+        }
+    }, [selectedCategories]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        const draftData = {
+            name: formData.name,
+            category: formData.category,
+            subCategory: formData.subCategory,
+            finalCategory: formData.finalCategory,
+            manufacturingType: formData.manufacturingType
+        };
+
+        try {
+            const response = await apiService.products.createDraft(draftData);
+            updateFormData('draftId', response.data);
+            return true;
+        } catch (error) {
+            console.error('Failed to create draft:', error);
+            return false;
+        }
+    };
 
     return (
-        <div className="space-y-6 p-4 bg-white rounded-lg">
+        <form onSubmit={handleSubmit} className="space-y-6 p-4 bg-white rounded-lg">
             <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                     <Label htmlFor="name" className="flex items-center">
@@ -79,6 +77,7 @@ export default function ProductInfoForm({ formData, updateFormData }) {
                     onChange={(e) => updateFormData('name', e.target.value)}
                     placeholder="E.g., Organic Cotton T-Shirt"
                     className="focus:ring-2 focus:ring-blue-200 transition-all"
+                    required
                 />
                 <p className="text-sm text-gray-500 flex items-center">
                     Create a name that captures attention and describes your product
@@ -137,6 +136,6 @@ export default function ProductInfoForm({ formData, updateFormData }) {
                     Transparency about your product's creation process
                 </p>
             </div>
-        </div>
+        </form>
     )
 }

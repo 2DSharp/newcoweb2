@@ -67,31 +67,16 @@ export default function ProductCreationWizard() {
     }
 
     const createProductDraft = async () => {
-        try {
-            const draftData = {
-                name: formData.name,
-                category: formData.category,
-                subCategory: formData.subCategory,
-                manufacturingType: formData.manufacturingType,
-                searchability: {
-                    keywords: formData.keywords
-                },
-                materialType: formData.materialType,
-                description: formData.description,
-                stock: {
-                    personalizationText: false,
-                    variations: []  // Empty initially
-                }
-            }
+        const formRef = document.querySelector('form');
+        if (formRef) {
+            const event = new Event('submit', { cancelable: true });
+            const success = await formRef.dispatchEvent(event);
             
-            const response = await apiService.products.createDraft(draftData)
-            setDraftId(response.id)
-            setStep(prev => prev + 1)
-        } catch (error) {
-            console.error('Failed to create product draft:', error)
-            // Handle error appropriately
+            if (success) {
+                setStep(prev => prev + 1);
+            }
         }
-    }
+    };
 
     const handleNextStep = () => {
         if (step === 1) {

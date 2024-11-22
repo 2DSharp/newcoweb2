@@ -32,27 +32,42 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
 
     const searchLower = searchTerm.toLowerCase();
     
-    const findMatchingWithChildren = (categories: Category[]): Category[] => {
-      const results: Category[] = [];
+    interface CategoryWithFullPath extends Category {
+      fullPath?: string;
+    }
+
+    const findMatchingWithFullPath = (
+      categories: Category[], 
+      parentPath: string = ""
+    ): CategoryWithFullPath[] => {
+      const results: CategoryWithFullPath[] = [];
       
       for (const category of categories) {
+        const currentPath = parentPath ? `${parentPath} > ${category.name}` : category.name;
         const matches = category.name.toLowerCase().includes(searchLower);
+        const hasChildren = category.children && category.children.length > 0;
         
         if (matches) {
-          // If category matches, include it and expand it
-          results.push(category);
-          setExpandedCategories(prev => {
-            const newSet = new Set(prev);
-            newSet.add(category.id);
-            return newSet;
-          });
-        } else {
-          // If no match, check children
-          if (category.children) {
-            const childMatches = findMatchingWithChildren(category.children);
-            if (childMatches.length > 0) {
-              results.push(...childMatches);
-            }
+          if (hasChildren) {
+            // If it's a parent category that matches, include it with its children
+            results.push({
+              ...category,
+              // Don't add fullPath for parent categories
+            });
+          } else {
+            // If it's a leaf category that matches, include it with its full path
+            results.push({
+              ...category,
+              fullPath: currentPath
+            });
+          }
+        }
+        
+        // Always check children for matches
+        if (category.children) {
+          const childMatches = findMatchingWithFullPath(category.children, currentPath);
+          if (!matches) { // Only add child matches if parent didn't match
+            results.push(...childMatches);
           }
         }
       }
@@ -60,7 +75,16 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
       return results;
     };
 
-    return findMatchingWithChildren(categories);
+    const filtered = findMatchingWithFullPath(categories);
+    
+    // Auto-expand matched parent categories
+    const matchedParentIds = filtered
+      .filter(cat => cat.children && cat.children.length > 0)
+      .map(cat => cat.id);
+    
+    setExpandedCategories(new Set(matchedParentIds));
+    
+    return filtered;
   }, [searchTerm, categories]);
 
   const handleCategoryClick = (category: Category) => {
@@ -156,10 +180,18 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
       const isSelected = selectedCategories.some(selected => selected.id === category.id);
       const hasChildren = category.children && category.children.length > 0;
       const isLeafSelected = selectedCategories[selectedCategories.length - 1]?.id === category.id && !hasChildren;
-      const shouldShowChildren = hasChildren && expandedCategories.has(category.id);
+      const shouldShowChildren = hasChildren && (
+        expandedCategories.has(category.id) || 
+        (searchTerm && category.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      
+      // Use fullPath only for leaf nodes in search results
+      const displayName = searchTerm && (category as any).fullPath && !hasChildren
+        ? (category as any).fullPath 
+        : category.name;
       
       return (
-        <div key={category.id} style={{ marginLeft: `${level * 16}px` }}>
+        <div key={category.id} style={{ marginLeft: `${level * 24}px` }}>
           <Button
             onClick={() => handleCategoryClick(category)}
             className={`w-full justify-start mb-2 ${
@@ -168,12 +200,12 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
             }`}
             variant="ghost"
           >
-            {hasChildren && (
+            {(hasChildren && (!searchTerm || category.name.toLowerCase().includes(searchTerm.toLowerCase()))) && (
               shouldShowChildren ? 
               <ChevronDown className="mr-2 h-4 w-4" /> : 
               <ChevronRight className="mr-2 h-4 w-4" />
             )}
-            {category.name}
+            {displayName}
           </Button>
           {shouldShowChildren && (
             <div>{renderCategories(category.children, level + 1)}</div>
