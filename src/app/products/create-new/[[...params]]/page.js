@@ -215,10 +215,7 @@ export default function ProductCreationWizard() {
 
                 {/* Progress and Steps Indicator */}
                 <div>
-                    <Progress 
-                        value={(step) * (100 / steps.length)} 
-                        className="w-full bg-indigo-100" 
-                    />
+
                     <div className="flex justify-between mt-2">
                         {steps.map((stepItem, index) => (
                             <button
@@ -243,6 +240,11 @@ export default function ProductCreationWizard() {
                             </button>
                         ))}
                     </div>
+                    <div className="space-y-4"></div>
+                        <Progress 
+                            value={(step) * (100 / steps.length)} 
+                        className="w-full space-y-4 bg-indigo-100" 
+                    />
                 </div>
 
                 {/* Main content */}
