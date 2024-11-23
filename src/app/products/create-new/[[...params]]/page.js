@@ -43,6 +43,7 @@ export default function ProductCreationWizard() {
                         variations: response.data.stock?.variations?.map(variation => ({
                             ...variation,
                             isCustom: variation.type === 'CUSTOM',
+                            details: variation.details || {}, // Ensure details are preserved
                             images: variation.images?.map(img => ({
                                 imgId: img.imgId,
                                 thumbnail: img.thumbnail,
@@ -116,6 +117,7 @@ export default function ProductCreationWizard() {
                     stock: variation.stock || 0,
                     price: variation.price,
                     sku: variation.sku,
+                    details: variation.details || {}, // Ensure details are preserved
                     processingTime: variation.processingTime,
                     images: variation.images?.map(img => ({
                         imgId: img.imgId,

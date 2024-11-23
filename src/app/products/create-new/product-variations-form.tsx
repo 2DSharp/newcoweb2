@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee } from 'lucide-react'
+import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee, X, Trash } from 'lucide-react'
 import ImageUploader from '@/components/ImageUploader'
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 
 export default function ProductVariationsForm({ formData, updateFormData }) {
     const [validationError, setValidationError] = useState(false);
@@ -30,18 +31,41 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
 
     const handleVariationChange = (index, field, value) => {
         const updatedVariations = [...formData.variations]
+            // Ensure the variation at this index exists and has all required fields
+    if (!updatedVariations[index]) {
+        updatedVariations[index] = {
+            details: {},
+            images: []
+        }
+    }
+
+    // Special handling for images to ensure they're properly scoped to this variation
+    if (field === 'images') {
+        updatedVariations[index] = {
+            ...updatedVariations[index],
+            images: [...value] // Create new array to prevent reference issues
+        }
+    } else {
         updatedVariations[index] = {
             ...updatedVariations[index],
             [field]: value
         }
+    }
         updateFormData('variations', updatedVariations)
     }
 
     const addVariation = () => {
+        const lastVariation = formData.variations[formData.variations.length - 1]
+
         updateFormData('variations', [
             ...formData.variations,
-            {}
+            { 
+                price: lastVariation.price || '', // Copy price
+                processingTime: lastVariation.processingTime || '', // Copy processing time
+                details: { ...lastVariation.details } || {}, // Deep copy details object
+            }
         ])
+
     }
 
     const removeVariation = (index) => {
@@ -56,16 +80,44 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
             if (variation.isCustom) {
                 return variation.name &&
                     variation.price > 0 &&
+                    variation.processingTime > 0 &&
                     variation.images?.length >= 1 &&
                     variation.images?.length <= 4;
             }
             return variation.name &&
                 variation.price > 0 &&
-                variation.stock >= 0 &&
+                variation.processingTime > 0 &&
                 variation.images?.length >= 1 &&
                 variation.images?.length <= 4;
         });
     };
+
+    const handleDetailsChange = (index: number, details: { key: string, value: string }[]) => {
+        const updatedVariations = [...formData.variations]
+        updatedVariations[index] = {
+            ...updatedVariations[index],
+            details: details.reduce((acc, detail) => {
+                if (detail.key || detail.value) {
+                    acc[detail.key] = detail.value
+                }
+                return acc
+            }, {})
+        }
+        updateFormData('variations', updatedVariations)
+    }
+
+    const addDetail = (index: number) => {
+        const variation = formData.variations[index]
+        const updatedVariations = [...formData.variations]
+        updatedVariations[index] = {
+            ...variation,
+            details: {
+                ...(variation.details || {}),
+                '': ''
+            }
+        }
+        updateFormData('variations', updatedVariations)
+    }
 
     useEffect(() => {
         // Clear validation error when form data changes
@@ -87,6 +139,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
             {(formData.variations || []).map((variation, index) => (
                 <Card key={index} className="p-4">
                     <CardContent>
+
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-lg font-semibold">
                                 {index === 0 ? 'Base Variation' : `Variation ${index + 1}`}
@@ -210,7 +263,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                         <div className="space-y-2">
                                             <Label htmlFor={`stock-${index}`} className="flex items-center">
                                                 <Package className="mr-2 text-orange-500" size={16} />
-                                                Stock {!variation.isCustom && '*'}
+                                                Stock
                                             </Label>
                                             <Input
                                                 id={`stock-${index}`}
@@ -218,7 +271,6 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                                 value={variation.stock}
                                                 onChange={(e) => handleVariationChange(index, 'stock', Number(e.target.value))}
                                                 min="0"
-                                                required={!variation.isCustom}
                                                 disabled={variation.isCustom}
                                                 className={variation.isCustom ? 'bg-gray-100' : ''}
                                                 placeholder="Available quantity"
@@ -234,7 +286,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                         <div className="space-y-2">
                                             <Label htmlFor={`processing-${index}`} className="flex items-center">
                                                 <Clock className="mr-2 text-indigo-500" size={16} />
-                                                Processing Time (days)
+                                                Processing Time (days) *
                                             </Label>
                                             <Input
                                                 id={`processing-${index}`}
@@ -242,6 +294,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                                 value={variation.processingTime}
                                                 onChange={(e) => handleVariationChange(index, 'processingTime', Number(e.target.value))}
                                                 min="1"
+                                                required
                                                 placeholder="e.g., 3"
                                             />
                                             <p className="text-sm text-gray-500">
@@ -254,16 +307,159 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
 
                             <div className="space-y-2">
                                 <Label className="flex items-center">
-                                    <ImageIcon className="mr-2 text-red-500" size={16} />
-                                    Sample  (1-4 required) *
+                                    <ImageIcon className="mr-2 text-green-500" size={16} />
+                                    Sample Photos (1-4 required) *
                                 </Label>
+                                <p className="text-sm text-gray-500">
+                                    Upload 1-4 high-quality images showing this variation from different angles
+                                </p>
                                 <ImageUploader
                                     images={variation.images || []}
                                     onChange={(newImages) => handleVariationChange(index, 'images', newImages)}
                                     maxImages={4}
+                                    variationIndex={index}
                                 />
+                               
+                            </div>
+
+                            <div className="space-y-2 mt-4">
+                                <Label className="flex items-center">
+                                    <Info className="mr-2 text-blue-500" size={16} />
+                                    Product Details (Optional)
+                                </Label>
+                                <div className="border rounded-md overflow-hidden">
+                                    {/* Desktop layout */}
+                                    <div className="hidden md:block">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="bg-gray-50 hover:bg-gray-50">
+                                                    <TableHead className="font-medium">Feature</TableHead>
+                                                    <TableHead className="font-medium border-l">Value</TableHead>
+                                                    <TableHead className="w-[40px] border-l"></TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {Object.entries(variation.details || {}).map(([key, value], detailIndex) => (
+                                                    <TableRow key={detailIndex} className="hover:bg-gray-50">
+                                                        <TableCell className="p-0">
+                                                            <Input 
+                                                                value={key}
+                                                                onChange={(e) => {
+                                                                    const newDetails = { ...variation.details }
+                                                                    const oldValue = newDetails[key]
+                                                                    delete newDetails[key]
+                                                                    newDetails[e.target.value] = oldValue
+                                                                    handleDetailsChange(index, Object.entries(newDetails).map(([k, v]) => ({ key: k, value: v })))
+                                                                }}
+                                                                placeholder="e.g., Dimensions"
+                                                                className="border-0 focus:ring-0 focus:ring-offset-0 rounded-none h-11"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="p-0 border-l">
+                                                            <Input 
+                                                                value={value}
+                                                                onChange={(e) => {
+                                                                    const newDetails = { ...variation.details }
+                                                                    newDetails[key] = e.target.value
+                                                                    handleDetailsChange(index, Object.entries(newDetails).map(([k, v]) => ({ key: k, value: v })))
+                                                                }}
+                                                                placeholder="e.g., 10x20x30 cm"
+                                                                className="border-0 focus:ring-0 focus:ring-offset-0 rounded-none h-11"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="border-l w-[40px] text-center">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() => {
+                                                                    const newDetails = { ...variation.details }
+                                                                    delete newDetails[key]
+                                                                    handleDetailsChange(index, Object.entries(newDetails).map(([k, v]) => ({ key: k, value: v })))
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                                <TableRow>
+                                                    <TableCell colSpan={3} className="p-0">
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="w-full rounded-none h-11 hover:bg-gray-50"
+                                                            onClick={() => addDetail(index)}
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" />
+                                                            Add Detail
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+
+                                    {/* Mobile layout */}
+                                    <div className="md:hidden divide-y">
+                                        {Object.entries(variation.details || {}).map(([key, value], detailIndex) => (
+                                            <div key={detailIndex} className="relative bg-white">
+                                                <div className="p-3 space-y-3">
+                                                    <div className="pr-8">
+                                                        <Label className="text-xs text-gray-500 mb-1">Feature</Label>
+                                                        <Input 
+                                                            value={key}
+                                                            onChange={(e) => {
+                                                                const newDetails = { ...variation.details }
+                                                                const oldValue = newDetails[key]
+                                                                delete newDetails[key]
+                                                                newDetails[e.target.value] = oldValue
+                                                                handleDetailsChange(index, Object.entries(newDetails).map(([k, v]) => ({ key: k, value: v })))
+                                                            }}
+                                                            placeholder="e.g., Dimensions"
+                                                            className="border-0 focus:ring-0 focus:ring-offset-0 bg-gray-50/50 h-9"
+                                                        />
+                                                    </div>
+                                                    <div className="pr-8 border-t">
+                                                        <Label className="text-xs text-gray-500 mb-1">Value</Label>
+                                                        <Input 
+                                                            value={value}
+                                                            onChange={(e) => {
+                                                                const newDetails = { ...variation.details }
+                                                                newDetails[key] = e.target.value
+                                                                handleDetailsChange(index, Object.entries(newDetails).map(([k, v]) => ({ key: k, value: v })))
+                                                            }}
+                                                            placeholder="e.g., 10x20x30 cm"
+                                                            className="border-0 focus:ring-0 focus:ring-offset-0 bg-gray-50/50 h-9"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute top-3 right-2 h-8 w-8 p-0"
+                                                    onClick={() => {
+                                                        const newDetails = { ...variation.details }
+                                                        delete newDetails[key]
+                                                        handleDetailsChange(index, Object.entries(newDetails).map(([k, v]) => ({ key: k, value: v })))
+                                                    }}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                        
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full h-11 rounded-none"
+                                            onClick={() => addDetail(index)}
+                                        >
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            Add Detail
+                                        </Button>
+                                    </div>
+                                </div>
                                 <p className="text-sm text-gray-500">
-                                    Upload 1-4 high-quality images showing this variation from different angles
+                                    Add product specifications like dimensions, color, material etc.
                                 </p>
                             </div>
                         </div>

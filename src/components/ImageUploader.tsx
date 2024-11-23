@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
-import { X, ImageIcon, Plus, Loader2 } from 'lucide-react'
+import { X, ImageIcon, Plus, Loader2, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Cropper from 'react-easy-crop'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -25,7 +25,14 @@ interface ImageUploaderProps {
     maxImages?: number
 }
 
-export default function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploaderProps) {
+interface ImageUploaderProps {
+    images: Image[]
+    onChange: (images: Image[]) => void
+    maxImages?: number
+    variationIndex: number
+}
+
+export default function ImageUploader({ images = [], onChange, maxImages = 4, variationIndex }: ImageUploaderProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [crop, setCrop] = useState({ x: 0, y: 0 })
     const [zoom, setZoom] = useState(1)
@@ -34,14 +41,28 @@ export default function ImageUploader({ images, onChange, maxImages = 4 }: Image
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [isUploading, setIsUploading] = useState(false)
 
+    const fileInputId = `file-upload-${variationIndex}`
+
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            const objectUrl = URL.createObjectURL(file)
             setCurrentFile(file)
-            setPreviewUrl(URL.createObjectURL(file))
+            setPreviewUrl(objectUrl)
             setIsOpen(true)
+            // Reset input
+            e.target.value = ''
         }
     }
+
+    // Clean up object URL when component unmounts or preview changes
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl)
+            }
+        }
+    }, [previewUrl])
 
     const onCropComplete = (croppedArea, croppedAreaPixels) => {
         setCroppedAreaPixels(croppedAreaPixels)
@@ -91,7 +112,7 @@ export default function ImageUploader({ images, onChange, maxImages = 4 }: Image
             })
             const data: ImageResponse = await response.json()
 
-            // Add new image to array using URL from response
+            // Use the URL directly from the response
             const newImage: Image = {
                 imgId: data.id,
                 thumbnail: images.length === 0,
@@ -160,11 +181,11 @@ export default function ImageUploader({ images, onChange, maxImages = 4 }: Image
                 
                 {images.length < maxImages && (
                     <div 
-                        onClick={() => document.getElementById('file-upload')?.click()}
+                        onClick={() => document.getElementById(fileInputId)?.click()}
                         className="aspect-square border-2 border-dashed rounded flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-colors cursor-pointer"
                     >
                         <input
-                            id="file-upload"
+                            id={fileInputId}
                             type="file"
                             className="hidden"
                             accept="image/*"
@@ -176,59 +197,61 @@ export default function ImageUploader({ images, onChange, maxImages = 4 }: Image
                 )}
             </div>
 
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Crop Image</DialogTitle>
-                    </DialogHeader>
-                    <div className="relative h-[400px]">
-                        {previewUrl && (
-                            <Cropper
-                                image={previewUrl}
-                                crop={crop}
-                                zoom={zoom}
-                                aspect={1}
-                                onCropChange={setCrop}
-                                onZoomChange={setZoom}
-                                onCropComplete={onCropComplete}
-                                classes={{
-                                    containerClassName: "relative h-[400px]",
-                                    mediaClassName: "max-h-full"
-                                }}
-                                showGrid={true}
-                            />
-                        )}
-                    </div>
-                    <div className="px-4">
-                        <Label>Zoom</Label>
-                        <Slider
-                            value={[zoom]}
-                            min={1}
-                            max={3}
-                            step={0.1}
-                            onValueChange={([value]) => setZoom(value)}
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button 
-                            onClick={handleCropSubmit} 
-                            disabled={isUploading}
-                        >
-                            {isUploading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Uploading...
-                                </>
-                            ) : (
-                                'Upload'
+            {isOpen && (
+                <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                    <DialogContent className="max-w-3xl">
+                        <DialogHeader>
+                            <DialogTitle>Crop Image</DialogTitle>
+                        </DialogHeader>
+                        <div className="relative h-[400px]">
+                            {previewUrl && (
+                                <Cropper
+                                    image={previewUrl}
+                                    crop={crop}
+                                    zoom={zoom}
+                                    aspect={1}
+                                    onCropChange={setCrop}
+                                    onZoomChange={setZoom}
+                                    onCropComplete={onCropComplete}
+                                    classes={{
+                                        containerClassName: "relative h-[400px]",
+                                        mediaClassName: "max-h-full"
+                                    }}
+                                    showGrid={true}
+                                />
                             )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </div>
+                        <div className="px-4">
+                            <Label>Zoom</Label>
+                            <Slider
+                                value={[zoom]}
+                                min={1}
+                                max={3}
+                                step={0.1}
+                                onValueChange={([value]) => setZoom(value)}
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button 
+                                onClick={handleCropSubmit} 
+                                disabled={isUploading}
+                            >
+                                {isUploading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Uploading...
+                                    </>
+                                ) : (
+                                    'Upload'
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     )
 } 
