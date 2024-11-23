@@ -133,11 +133,22 @@ export default function ProductCreationWizard() {
         }
     }
 
-    const handleNextStep = async () => {
+    const handleNextStep = async (e) => {
+        e?.preventDefault()
+        console.log("Step", step)
         try {
             if (draftId) {
                 const formattedData = formatDataForApi(formData)
                 await apiService.products.updateDraft(draftId, formattedData)
+                if (step === 3) {
+                    try {
+                        console.log("Step ! 3")
+                        const data = await apiService.products.publishDraft(draftId)
+                        router.push('/products/' + data.data)
+                    } catch (error) {
+                        console.error('Failed to submit product:', error)
+                    }
+                }
             } else if (step === 1) {
                 // First step creation with minimal data
                 const response = await apiService.products.createDraft({
@@ -169,19 +180,8 @@ export default function ProductCreationWizard() {
     }
 
     const handleSubmit = async (e) => {
-        e?.preventDefault()
-        if (step === 3) {
-            try {
-                const formattedData = formatDataForApi(formData)
-                await apiService.products.updateDraft(draftId, formattedData)
-                await apiService.products.publishDraft(draftId)
-                router.push('/products')
-            } catch (error) {
-                console.error('Failed to submit product:', error)
-            }
-        } else {
-            handleNextStep()
-        }
+       // e?.preventDefault()
+       
     }
 
     const updateFormData = (field, value) => {

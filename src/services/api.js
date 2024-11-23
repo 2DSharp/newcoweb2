@@ -217,7 +217,7 @@ const apiService = {
             return response.data;
         },
 
-        publishDraft: async () => {
+        publishDraft: async (draftId) => {
             const response = await authenticatedApiClient.post(`/seller/products/drafts/${draftId}/publish`);
             return response.data;
         },
