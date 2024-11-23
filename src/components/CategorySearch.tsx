@@ -218,44 +218,76 @@ export default function CategorySearch({ categories, onCategorySelect, initialSe
     onCategorySelect([])
   }
 
+  const handleChevronClick = (e: React.MouseEvent, category: Category) => {
+    e.stopPropagation() // Prevent category selection
+
+    // Find the parent category to get siblings
+    const parentCategory = selectedCategories[selectedCategories.length - 2]
+
+    setExpandedCategories(prev => {
+        const newSet = new Set(prev)
+        if (newSet.has(category.id)) {
+            newSet.delete(category.id)
+            // When collapsing, show parent's children (siblings)
+            if (parentCategory) {
+                setCurrentCategories(parentCategory.children || [])
+                setSelectedCategories(prev => prev.slice(0, -1)) // Remove current category from selection
+            } else {
+                setCurrentCategories(categories) // At root level, show all categories
+                setSelectedCategories([])
+            }
+        } else {
+            newSet.add(category.id)
+        }
+        return newSet
+    })
+  }
+
   const renderCategories = (categories: Category[], level = 0) => {
     return categories.map((category) => {
-      const isSelected = selectedCategories.some(selected => selected.id === category.id);
-      const hasChildren = category.children && category.children.length > 0;
-      const isLeafSelected = selectedCategories[selectedCategories.length - 1]?.id === category.id && !hasChildren;
-      const shouldShowChildren = hasChildren && (
-        expandedCategories.has(category.id) || 
-        (searchTerm && category.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      
-      // Use fullPath only for leaf nodes in search results
-      const displayName = searchTerm && (category as any).fullPath && !hasChildren
-        ? (category as any).fullPath 
-        : category.name;
-      
-      return (
-        <div key={category.id} style={{ marginLeft: `${level * 24}px` }}>
-          <Button
-            type="button"
-            onClick={() => handleCategoryClick(category)}
-            className={`w-full justify-start min-h-[2.5rem] h-auto mb-2 ${
-              isLeafSelected ? 'ring-2 ring-blue-500' : 
-              isSelected ? 'text-blue-500' : ''
-            }`}
-            variant="ghost"
-          >
-            {(hasChildren && (!searchTerm || category.name.toLowerCase().includes(searchTerm.toLowerCase()))) && (
-              shouldShowChildren ? 
-              <ChevronDown className="mr-2 h-4 w-4" /> : 
-              <ChevronRight className="mr-2 h-4 w-4" />
-            )}
-           <span style={{textAlign: 'left'}} className="break-words whitespace-pre-wrap"> {displayName} </span> 
-          </Button>
-          {shouldShowChildren && (
-            <div >{renderCategories(category.children, level + 1)}</div>
-          )}
-        </div>
-      );
+        const isSelected = selectedCategories.some(selected => selected.id === category.id);
+        const hasChildren = category.children && category.children.length > 0;
+        const isLeafSelected = selectedCategories[selectedCategories.length - 1]?.id === category.id && !hasChildren;
+        const shouldShowChildren = hasChildren && (
+            expandedCategories.has(category.id) || 
+            (searchTerm && category.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        
+        const displayName = searchTerm && (category as any).fullPath && !hasChildren
+            ? (category as any).fullPath 
+            : category.name;
+        
+        return (
+            <div key={category.id} style={{ marginLeft: `${level * 24}px` }}>
+                <Button
+                    type="button"
+                    onClick={() => handleCategoryClick(category)}
+                    className={`w-full justify-start min-h-[2.5rem] h-auto mb-2 ${
+                        isLeafSelected ? 'ring-2 ring-blue-500' : 
+                        isSelected ? 'text-blue-500' : ''
+                    }`}
+                    variant="ghost"
+                >
+                    {(hasChildren && (!searchTerm || category.name.toLowerCase().includes(searchTerm.toLowerCase()))) && (
+                        <div 
+                            onClick={(e) => handleChevronClick(e, category)} 
+                            className="mr-2 cursor-pointer"
+                        >
+                            {shouldShowChildren ? 
+                                <ChevronDown className="h-4 w-4" /> : 
+                                <ChevronRight className="h-4 w-4" />
+                            }
+                        </div>
+                    )}
+                    <span style={{textAlign: 'left'}} className="break-words whitespace-pre-wrap">
+                        {displayName}
+                    </span>
+                </Button>
+                {shouldShowChildren && (
+                    <div>{renderCategories(category.children, level + 1)}</div>
+                )}
+            </div>
+        );
     });
   };
 
