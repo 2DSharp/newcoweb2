@@ -26,6 +26,7 @@ export default function RichTextEditor({
                 class: 'prose max-w-none focus:outline-none',
             },
         },
+        immediatelyRender: false
     })
 
     useEffect(() => {
@@ -96,6 +97,7 @@ export default function RichTextEditor({
                 <EditorContent 
                     editor={editor} 
                     onChange={onChange} 
+                
                     className={`p-3 focus:outline-none ${editorClassName}`}
                     style={editorStyle}
                 />

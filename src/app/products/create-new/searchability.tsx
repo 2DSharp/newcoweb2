@@ -47,22 +47,52 @@ export default function SearchabilityDetailsForm({ formData, updateFormData }: F
         }
     }, [])
 
+    const handleAudienceChange = (audienceValue: AgeGroup) => {
+        const currentAudiences = formData.searchability?.audience || []
+        const updatedAudiences = currentAudiences.includes(audienceValue)
+            ? currentAudiences.filter(a => a !== audienceValue)
+            : [...currentAudiences, audienceValue]
+        updateFormData('searchability', {
+            ...formData.searchability,
+            audience: updatedAudiences
+        })
+    }
+
     return (
         <div className="space-y-6 p-4 bg-white rounded-lg">
-            <TagInput
-                label="Keywords"
-                icon={<Tag size={16} />}
-                tooltip="Add keywords to improve product searchability"
-                placeholder="Add keyword"
-                tags={formData.searchability?.keywords || []}
-                onTagsChange={(newTags) => 
-                    updateFormData('searchability', {
-                        ...formData.searchability,
-                        keywords: newTags
-                    })
-                }
-                iconColor="text-blue-500"
-            />
+            
+            <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                    <Label className="flex items-center">
+                        <Tag className="mr-2 text-blue-500" size={16} />
+                        Keywords
+                    </Label>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger type="button">
+                                <Info size={16} className="text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Add keywords to improve product searchability</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                <p className="text-sm text-gray-500">
+                    Search terms to help customers find your product
+                </p>
+                <TagInput
+                    placeholder="Add keyword"
+                    tags={formData.searchability?.keywords || []}
+                    onTagsChange={(newTags) => 
+                        updateFormData('searchability', {
+                            ...formData.searchability,
+                            keywords: newTags
+                        })
+                    }
+                />
+         
+            </div>
 
             <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -97,16 +127,33 @@ export default function SearchabilityDetailsForm({ formData, updateFormData }: F
                 </div>
             </div>
 
-            <TagInput
-                label="Materials"
-                icon={<Scissors size={16} />}
-                tooltip="List all materials used in creating your product"
-                placeholder="E.g., Organic Cotton, Recycled Polyester"
-                tags={formData.materialType || []}
-                onTagsChange={(newTags) => updateFormData('materialType', newTags)}
-                description="Specify the materials used in your product."
-                iconColor="text-green-500"
-            />
+            <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                    <Label className="flex items-center">
+                        <Scissors className="mr-2 text-green-500" size={16} />
+                        Materials
+                    </Label>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger type="button">
+                                <Info size={16} className="text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>List all materials used in creating your product</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                <p className="text-sm text-gray-500">
+                    Specify the materials used in your product.
+                </p>
+                <TagInput
+                    placeholder="E.g., Organic Cotton, Recycled Polyester"
+                    tags={formData.materialType || []}
+                    onTagsChange={(newTags) => updateFormData('materialType', newTags)}
+                />
+              
+            </div>
 
             <div className="space-y-2">
                 <div className="flex items-center space-x-2">

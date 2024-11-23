@@ -91,8 +91,8 @@ authenticatedApiClient.interceptors.response.use(
                 return authenticatedApiClient(originalRequest);
             } catch (refreshError) {
                 // Clear auth data and redirect to login
-                localStorage.clear();
-                window.location.href = '/';
+                // localStorage.clear();
+                // window.location.href = '/';
                 return Promise.reject(refreshError);
             }
         }

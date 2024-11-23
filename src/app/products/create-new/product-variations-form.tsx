@@ -4,9 +4,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Trash2, X, ImageIcon } from 'lucide-react'
+import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import ImageUploader from '@/components/ImageUploader'
 
 export default function ProductVariationsForm({ formData, updateFormData }) {
+    React.useEffect(() => {
+        if (!formData.variations || formData.variations.length === 0) {
+            updateFormData('variations', [{}])
+        }
+    }, [])
+
     const handleVariationChange = (index, field, value) => {
         const updatedVariations = [...formData.variations]
         updatedVariations[index] = {
@@ -19,17 +27,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
     const addVariation = () => {
         updateFormData('variations', [
             ...formData.variations,
-            {
-                id: formData.variations.length + 1,
-                name: '',
-                type: 'FIXED_VARIANT',
-                stock: 0,
-                price: 0,
-                processingTime: 1,
-                sku: '',
-                isCustom: false,
-                images: []
-            }
+            {}
         ])
     }
 
@@ -40,34 +38,10 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
         }
     }
 
-    const handleImageUpload = (index, e) => {
-        const files = Array.from(e.target.files)
-        const variation = formData.variations[index]
-
-        if (variation.images.length + files.length > 4) {
-            alert('Maximum 4 images allowed per variation')
-            return
-        }
-
-        const newImages = files.map((file, i) => ({
-            imgId: `img-${Date.now()}-${i}`,
-            thumbnail: variation.images.length === 0 && i === 0,
-            preview: URL.createObjectURL(file)
-        }))
-
-        handleVariationChange(index, 'images', [...variation.images, ...newImages])
-    }
-
-    const removeImage = (variationIndex, imageIndex) => {
-        const variation = formData.variations[variationIndex]
-        const updatedImages = variation.images.filter((_, i) => i !== imageIndex)
-        handleVariationChange(variationIndex, 'images', updatedImages)
-    }
-
     return (
         <div className="space-y-6">
-            {formData.variations.map((variation, index) => (
-                <Card key={variation.id} className="p-4">
+            {(formData.variations || []).map((variation, index) => (
+                <Card key={index} className="p-4">
                     <CardContent>
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-lg font-semibold">
@@ -87,107 +61,166 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                         <div className="grid gap-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor={`name-${index}`}>Variation Name *</Label>
+                                    <Label htmlFor={`name-${index}`} className="flex items-center">
+                                        <Tag className="mr-2 text-blue-500" size={16} />
+                                        Variation Name {index !== 0 && '*'}
+                                    </Label>
                                     <Input
                                         id={`name-${index}`}
                                         value={variation.name}
                                         onChange={(e) => handleVariationChange(index, 'name', e.target.value)}
-                                        placeholder="Enter variation name"
-                                        required
+                                        placeholder={index === 0 ? "Regular, Basic, Standard" : "e.g., Large Blue, Custom Size, Premium Edition"}
+                                        required={index !== 0}
                                     />
+                                    <p className="text-sm text-gray-500">
+                                        {index === 0 
+                                            ? "Optional name for your base product variation"
+                                            : "Give this variation a unique, descriptive name to differentiate it"
+                                        }
+                                    </p>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor={`sku-${index}`}>SKU *</Label>
+                                    <Label htmlFor={`sku-${index}`} className="flex items-center">
+                                        <Barcode className="mr-2 text-purple-500" size={16} />
+                                        SKU
+                                    </Label>
                                     <Input
                                         id={`sku-${index}`}
                                         value={variation.sku}
                                         onChange={(e) => handleVariationChange(index, 'sku', e.target.value)}
-                                        placeholder="Enter SKU"
-                                        required
+                                        placeholder="e.g., PROD-001-BLU, CUSTOM-LARGE-001"
                                     />
+                                    <p className="text-sm text-gray-500">
+                                        Optional unique identifier for inventory tracking
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor={`price-${index}`}>Price *</Label>
-                                    <Input
-                                        id={`price-${index}`}
-                                        type="number"
-                                        value={variation.price}
-                                        onChange={(e) => handleVariationChange(index, 'price', Number(e.target.value))}
-                                        min="0"
-                                        step="0.01"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor={`stock-${index}`}>Stock *</Label>
-                                    <Input
-                                        id={`stock-${index}`}
-                                        type="number"
-                                        value={variation.stock}
-                                        onChange={(e) => handleVariationChange(index, 'stock', Number(e.target.value))}
-                                        min="0"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor={`processing-${index}`}>Processing Time (days)</Label>
-                                    <Input
-                                        id={`processing-${index}`}
-                                        type="number"
-                                        value={variation.processingTime}
-                                        onChange={(e) => handleVariationChange(index, 'processingTime', Number(e.target.value))}
-                                        min="1"
-                                    />
-                                </div>
-                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                {/* Price and Calculations Row */}
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`price-${index}`} className="flex items-center">
+                                            <IndianRupee className="mr-2 text-green-500" size={16} />
+                                            Selling Price Per Unit *
+                                        </Label>
+                                        <Input
+                                            id={`price-${index}`}
+                                            type="number"
+                                            value={variation.price}
+                                            onChange={(e) => handleVariationChange(index, 'price', Number(e.target.value))}
+                                            min="100"
+                                            step="1"
+                                            required
+                                        />
+                                        <p className="text-sm text-gray-500">
+                                            The final price that will be displayed to the customer. This price will be inclusive of all shipping and taxes.
+                                        </p>
+                                    </div>
 
-                            <div className="flex items-center space-x-2">
-                                <Switch
-                                    id={`custom-${index}`}
-                                    checked={variation.isCustom}
-                                    onCheckedChange={(checked) => handleVariationChange(index, 'isCustom', checked)}
-                                />
-                                <Label htmlFor={`custom-${index}`}>Custom Variation</Label>
+                                    {/* Live Calculations */}
+                                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                        <Label className="text-sm text-gray-600">Commission (6% + GST)</Label>
+                                        <div className="text-lg font-semibold text-red-600">
+                                            ₹ {(((variation.price || 0) * 0.06) * 1.18).toFixed(2)}
+                                        </div>
+                                        <p className="text-xs text-gray-500">Platform fee + 18% GST</p>
+                                    </div>
+
+                                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                        <Label className="text-sm text-gray-600">Delivery + GST</Label>
+                                        <div className="text-lg font-semibold text-orange-600">
+                                            ₹ {(85 * 1.18).toFixed(2)}
+                                        </div>
+                                        <p className="text-xs text-gray-500">₹85 shipping + 18% GST</p>
+                                    </div>
+
+                                    <div className="space-y-2 bg-green-50 p-3 rounded-lg">
+                                        <Label className="text-sm text-gray-600">Your Earnings</Label>
+                                        <div className="text-lg font-semibold text-green-600">
+                                            ₹ {(
+                                                (variation.price || 0) - 
+                                                ((variation.price || 0) * 0.06 * 1.18) - 
+                                                (85 * 1.18)
+                                            ).toFixed(2)}
+                                        </div>
+                                        <p className="text-xs text-gray-500">Final amount after all deductions</p>
+                                    </div>
+                                </div>
+
+                                {/* Stock and Processing Time Row */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Switch
+                                            id={`custom-${index}`}
+                                            checked={variation.isCustom}
+                                            onCheckedChange={(checked) => handleVariationChange(index, 'isCustom', checked)}
+                                        />
+                                        <Label htmlFor={`custom-${index}`}>Custom Variation</Label>
+                                    </div>
+                                    <p className="text-sm text-gray-500">
+                                        Enable for made-to-order or customizable items
+                                    </p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`stock-${index}`} className="flex items-center">
+                                                <Package className="mr-2 text-orange-500" size={16} />
+                                                Stock {!variation.isCustom && '*'}
+                                            </Label>
+                                            <Input
+                                                id={`stock-${index}`}
+                                                type="number"
+                                                value={variation.stock}
+                                                onChange={(e) => handleVariationChange(index, 'stock', Number(e.target.value))}
+                                                min="0"
+                                                required={!variation.isCustom}
+                                                disabled={variation.isCustom}
+                                                className={variation.isCustom ? 'bg-gray-100' : ''}
+                                                placeholder="Available quantity"
+                                            />
+                                            <p className="text-sm text-gray-500">
+                                                {variation.isCustom 
+                                                    ? "Stock tracking disabled for custom variations"
+                                                    : "Number of items available for immediate purchase"
+                                                }
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`processing-${index}`} className="flex items-center">
+                                                <Clock className="mr-2 text-indigo-500" size={16} />
+                                                Processing Time (days)
+                                            </Label>
+                                            <Input
+                                                id={`processing-${index}`}
+                                                type="number"
+                                                value={variation.processingTime}
+                                                onChange={(e) => handleVariationChange(index, 'processingTime', Number(e.target.value))}
+                                                min="1"
+                                                placeholder="e.g., 3"
+                                            />
+                                            <p className="text-sm text-gray-500">
+                                                Number of days needed to prepare this variation for shipping
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Images (1-4 required) *</Label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {variation.images.map((image, imgIndex) => (
-                                        <div key={image.imgId} className="relative">
-                                            <img
-                                                src={image.preview}
-                                                alt={`Product ${imgIndex + 1}`}
-                                                className="w-full h-24 object-cover rounded"
-                                            />
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                className="absolute -top-2 -right-2"
-                                                onClick={() => removeImage(index, imgIndex)}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                    {variation.images.length < 4 && (
-                                        <div className="w-full h-24 border-2 border-dashed rounded flex items-center justify-center">
-                                            <label className="cursor-pointer">
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    accept="image/*"
-                                                    multiple
-                                                    onChange={(e) => handleImageUpload(index, e)}
-                                                />
-                                                <ImageIcon className="h-8 w-8 text-gray-400" />
-                                            </label>
-                                        </div>
-                                    )}
-                                </div>
+                                <Label className="flex items-center">
+                                    <ImageIcon className="mr-2 text-red-500" size={16} />
+                                    Sample  (1-4 required) *
+                                </Label>
+                                <ImageUploader
+                                    images={variation.images || []}
+                                    onChange={(newImages) => handleVariationChange(index, 'images', newImages)}
+                                    maxImages={4}
+                                />
+                                <p className="text-sm text-gray-500">
+                                    Upload 1-4 high-quality images showing this variation from different angles
+                                </p>
                             </div>
                         </div>
                     </CardContent>

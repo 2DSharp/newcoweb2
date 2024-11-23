@@ -7,25 +7,15 @@ import { Label } from "./label"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip"
 
 interface TagInputProps {
-    label: string;
-    icon: React.ReactNode;
-    tooltip: string;
     placeholder: string;
     tags: string[];
     onTagsChange: (tags: string[]) => void;
-    description?: string;
-    iconColor?: string;
 }
 
 export function TagInput({
-    label,
-    icon,
-    tooltip,
     placeholder,
     tags,
     onTagsChange,
-    description,
-    iconColor = "text-blue-500"
 }: TagInputProps) {
     const [currentTag, setCurrentTag] = useState('')
 
@@ -43,24 +33,6 @@ export function TagInput({
 
     return (
         <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-                <Label className="flex items-center">
-                    <div className={`mr-2 ${iconColor}`}>
-                        {icon}
-                    </div>
-                    {label}
-                </Label>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger type="button">
-                            <Info size={16} className="text-gray-400" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{tooltip}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </div>
             <div className="flex space-x-2">
                 <Input
                     value={currentTag}
@@ -85,7 +57,6 @@ export function TagInput({
                     </Badge>
                 ))}
             </div>
-            {description && <p className="text-sm text-gray-500">{description}</p>}
         </div>
     )
 } 

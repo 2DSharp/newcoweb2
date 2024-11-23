@@ -17,7 +17,9 @@ export default function ProductCreationWizard() {
     
     const [step, setStep] = useState(1)
     const [draftId, setDraftId] = useState(null)
-    const [formData, setFormData] = useState({})
+    const [formData, setFormData] = useState({
+        variations: [{}]
+    })
     const [isInitialLoad, setIsInitialLoad] = useState(true)
 
     // Initialize from URL params
@@ -122,9 +124,12 @@ export default function ProductCreationWizard() {
             try {
                 await apiService.products.updateDraft(draftId, {
                     ...formData,
-                    keywords: formData.keywords || [],
-                    audience: formData.audience || [],
-                    materialType: formData.materialType || []
+                    searchability: {
+                        keywords: formData.searchability?.keywords || [],
+                        audience: formData.searchability?.audience || []
+                    },
+                    materialType: formData.materialType || [],
+                    manufacturingType: formData.manufacturingType || ''
                 })
                 setStep(prev => prev + 1)
             } catch (error) {
@@ -156,6 +161,10 @@ export default function ProductCreationWizard() {
     }
 
     const validateVariations = () => {
+        // Check if variations exist first
+        if (!formData.variations || !Array.isArray(formData.variations)) {
+            return true // Return true if we're not on the variations step
+        }
         return formData.variations.every(variation =>
             variation.name &&
             variation.price > 0 &&
