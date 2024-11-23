@@ -160,21 +160,6 @@ export default function ProductCreationWizard() {
         }
     }
 
-    const validateVariations = () => {
-        // Check if variations exist first
-        if (!formData.variations || !Array.isArray(formData.variations)) {
-            return true // Return true if we're not on the variations step
-        }
-        return formData.variations.every(variation =>
-            variation.name &&
-            variation.price > 0 &&
-            variation.stock >= 0 &&
-            variation.sku &&
-            variation.images.length >= 1 &&
-            variation.images.length <= 4
-        )
-    }
-
     const updateFormData = (field, value) => {
         setFormData(prev => ({
             ...prev,
@@ -198,8 +183,8 @@ export default function ProductCreationWizard() {
 
     const steps = [
         { title: "Product Info", icon: <Store className="w-4 h-4" /> },
-        { title: "Searchability", icon: <Search className="w-4 h-4" /> },
-        { title: "Variations", icon: <Layers className="w-4 h-4" /> }
+        { title: "Stock & Pricing", icon: <Layers className="w-4 h-4" /> },
+        { title: "Searchability", icon: <Search className="w-4 h-4" /> }
     ]
 
     const renderStepContent = () => {
@@ -207,9 +192,9 @@ export default function ProductCreationWizard() {
             case 1:
                 return <ProductInfoForm handleSubmit={handleSubmit} formData={formData} updateFormData={updateFormData} />
             case 2:
-                return <SearchabilityDetailsForm formData={formData} updateFormData={updateFormData} />
-            case 3:
                 return <ProductVariationsForm formData={formData} updateFormData={updateFormData} />
+            case 3:
+                return <SearchabilityDetailsForm formData={formData} updateFormData={updateFormData} />
             default:
                 return null
         }
@@ -223,8 +208,7 @@ export default function ProductCreationWizard() {
                 </h1>
 
                 {/* Progress and Steps Indicator */}
-                <div>
-
+                <div className="space-y-4">
                     <div className="flex justify-between mt-2">
                         {steps.map((stepItem, index) => (
                             <button
@@ -249,24 +233,18 @@ export default function ProductCreationWizard() {
                             </button>
                         ))}
                     </div>
-                    <div className="space-y-4"></div>
+
+                    <div>
                         <Progress 
                             value={(step) * (100 / steps.length)} 
-                        className="w-full space-y-4 bg-indigo-100" 
-                    />
+                            className="w-full bg-indigo-100" 
+                        />
+                    </div>
                 </div>
 
                 {/* Main content */}
                 <div className="bg-white rounded-lg">
                     {renderStepContent()}
-
-                    {step === 3 && !validateVariations() && (
-                        <Alert variant="destructive" className="mt-4">
-                            <AlertDescription>
-                                Please ensure all variations have a name, SKU, price, and 1-4 images.
-                            </AlertDescription>
-                        </Alert>
-                    )}
                 </div>
 
                 {/* Bottom buttons */}
@@ -284,7 +262,6 @@ export default function ProductCreationWizard() {
 
                         <Button
                             onClick={handleNextStep}
-                            disabled={step === 3 && !validateVariations()}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white"
                         >
                             {step === 3 ? 'Submit Product' : (

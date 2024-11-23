@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -7,8 +7,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import ImageUploader from '@/components/ImageUploader'
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function ProductVariationsForm({ formData, updateFormData }) {
+    const [validationError, setValidationError] = useState(false);
+
     React.useEffect(() => {
         if (!formData.variations || formData.variations.length === 0) {
             updateFormData('variations', [{}])
@@ -37,6 +40,37 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
             updateFormData('variations', updatedVariations)
         }
     }
+
+    const validateVariations = () => {
+        return formData.variations.every(variation => {
+            if (variation.isCustom) {
+                return variation.name &&
+                    variation.price > 0 &&
+                    variation.images?.length >= 1 &&
+                    variation.images?.length <= 4;
+            }
+            return variation.name &&
+                variation.price > 0 &&
+                variation.stock >= 0 &&
+                variation.images?.length >= 1 &&
+                variation.images?.length <= 4;
+        });
+    };
+
+    useEffect(() => {
+        // Clear validation error when form data changes
+        setValidationError(false);
+    }, [formData.variations]);
+
+    // Add validation check to form submission
+    const handleSubmit = (e) => {
+        e?.preventDefault();
+        if (!validateVariations()) {
+            setValidationError(true);
+            return false;
+        }
+        return true;
+    };
 
     return (
         <div className="space-y-6">
@@ -109,7 +143,6 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                             type="number"
                                             value={variation.price}
                                             onChange={(e) => handleVariationChange(index, 'price', Number(e.target.value))}
-                                            min="100"
                                             step="1"
                                             required
                                         />
@@ -122,7 +155,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                     <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
                                         <Label className="text-sm text-gray-600">Commission (6% + GST)</Label>
                                         <div className="text-lg font-semibold text-red-600">
-                                            ₹ {(((variation.price || 0) * 0.06) * 1.18).toFixed(2)}
+                                            ₹ {variation.price ? (((variation.price * 0.06) * 1.18).toFixed(2)) : '0.00'}
                                         </div>
                                         <p className="text-xs text-gray-500">Platform fee + 18% GST</p>
                                     </div>
@@ -130,7 +163,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                     <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
                                         <Label className="text-sm text-gray-600">Delivery + GST</Label>
                                         <div className="text-lg font-semibold text-orange-600">
-                                            ₹ {(85 * 1.18).toFixed(2)}
+                                            ₹ {variation.price ? ((85 * 1.18).toFixed(2)) : '0.00'}
                                         </div>
                                         <p className="text-xs text-gray-500">₹85 shipping + 18% GST</p>
                                     </div>
@@ -138,11 +171,12 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                     <div className="space-y-2 bg-green-50 p-3 rounded-lg">
                                         <Label className="text-sm text-gray-600">Your Earnings</Label>
                                         <div className="text-lg font-semibold text-green-600">
-                                            ₹ {(
-                                                (variation.price || 0) - 
-                                                ((variation.price || 0) * 0.06 * 1.18) - 
+                                            ₹ {variation.price ? (
+                                                (variation.price - 
+                                                (variation.price * 0.06 * 1.18) - 
                                                 (85 * 1.18)
-                                            ).toFixed(2)}
+                                                ).toFixed(2)
+                                            ) : '0.00'}
                                         </div>
                                         <p className="text-xs text-gray-500">Final amount after all deductions</p>
                                     </div>
@@ -226,6 +260,15 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                     </CardContent>
                 </Card>
             ))}
+
+            {validationError && (
+                <Alert variant="destructive">
+                    <AlertDescription>
+                        Please ensure all variations have a name, price, and 1-4 images.
+                        {!formData.variations[0].isCustom && " Stock is required for non-custom variations."}
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <Button
                 variant="outline"

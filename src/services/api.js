@@ -18,6 +18,10 @@ const authenticatedApiClient = axios.create({
     baseURL: "http://localhost:8080"
 });
 
+const authenticatedFileUploadClient = axios.create({
+    baseURL: "http://localhost:5000"
+});
+
 const unauthenticatedApiClient = axios.create({
     baseURL: "http://localhost:8080"
 });
@@ -91,8 +95,8 @@ authenticatedApiClient.interceptors.response.use(
                 return authenticatedApiClient(originalRequest);
             } catch (refreshError) {
                 // Clear auth data and redirect to login
-                // localStorage.clear();
-                // window.location.href = '/';
+                localStorage.clear();
+                window.location.href = '/';
                 return Promise.reject(refreshError);
             }
         }
@@ -215,6 +219,17 @@ const apiService = {
 
         publishDraft: async () => {
             const response = await authenticatedApiClient.post(`/seller/products/drafts/${draftId}/publish`);
+            return response.data;
+        },
+    },
+
+    files: {
+        upload: async (formData) => {
+            const response = await authenticatedFileUploadClient.post('/files/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             return response.data;
         },
     },
