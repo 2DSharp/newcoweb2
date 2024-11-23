@@ -15,18 +15,47 @@ export interface Category {
 
 interface CategorySearchProps {
   categories: Category[]
-  onCategorySelect: (selectedCategories: Category[]) => void
+  onCategorySelect: (categories: Category[]) => void
+  initialSelected?: Category[]
 }
 
-export default function CategorySearch({ categories, onCategorySelect }: CategorySearchProps) {
+export default function CategorySearch({ categories, onCategorySelect, initialSelected }: CategorySearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>(initialSelected || [])
   const [currentCategories, setCurrentCategories] = useState<Category[]>(categories)
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
-  const [isListVisible, setIsListVisible] = useState(true)
-    useEffect(() => {
-        resetSearch()
-    }, [categories])
+  const [isListVisible, setIsListVisible] = useState(false)
+
+  // Initialize with initialSelected when it changes
+  useEffect(() => {
+    if (initialSelected?.length) {
+      setSelectedCategories(initialSelected)
+      // Set the search term to the leaf category's name
+      const leafCategory = initialSelected[initialSelected.length - 1]
+      setSearchTerm(leafCategory.name)
+      // Set isListVisible to false since we have a selection
+      setIsListVisible(false)
+      // Expand all parent categories in the selection
+      const parentIds = initialSelected
+        .slice(0, -1) // Exclude leaf category
+        .map(cat => cat.id)
+      setExpandedCategories(new Set(parentIds))
+    }
+  }, [initialSelected])
+
+  // Reset when categories prop changes
+  useEffect(() => {
+    setCurrentCategories(categories)
+  }, [categories])
+
+  const handleInputFocus = () => {
+    setIsListVisible(true)
+    // Only clear search term if user has selected categories
+    if (selectedCategories.length > 0) {
+      setSearchTerm("")
+    }
+  }
+
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return currentCategories;
 
@@ -107,10 +136,9 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
     }
 
     const categoryPath = findCategoryPath(categories, category.id) || [category]
-    setSelectedCategories(categoryPath)
     
     if (category.children && category.children.length > 0) {
-      // If it has children, expand/collapse it
+      // If it has children, just expand/collapse it and update the path
       setExpandedCategories(prev => {
         const newSet = new Set(prev)
         if (newSet.has(category.id)) {
@@ -120,13 +148,18 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
         }
         return newSet
       })
-    } else {
-      // If it's a leaf node, hide the list and set the search term
-      setIsListVisible(false)
+      // Update selected categories but don't finalize
+      setSelectedCategories(categoryPath)
       setSearchTerm(category.name)
+      setCurrentCategories(category.children)
+      setIsListVisible(true) // Keep list open for parent categories
+    } else {
+      // If it's a leaf node, finalize the selection
+      setSelectedCategories(categoryPath)
+      setSearchTerm(category.name)
+      setIsListVisible(false) // Close list only for leaf nodes
+      onCategorySelect(categoryPath) // Only call onCategorySelect for leaf nodes
     }
-    
-    onCategorySelect(categoryPath)
   }
 
   const handleBackClick = () => {
@@ -144,13 +177,16 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
       // Expand the parent category to show its children
       setExpandedCategories(new Set([parentCategory.id]));
       
-      onCategorySelect(newSelected);
+      // Only call onCategorySelect if we're at a leaf node
+      if (!parentCategory.children) {
+        onCategorySelect(newSelected);
+      }
     } else {
       // If at root level, reset everything
       resetSearch();
       setIsListVisible(true);
     }
-  };
+  }
 
   const handleSelectedCategoryClick = (category: Category, index: number) => {
     if (index === selectedCategories.length - 1 && !category.children) {
@@ -167,7 +203,10 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
     if (category.children) {
       setCurrentCategories(category.children)
     }
-    onCategorySelect(newSelected)
+    // Don't call onCategorySelect here unless it's a leaf node
+    if (!category.children) {
+      onCategorySelect(newSelected)
+    }
   }
 
   const resetSearch = () => {
@@ -177,11 +216,6 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
     setExpandedCategories(new Set())
     setIsListVisible(true)
     onCategorySelect([])
-  }
-
-  const handleInputFocus = () => {
-    setIsListVisible(true)
-    setSearchTerm("")
   }
 
   const renderCategories = (categories: Category[], level = 0) => {
@@ -248,7 +282,6 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
   <Button 
             type="button"
             onClick={handleBackClick} 
-            disabled={selectedCategories.length === 0 && currentCategories === categories}
             size="icon"
             variant="ghost"
           >
@@ -260,7 +293,9 @@ export default function CategorySearch({ categories, onCategorySelect }: Categor
               <Button
                 type="button"
                 variant="ghost"
-                className="p-1 hover:text-blue-500"
+                className={`p-1 hover:text-blue-500 ${
+                  index === selectedCategories.length - 1 ? 'font-bold text-blue-500' : ''
+                }`}
                 onClick={() => handleSelectedCategoryClick(category, index)}
               >
                 {category.name}

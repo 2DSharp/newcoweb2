@@ -200,6 +200,23 @@ const apiService = {
             const response = await authenticatedApiClient.post('/seller/products/drafts', productData);
             return response.data;
         },
+        updateDraft: async (draftId, productData) => {
+            const response = await authenticatedApiClient.put(`/seller/products/drafts`,{ ...productData, id: draftId});
+            return response.data;
+        },
+        getDraft: async (draftId) => {
+            const response = await authenticatedApiClient.get(`/seller/products/drafts/${draftId}`);
+            return response.data;
+        },
+        deleteDraft: async (draftId) => {
+            const response = await authenticatedApiClient.delete(`/seller/products/drafts/${draftId}`);
+            return response.data;
+        },
+
+        publishDraft: async () => {
+            const response = await authenticatedApiClient.post(`/seller/products/drafts/${draftId}/publish`);
+            return response.data;
+        },
     },
 };
 
