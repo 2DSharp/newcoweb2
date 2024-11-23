@@ -34,18 +34,31 @@ export default function ProductCreationWizard() {
     // Load draft data ONLY on initial page load
     useEffect(() => {
         const loadDraftData = async () => {
-            // Only fetch if it's the initial load and we have a draftId
             if (isInitialLoad && draftId) {
                 try {
                     const response = await apiService.products.getDraft(draftId)
+                    // Restructure the variations data to include image URLs
+                    const formattedData = {
+                        ...response.data,
+                        variations: response.data.stock?.variations?.map(variation => ({
+                            ...variation,
+                            isCustom: variation.type === 'CUSTOM',
+                            images: variation.images?.map(img => ({
+                                imgId: img.imgId,
+                                thumbnail: img.thumbnail,
+                                url: img.url // Construct the URL for each image
+                            })) || []
+                        })) || [{}]
+                    }
+                    console.log("Formatted data:", formattedData)
                     setFormData(prev => ({
                         ...prev,
-                        ...response.data
+                        ...formattedData
                     }))
                 } catch (error) {
                     console.error('Failed to load draft:', error)
                 } finally {
-                    setIsInitialLoad(false) // Mark initial load as complete
+                    setIsInitialLoad(false)
                 }
             }
         }
@@ -87,56 +100,69 @@ export default function ProductCreationWizard() {
         }
     }
 
+    const formatDataForApi = (formData) => {
+        return {
+            description: formData.description,
+            name: formData.name,
+            category: formData.category,
+            subCategory: formData.subCategory,
+            finalCategory: formData.finalCategory,
+            manufacturingType: formData.manufacturingType,
+            stock: {
+                personalizationText: formData.personalizationText || false,
+                variations: formData.variations.map(variation => ({
+                    name: variation.name,
+                    type: variation.isCustom ? 'CUSTOM' : 'FIXED_VARIANT',
+                    stock: variation.stock || 0,
+                    price: variation.price,
+                    sku: variation.sku,
+                    processingTime: variation.processingTime,
+                    images: variation.images?.map(img => ({
+                        imgId: img.imgId,
+                        thumbnail: img.thumbnail
+                    })) || []
+                }))
+            },
+            searchability: {
+                keywords: formData.searchability?.keywords || [],
+                audience: formData.searchability?.audience || []
+            },
+            materialType: formData.materialType || []
+        }
+    }
+
     const handleNextStep = async () => {
-        if (step === 1) {
-            try {
-                if (draftId) {
-                    await apiService.products.updateDraft(draftId, {
-                        ...formData,
-                        searchability: {
-                            keywords: formData.searchability?.keywords || [],
-                            audience: formData.searchability?.audience || []
-                        },
-                        materialType: formData.materialType || []
-                    })
-                } else {
-                    const draftData = {
-                        name: formData.name,
-                        description: formData.description,
-                        category: formData.category,
-                        subCategory: formData.subCategory,
-                        finalCategory: formData.finalCategory,
-                        manufacturingType: formData.manufacturingType,
-                        searchability: {
-                            keywords: formData.searchability?.keywords || [],
-                            audience: formData.searchability?.audience || []
-                        },
-                        materialType: formData.materialType || []
-                    }
-                    const response = await apiService.products.createDraft(draftData)
-                    setDraftId(response.data)
-                }
-                setStep(prev => prev + 1)
-            } catch (error) {
-                console.error('Failed to save draft:', error)
-            }
-        } else if (step === 2) {
-            try {
-                await apiService.products.updateDraft(draftId, {
-                    ...formData,
-                    searchability: {
-                        keywords: formData.searchability?.keywords || [],
-                        audience: formData.searchability?.audience || []
-                    },
-                    materialType: formData.materialType || [],
-                    manufacturingType: formData.manufacturingType || ''
+        try {
+            if (draftId) {
+                const formattedData = formatDataForApi(formData)
+                await apiService.products.updateDraft(draftId, formattedData)
+            } else if (step === 1) {
+                // First step creation with minimal data
+                const response = await apiService.products.createDraft({
+                    name: formData.name,
+                    description: formData.description,
+                    category: formData.category,
+                    subCategory: formData.subCategory,
+                    finalCategory: formData.finalCategory
                 })
-                setStep(prev => prev + 1)
-            } catch (error) {
-                console.error('Failed to update draft:', error)
+                setDraftId(response.data)
             }
-        } else if (step === 3) {
-            handleSubmit()
+            setStep(prev => prev + 1)
+        } catch (error) {
+            console.error('Failed to save draft:', error)
+        }
+    }
+
+    const handleBack = async () => {
+        try {
+            if (draftId) {
+                const formattedData = formatDataForApi(formData)
+                await apiService.products.updateDraft(draftId, formattedData)
+            }
+            setStep(prev => prev - 1)
+        } catch (error) {
+            console.error('Failed to save draft on back navigation:', error)
+            setStep(prev => prev - 1)
         }
     }
 
@@ -144,13 +170,9 @@ export default function ProductCreationWizard() {
         e?.preventDefault()
         if (step === 3) {
             try {
-                const submitData = {
-                    ...formData,
-                    category: formData.category,
-                    subCategory: formData.subCategory,
-                    finalCategory: formData.finalCategory
-                }
-                await apiService.products.submitProduct(submitData)
+                const formattedData = formatDataForApi(formData)
+                await apiService.products.updateDraft(draftId, formattedData)
+                await apiService.products.publishDraft(draftId)
                 router.push('/products')
             } catch (error) {
                 console.error('Failed to submit product:', error)
@@ -165,20 +187,6 @@ export default function ProductCreationWizard() {
             ...prev,
             [field]: value
         }))
-    }
-
-    const handleBack = async () => {
-        try {
-            if (draftId) {
-                
-                await apiService.products.updateDraft(draftId, formData)
-            }
-            setStep(prev => prev - 1)
-        } catch (error) {
-            console.error('Failed to save draft on back navigation:', error)
-            // Still allow back navigation even if save fails
-            setStep(prev => prev - 1)
-        }
     }
 
     const steps = [

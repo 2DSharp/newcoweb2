@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import ImageUploader from '@/components/ImageUploader'
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -15,6 +14,17 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
     React.useEffect(() => {
         if (!formData.variations || formData.variations.length === 0) {
             updateFormData('variations', [{}])
+                } else {
+            // Ensure all variations have properly formatted image data
+            const updatedVariations = formData.variations.map(variation => ({
+                ...variation,
+                images: variation.images?.map(img => ({
+                    imgId: img.imgId,
+                    thumbnail: img.thumbnail,
+                    url: img.url // Ensure URL is preserved
+                })) || []
+            }))
+            updateFormData('variations', updatedVariations)
         }
     }, [])
 
