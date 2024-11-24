@@ -26,7 +26,7 @@ const LoginPage = () => {
             });
 
             if (response.successful) {
-                router.push('/products/create-new');
+                router.push('/products/list');
             } else {
                 setError(response.message || 'Login failed. Please try again.');
             }

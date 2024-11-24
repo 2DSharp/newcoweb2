@@ -70,7 +70,7 @@ export default function ProductCreationWizard() {
     // Update URL when step or draftId changes
     useEffect(() => {
         if (draftId) {
-            router.push(`/products/create-new/${draftId}/${step}`, { shallow: true })
+            router.push(`/products/new/${draftId}/${step}`, { shallow: true })
         }
     }, [step, draftId, router])
 

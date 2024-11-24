@@ -221,6 +221,17 @@ const apiService = {
             const response = await authenticatedApiClient.post(`/seller/products/drafts/${draftId}/publish`);
             return response.data;
         },
+        getList: async () => {
+            const response = await authenticatedApiClient.get('/seller/products/');
+            return response.data;
+        },
+        updateStock: async (productId, variantId, quantity) => {
+            const response = await authenticatedApiClient.put(`/seller/products/${productId}/stock`, {
+                variantId,
+                quantity
+            });
+            return response.data;
+        },
     },
 
     files: {
