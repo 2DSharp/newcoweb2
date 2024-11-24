@@ -73,10 +73,10 @@ export function OnboardingForm({ initialStep }: Props) {
         const newStep = step + 1;
         switch (newStep) {
             case 2:
-                router.push('/onboarding/verify-otp');
+                router.push('/seller/onboarding/verify-otp');
                 break;
             case 3:
-                router.push('/onboarding/store-setup');
+                router.push('/seller/onboarding/store-setup');
                 break;
         }
     };

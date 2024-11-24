@@ -309,15 +309,15 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                             <div className="space-y-2">
                                 <Label className="flex items-center">
                                     <ImageIcon className="mr-2 text-green-500" size={16} />
-                                    Sample Photos (1-4 required) *
+                                    Sample Photos (1-5 required) *
                                 </Label>
                                 <p className="text-sm text-gray-500">
-                                    Upload 1-4 high-quality images showing this variation from different angles
+                                    Upload 1-5 high-quality images showing this variation from different angles
                                 </p>
                                 <ImageUploader
                                     images={variation.images || []}
                                     onChange={(newImages) => handleVariationChange(index, 'images', newImages)}
-                                    maxImages={4}
+                                    maxImages={5}
                                     variationIndex={index}
                                 />
                                

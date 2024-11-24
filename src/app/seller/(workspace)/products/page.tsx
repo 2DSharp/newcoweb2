@@ -15,7 +15,7 @@ import { Edit2 } from 'lucide-react'
 import StockEditModal from '@/components/StockEditModal'
 import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { useToast } from '@/hooks/use-toast';
-
+import Link from 'next/link';
 export default function ProductsListPage() {
     const router = useRouter()
     const [products, setProducts] = useState([])
@@ -134,7 +134,7 @@ export default function ProductsListPage() {
                     >
                         {showDrafts ? 'View Products' : 'View Drafts'}
                     </Button>
-                    <a href="/products/new">
+                    <a href="/seller/products/new">
                         <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
                             <Plus className="h-4 w-4 mr-2" />
                             Add Product
@@ -211,12 +211,14 @@ export default function ProductsListPage() {
                                         }
                                         </TableCell>
                                         <TableCell>
+                                            <Link href={`/products/${item.id}`}>
                                             {item.name}
                                             {item.variants?.length > 1 && (
                                                 <div className="text-sm text-gray-500">
                                                     + {item.variants.length - 1} variants
                                                 </div>
                                             )}
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             <span className={`px-2 py-1 rounded-full text-sm ${
@@ -251,7 +253,7 @@ export default function ProductsListPage() {
                                             {item.finalCategory && ` > ${item.finalCategory}`}
                                         </TableCell>
                                         <TableCell>
-                                            {format(new Date(item.createdAt), 'MMM d, yyyy')}
+                                            {item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : item.lastUpdatedAt ? format(new Date(item.lastUpdatedAt), 'MMM d, yyyy') : ''}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
@@ -262,7 +264,7 @@ export default function ProductsListPage() {
                                                      size="sm"
                                                      variant="ghost"
                                                      onClick={() => {
-                                                      router.push(`/products/new/${item.id}/1`)
+                                                      router.push(`/seller/products/new/${item.id}/1`)
                                                      }}
                                                  >
                                                      <Pencil className="h-4 w-4" />

@@ -1,14 +1,12 @@
 "use client"
 
-import LoginPage from "./login/page";
-import EntryPageLayout from "./entrypage";
+import LoginPage from "./seller/(auth)/page";
+import EntryPageLayout from "./seller/(auth)/layout";
 
 const HomePage = () => {
 
     return (
-        <EntryPageLayout>
-            <LoginPage/>
-        </EntryPageLayout>
+            <div>Home Page</div>
     );
 }
 

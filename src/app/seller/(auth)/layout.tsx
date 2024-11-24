@@ -1,8 +1,10 @@
-"use client"
 
 
-const EntryPageLayout = ({children}) => {
-
+export default function AuthLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
     return (
         <div className="min-h-screen flex flex-col md:flex-row">
             {/* Left Side - Hidden on mobile */}
@@ -54,4 +56,3 @@ const EntryPageLayout = ({children}) => {
     );
 };
 
-export default EntryPageLayout;

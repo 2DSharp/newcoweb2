@@ -20,22 +20,22 @@ const routes = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    href: "/products/list",
+    href: "/seller/dashboard",
   },
   {
     label: "Products",
     icon: Package,
-    href: "/products/list/products",
+    href: "/seller/products",
   },
   {
     label: "Orders",
     icon: ShoppingCart,
-    href: "/products/list/orders",
+    href: "/seller/orders",
   },
   {
     label: "Discounts",
     icon: Tags,
-    href: "/products/list/discounts",
+    href: "/seller/discounts",
   },
   {
     label: "Settings",

@@ -114,7 +114,7 @@ export function PersonalInfo({formData, updateFormData, onNext}: Props) {
             <p className="text-center text-sm text-gray-600">
                 Already have an account?{' '}
                 <br/>
-                <Link href="/">
+                <Link href="/seller/">
                     <span className="text-indigo-600 hover:text-indigo-500 font-medium">
                     Login to your seller account
                     </span>

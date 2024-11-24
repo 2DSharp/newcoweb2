@@ -26,7 +26,7 @@ const LoginPage = () => {
             });
 
             if (response.successful) {
-                router.push('/products/list');
+                router.push('/seller/dashboard');
             } else {
                 setError(response.message || 'Login failed. Please try again.');
             }
@@ -121,7 +121,7 @@ const LoginPage = () => {
 
                 <p className="text-center text-sm text-gray-600">
                     Don't have an account?{' '}
-                    <Link href="/onboarding" className="text-indigo-600 hover:text-indigo-500 font-medium">
+                    <Link href="/seller/onboarding" className="text-indigo-600 hover:text-indigo-500 font-medium">
                         Start selling now!
                     </Link>
                 </p>

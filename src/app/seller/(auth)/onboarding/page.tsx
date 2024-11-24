@@ -15,13 +15,13 @@ export default function OnboardingPage() {
 
                 // If OTP is verified, redirect to store setup
                 if (formData.otpToken) {
-                    router.replace('/onboarding/store-setup')
+                    router.replace('/seller/onboarding/store-setup')
                     return
                 }
 
                 // If personal info is complete, redirect to OTP verification
                 if (formData.firstName && formData.lastName && formData.email && formData.password) {
-                    router.replace('/onboarding/verify-otp')
+                    router.replace('/seller/onboarding/verify-otp')
                     return
                 }
             } catch (e) {
@@ -29,7 +29,7 @@ export default function OnboardingPage() {
             }
         }
 
-        router.replace('/onboarding/personal-info')
+        router.replace('/seller/onboarding/personal-info')
     }, [router])
 
     // Return null or a loading state since we're always redirecting

@@ -1,8 +1,8 @@
 'use client';
 
-import {OnboardingForm} from '../../../components/OnboardingForm';
+import {OnboardingForm} from '../../../../../components/OnboardingForm';
 // @ts-ignore
-import EntryPageLayout from "@/app/entrypage";
+import EntryPageLayout from "@/app/seller/(auth)/layout";
 import { redirect } from 'next/navigation'
 import {useEffect} from "react";
 
@@ -18,16 +18,10 @@ export default function OnboardingHome({ params }: { params: { step: string } })
     const currentStep = stepMap[params.step]
 
     if (!currentStep) {
-        redirect('/onboarding/personal-info')
+        redirect('/seller/onboarding/personal-info')
     }
 
     useEffect(() => {
-        // Check if user is logged in using auth_data
-        const authData = localStorage.getItem('auth_data');
-        if (authData) {
-            window.location.href = '/products/create-new';
-            return;
-        }
 
         // Check localStorage for progress
         const savedData = localStorage.getItem('onboardingFormData')
@@ -38,13 +32,13 @@ export default function OnboardingHome({ params }: { params: { step: string } })
                 // If personal info is complete, redirect to OTP verification
                 if (formData.firstName && formData.lastName && formData.email && formData.password) {
                     if (currentStep < 2) {
-                        window.location.href = '/onboarding/verify-otp'
+                        window.location.href = '/seller/onboarding/verify-otp'
                         return
                     }
 
                     // If OTP is verified, redirect to store setup
                     if (formData.otpToken && currentStep < 3) {
-                        window.location.href = '/onboarding/store-setup'
+                        window.location.href = '/seller/onboarding/store-setup'
                         return
                     }
                 }
@@ -55,7 +49,6 @@ export default function OnboardingHome({ params }: { params: { step: string } })
     }, [currentStep])
 
     return (
-        <EntryPageLayout>
             <div className="max-w-md w-full mx-auto">
 
                 {/* Logo and Header */}
@@ -70,7 +63,6 @@ export default function OnboardingHome({ params }: { params: { step: string } })
                 <OnboardingForm initialStep={currentStep}/>
 
             </div>
-        </EntryPageLayout>
 )
 ;
 }

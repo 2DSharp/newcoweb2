@@ -38,7 +38,7 @@ export function StoreSetup({formData, updateFormData, onNext}: Props) {
             "state": formData.state,
             "email": formData.email
         })
-        window.location.href = "/products/create"
+        window.location.href = "/seller/products/new"
     };
 
     return (
