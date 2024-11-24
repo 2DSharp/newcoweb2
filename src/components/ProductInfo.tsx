@@ -283,7 +283,7 @@ export function ProductInfo({ product }: { product: any }) {
                                     </div>
                                     <span className="text-sm font-medium">{review.name}</span>
                                     {review.verified && (
-                                        <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                                        <span style={{textAlign: 'center'}} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
                                             Verified Purchase
                                         </span>
                                     )}
