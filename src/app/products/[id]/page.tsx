@@ -2,7 +2,11 @@ import { ProductInfo } from '@/components/ProductInfo';
 import { ChevronRight } from 'lucide-react';
 
 async function getProduct(id: string) {
-    const res = await fetch(`http://localhost:8080/public/products/${id}`);
+    const res = await fetch(`http://localhost:8080/public/products/${id}`, {
+        cache: 'no-store',  // Disable caching
+        // Alternatively, you can use:
+        // next: { revalidate: 0 }  // for revalidating on every request
+    });
     if (!res.ok) return null;
     const data = await res.json();
     return data.data;

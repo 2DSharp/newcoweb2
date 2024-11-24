@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Star, Truck, StarHalf } from 'lucide-react';
 import { format, addDays } from 'date-fns';
-
+import Link from 'next/link';
 function RatingSummary() {
     return (
         <div className="flex items-center gap-2">
@@ -83,7 +83,12 @@ export function ProductInfo({ product }: { product: any }) {
                             </div>
                             <RatingSummary />
                         </div>
-
+                        <Link 
+                                href={`/store/${product.storeId}`}
+                                className="inline-block text-sm text-gray-500 hover:text-gray-700 hover:underline"
+                            >
+                          <b>Sold by {product.storeName}</b>
+                        </Link>
                         <VariantSelector
                             variants={product.stock.variations}
                             selectedVariant={selectedVariant}
