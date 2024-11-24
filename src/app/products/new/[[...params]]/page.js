@@ -10,6 +10,7 @@ import ProductInfoForm from '../product-info-form'
 import SearchabilityDetailsForm from '../searchability'
 import ProductVariationsForm from '../product-variations-form'
 import apiService from '@/services/api'
+import { Card } from "@/components/ui/card"
 
 export default function ProductCreationWizard() {
     const router = useRouter()
@@ -213,9 +214,10 @@ export default function ProductCreationWizard() {
     return (
         <div className="min-h-screen flex flex-col py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl w-full mx-auto space-y-8">
-                <h1 className="text-3xl font-bold text-gray-900 text-center">
-                    Create New Product
-                </h1>
+                <div className="space-y-1">
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900">New Product</h1>
+                    <p className="text-sm text-gray-500">Create a new product listing</p>
+                </div>
 
                 {/* Progress and Steps Indicator */}
                 <div className="space-y-4">

@@ -8,6 +8,7 @@ import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupe
 import ImageUploader from '@/components/ImageUploader'
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+import { Separator } from "@/components/ui/separator"
 
 export default function ProductVariationsForm({ formData, updateFormData }) {
     const [validationError, setValidationError] = useState(false);
@@ -137,8 +138,8 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
     return (
         <div className="space-y-6">
             {(formData.variations || []).map((variation, index) => (
-                <Card key={index} className="p-4">
-                    <CardContent>
+                <div key={index} className="p-4">
+                    <div>
 
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-lg font-semibold">
@@ -463,8 +464,9 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                 </p>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                    <hr className="my-4 bg-gray-200" />
+                </div>
             ))}
 
             {validationError && (
