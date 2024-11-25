@@ -84,16 +84,18 @@ export function ProductInfo({ product }: { product: any }) {
                             <RatingSummary />
                         </div>
                         <Link 
-                                href={`/store/${product.storeId}`}
-                                className="inline-block text-sm text-gray-500 hover:text-gray-700 hover:underline"
-                            >
-                          <b>Sold by {product.storeName}</b>
+                            href={`/store/${product.storeId}`}
+                            className="inline-block text-sm text-gray-500 hover:text-gray-700 hover:underline"
+                        >
+                            <b>Sold by {product.storeName}</b>
                         </Link>
-                        <VariantSelector
-                            variants={product.stock.variations}
-                            selectedVariant={selectedVariant}
-                            onVariantChange={setSelectedVariant}
-                        />
+                        <div className="hidden lg:block">
+                            <VariantSelector
+                                variants={product.stock.variations}
+                                selectedVariant={selectedVariant}
+                                onVariantChange={setSelectedVariant}
+                            />
+                        </div>
                     </div>
 
                     {/* Mobile Content */}
@@ -115,6 +117,16 @@ export function ProductInfo({ product }: { product: any }) {
                                 )}
                             </div>
                             <RatingSummary />
+                        </div>
+                        {/* Mobile Variant Selector */}
+                        <div className="overflow-x-auto pb-4 -mx-4 px-4">
+                            <div className="inline-flex gap-4">
+                                <VariantSelector
+                                    variants={product.stock.variations}
+                                    selectedVariant={selectedVariant}
+                                    onVariantChange={setSelectedVariant}
+                                />
+                            </div>
                         </div>
                     </div>
 
