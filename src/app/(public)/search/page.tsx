@@ -11,9 +11,9 @@ export default function SearchResults() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Search Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <p className="text-sm font-bold text-gray-900">
             <span className="text-gray-500">Found 245 items</span>
-          </h1>
+          </p>
           <div className="flex items-center gap-4">
             {/* Mobile Filter Button with Sheet */}
             <Sheet>

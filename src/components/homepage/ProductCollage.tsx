@@ -32,15 +32,35 @@ const products = [
 ]
 
 export default function ProductCollage({heading}: {heading: string}) {
-  const leftColumn = products.slice(0, 8)
-  const middleColumns = products.slice(8, 
-20)
-  const rightColumn = products.slice(20, 28)
+  // For mobile view (2 columns), we'll reorganize the products
+  const mobileLeftColumn = products.slice(0, products.length / 2);
+  const mobileRightColumn = products.slice(products.length / 2);
+  
+  // Desktop view (4 columns) remains the same
+  const leftColumn = products.slice(0, 8);
+  const middleColumns = products.slice(8, 20);
+  const rightColumn = products.slice(20, 28);
 
   return (
     <section>
       <h2 className="text-3xl font-bold mb-8">{heading}</h2>
-      <div className="grid grid-cols-4 gap-4">
+      
+      {/* Mobile Layout (2 columns) */}
+      <div className="grid grid-cols-2 gap-4 lg:hidden">
+        <div className="space-y-4">
+          {mobileLeftColumn.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+        <div className="space-y-4">
+          {mobileRightColumn.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop Layout (4 columns) */}
+      <div className="hidden lg:grid grid-cols-4 gap-4">
         <div className="space-y-4">
           {leftColumn.map((product) => (
             <ProductCard key={product.id} product={product} />
@@ -58,7 +78,7 @@ export default function ProductCollage({heading}: {heading: string}) {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 function ProductCard({ product }) {

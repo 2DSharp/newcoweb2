@@ -18,7 +18,7 @@ export default function SortDropdown() {
   return (
     <div className="relative">
       <button
-        className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border shadow-sm"
+        className="flex items-center gap-2 px-4 py-2 text-sm bg-white rounded-lg border shadow-sm"
         onClick={() => setIsOpen(!isOpen)}
       >
         <SlidersHorizontal className="w-4 h-4" />
