@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ImageGallery } from '@/app/products/[id]/image-gallery';
+import { ImageGallery } from '@/components/image-gallery';
 import { ProductActions } from '@/components/ProductActions';
 import { VariantSelector } from '@/components/VariantSelector';
 import { Button } from '@/components/ui/button';

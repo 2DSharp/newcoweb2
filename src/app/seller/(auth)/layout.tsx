@@ -8,10 +8,10 @@ export default function AuthLayout({
     return (
         <div className="min-h-screen flex flex-col md:flex-row">
             {/* Left Side - Hidden on mobile */}
-            <div className="hidden md:flex md:w-1/2 bg-indigo-600 text-white p-12 flex-col justify-center relative">
+            <div className="hidden md:flex md:w-1/2 bg-gray-600 text-white p-12 flex-col justify-center relative">
                 <div className="absolute inset-0">
                     <img
-                        src="/api/placeholder/800/1200"
+                        src={"/sellerbg.jpg"}
                         alt="Seller Dashboard Preview"
                         className="object-cover w-full h-full opacity-20"
                     />
