@@ -1,12 +1,12 @@
-module.exports = {
-    images: {
-      remotePatterns: [
-        {
-          protocol: 'https',
-          hostname: 'newco2024-dev.s3.amazonaws.com',
-          port: '',
-          pathname: '/**',
-        },
-      ],
-    },
-  }
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    domains: [
+      'images.unsplash.com',
+      'newco2024-dev.s3.amazonaws.com'
+      // Add other image domains as needed
+    ],
+  },
+}
+
+module.exports = nextConfig

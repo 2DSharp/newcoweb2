@@ -232,10 +232,6 @@ const apiService = {
             });
             return response.data;
         },
-        getDrafts: async () => {
-            const response = await authenticatedApiClient.get('/seller/products/drafts');
-            return response.data;
-        },
     },
 
     files: {

@@ -1,23 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link'
-import { Search, ShoppingCart, User } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import Link from 'next/link';
+import { Search, ShoppingCart, User, Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+const MENU_ITEMS = [
+  { name: "Explore", href: "/explore" },
+  { name: "Gift Ideas", href: "/gifts" },
+  { name: "Season Must Haves", href: "/seasonal" },
+  { name: "Home Decor", href: "/home-decor" },
+  { name: "Fresh Arrivals", href: "/new-arrivals" },
+  { name: "Today's Deals", href: "/deals" },
+  { name: "Stories", href: "/stories" },
+  { name: "Near me", href: "/nearby" },
+  { name: "Live sessions", href: "/live" },
+  { name: "Sell", href: "/seller" }
+] as const;
 
 export function Navbar() {
   const [mounted, setMounted] = useState(false);
 
-  // Only render after component mounts to prevent hydration mismatch
   useState(() => {
     setMounted(true);
   }, []);
 
-  // Show nothing until mounted
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
     <div className="sticky top-0 z-50 bg-white">
@@ -25,62 +35,136 @@ export function Navbar() {
         <nav className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col py-4 gap-4">
             {/* Top Row */}
-            <div className="flex items-center justify-between w-full">
-              {/* Logo */}
-              <Link href="/" className="flex-shrink-0">
-                <div className="h-8 w-24 bg-gray-200 rounded flex items-center justify-center text-sm text-gray-600">
+            <div className="flex items-center justify-between w-full gap-6">
+              {/* Mobile Menu */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="lg:hidden">
+                    <Menu className="h-8 w-8" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] p-0">
+                  <div className="flex flex-col h-full">
+                    {/* Logo in Mobile Menu */}
+                    <div className="p-4 border-b">
+                      <Link href="/" className="flex-shrink-0">
+                        <div className="h-10 w-28 bg-gray-200 rounded flex items-center justify-center text-sm text-gray-600">
+                          LOGO
+                        </div>
+                      </Link>
+                    </div>
+                    
+                    {/* Menu Items */}
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="py-2">
+                        {MENU_ITEMS.map((item) => (
+                          <Link 
+                            key={item.name} 
+                            href={item.href}
+                            className="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Logo - Hide on mobile when menu is showing */}
+              <Link href="/" className="flex-shrink-0 lg:block">
+                <div className="h-10 w-28 bg-gray-200 rounded flex items-center justify-center text-sm text-gray-600">
                   LOGO
                 </div>
               </Link>
 
               {/* Search - Desktop */}
-              <form className="hidden md:flex flex-1 max-w-2xl mx-8" onSubmit={(e) => e.preventDefault()}>
-                <div className="relative w-full">
+              <form 
+                className="hidden md:flex flex-1 max-w-3xl" 
+                onSubmit={(e) => e.preventDefault()}
+              >
+                <div className="relative w-full flex">
                   <Input
                     type="search"
                     placeholder="Search products..."
-                    className="w-full pl-10 pr-4"
+                    className="w-full pr-16 rounded-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-base"
                   />
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Button 
+                    type="submit"
+                    variant="ghost" 
+                    className="absolute right-0 rounded-full h-full hover:bg-primary hover:text-white transition-colors"
+                  >
+                    <Search className="h-6 w-6" />
+                  </Button>
                 </div>
               </form>
 
               {/* Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Link href="/account">
+                <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
+
+                    <User size={28} />
+                    <span className="hidden md:inline-block text-sm text-gray-600">
+                      Account
+                    </span>
+                  </button>
+                </Link>
                 <Link href="/cart">
-                  <Button variant="ghost" size="icon" className="relative">
-                    <ShoppingCart className="h-8 w-8" />
-                    <span className="absolute -top-1 -right-1 h-4 w-4 text-[10px] font-medium text-white bg-black rounded-full flex items-center justify-center">
+                <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
+                    <ShoppingCart size={28} />
+              
+                    <span className="absolute -top-1 -right-1 h-5 w-5 text-xs font-medium text-white bg-black rounded-full flex items-center justify-center">
                       2
                     </span>
-                  </Button>
-                </Link>
-                <Link href="/account">
-                  <Button variant="ghost" size="icon">
-                    <User className="h-12 w-12" />
-                  </Button>
-                </Link>
-                <Link href="/login" className="hidden md:block">
-                  <Button variant="default">
-                    Sign In
-                  </Button>
+                    <span className="hidden md:inline-block text-sm text-gray-600">
+                      Cart
+                    </span>
+                  </button>
                 </Link>
               </div>
             </div>
 
             {/* Search - Mobile */}
-            <form className="md:hidden" onSubmit={(e) => e.preventDefault()}>
-              <div className="relative w-full">
+            <form 
+              className="md:hidden" 
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <div className="relative w-full flex">
                 <Input
                   type="search"
                   placeholder="Search products..."
-                  className="w-full pl-10 pr-4"
+                  className="w-full pr-16 rounded-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-base"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Button 
+                  type="submit"
+                  variant="ghost" 
+                  className="absolute right-0 rounded-full h-full hover:bg-primary hover:text-white transition-colors"
+                >
+                  <Search className="h-6 w-6" />
+                </Button>
               </div>
             </form>
           </div>
         </nav>
+
+        {/* Desktop Menu */}
+        <div className="hidden lg:block border-t">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-4">
+              {MENU_ITEMS.map((item) => (
+                <Link 
+                  key={item.name} 
+                  href={item.href}
+                  className="text-sm font-medium text-gray-600 whitespace-nowrap hover:text-gray-900 transition-colors"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       </header>
     </div>
   );

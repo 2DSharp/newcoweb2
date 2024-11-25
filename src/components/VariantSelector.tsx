@@ -61,7 +61,7 @@ export function VariantSelector({ variants, selectedVariant, onVariantChange }: 
                                         Out of stock
                                     </span>
                                 )}
-                                {Object.entries(variant.details || {}).map(([key, value]) => (
+                                {Object.entries(variant.details || {}).slice(0, 2).map(([key, value]) => (
                                     <div key={key} className="mt-1 text-xs text-gray-500">
                                         {key}: {value as string}
                                     </div>
