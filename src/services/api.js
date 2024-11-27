@@ -67,11 +67,13 @@ authenticatedApiClient.interceptors.response.use(
 
                 // Call backend refresh token endpoint
                 const response = await unauthenticatedApiClient.post('/identity/refresh-token', {
-                    refreshToken
+                    userId: JSON.parse(localStorage.getItem('auth_data')).userId,
+                    loginType: JSON.parse(localStorage.getItem('auth_data')).loginType,
+                    token: refreshToken
                 });
 
-                const { accessToken, userId, loginType, newRefreshToken } = response.data;
-
+                const { accessToken, userId, loginType } = response.data.data;
+                const newRefreshToken = response.data.data.refreshToken
                 // Store new refresh token in HTTP-only cookie
                 await fetch('/api/auth/set-refresh-token', {
                     method: 'POST',
@@ -96,6 +98,14 @@ authenticatedApiClient.interceptors.response.use(
             } catch (refreshError) {
                 // Clear auth data and redirect to login
                 localStorage.clear();
+                // Clear refresh token cookie
+                await fetch('/api/auth/set-refresh-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refreshToken: null }),
+                });
                 window.location.href = '/';
                 return Promise.reject(refreshError);
             }

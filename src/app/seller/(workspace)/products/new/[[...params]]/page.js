@@ -41,10 +41,18 @@ export default function ProductCreationWizard() {
                     // Restructure the variations data to include image URLs
                     const formattedData = {
                         ...response.data,
+                        personalizationText: response.data.stock?.personalizationText || false,
                         variations: response.data.stock?.variations?.map(variation => ({
                             ...variation,
                             isCustom: variation.type === 'CUSTOM',
                             details: variation.details || {}, // Ensure details are preserved
+                            dimensions:{
+                                l: variation.dimensions?.l || 0,
+                            w: variation.dimensions?.w || 0,
+                            h: variation.dimensions?.h || 0,
+                          } , // Add weight
+                            weight: variation.weight || 0,
+                    
                             images: variation.images?.map(img => ({
                                 imgId: img.imgId,
                                 thumbnail: img.thumbnail,
@@ -120,6 +128,12 @@ export default function ProductCreationWizard() {
                     sku: variation.sku,
                     details: variation.details || {}, // Ensure details are preserved
                     processingTime: variation.processingTime,
+                    dimensions: {
+                        l: variation.dimensions.l || 0,
+                        w: variation.dimensions.w || 0,
+                        h: variation.dimensions.h || 0
+                    },
+                    weight: variation.weight || 0,
                     images: variation.images?.map(img => ({
                         imgId: img.imgId,
                         thumbnail: img.thumbnail

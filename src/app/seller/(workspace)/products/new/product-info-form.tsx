@@ -7,6 +7,7 @@ import CategorySearch, { Category } from '@/components/CategorySearch'
 import apiService from '@/services/api'
 import RichTextEditor from "@/components/RichTextEditor";
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
   
 export default function ProductInfoForm({ formData, updateFormData, handleSubmit }) {
     const [categories, setCategories] = useState<Category[]>([])
@@ -115,7 +116,22 @@ export default function ProductInfoForm({ formData, updateFormData, handleSubmit
                 />
               
             </div>
+            <div className="space-y-2">
+               
+               <div className="flex items-center space-x-2">
 
+                   <Switch
+                       id="personalizationText"
+                       checked={formData.personalizationText || false}
+                       onCheckedChange={(checked) => updateFormData('personalizationText', checked)}
+                   />
+                    <Label htmlFor="personalizationText">Allow customers to add personalized messages</Label>
+
+               </div>
+               <p className="text-sm text-gray-500">
+                   When enabled, customers can add custom text or messages during checkout
+               </p>
+           </div>
             <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                     <Label htmlFor="description" className="flex items-center">
@@ -134,6 +150,7 @@ export default function ProductInfoForm({ formData, updateFormData, handleSubmit
                     className="text-sm"
                 />
             </div>
+            
         </form>
     )
 }
