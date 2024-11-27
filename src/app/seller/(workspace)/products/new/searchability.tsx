@@ -113,15 +113,24 @@ export default function SearchabilityDetailsForm({ formData, updateFormData }: F
                 </div>
                 <p className="text-sm text-gray-500">Who is your product for?</p>
 
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {audiences.map((audience) => (
-                        <div key={audience.value} className="flex items-center space-x-2">
+                        <div 
+                            key={audience.value} 
+                            className="flex items-center p-3 space-x-3 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors cursor-pointer"
+                            onClick={() => handleAudienceChange(audience.value)}
+                        >
                             <Checkbox
                                 id={audience.value}
                                 checked={(formData.searchability?.audience || []).includes(audience.value)}
-                                onCheckedChange={() => handleAudienceChange(audience.value)}
+                                className="data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
                             />
-                            <Label htmlFor={audience.value}>{audience.label}</Label>
+                            <Label 
+                                htmlFor={audience.value} 
+                                className="cursor-pointer font-medium text-gray-700"
+                            >
+                                {audience.label}
+                            </Label>
                         </div>
                     ))}
                 </div>

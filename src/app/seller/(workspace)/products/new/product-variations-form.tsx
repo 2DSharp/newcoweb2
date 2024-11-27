@@ -62,6 +62,8 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
             ...formData.variations,
             { 
                 price: lastVariation.price || '', // Copy price
+                weight: lastVariation.weight || '', // Copy price
+                dimensions: lastVariation.dimensions || '', // Copy price
                 processingTime: lastVariation.processingTime || '', // Copy processing time
                 details: { ...lastVariation.details } || {}, // Deep copy details object
             }
@@ -392,7 +394,7 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                             <div className="space-y-2 mt-4">
                                 <Label className="flex items-center">
                                     <Info className="mr-2 text-blue-500" size={16} />
-                                    Product Details (Optional)
+                                    Variant Specifications (Optional)
                                 </Label>
                                 <p className="text-sm text-gray-500">
                                     Add product specifications like dimensions, color, material etc.
