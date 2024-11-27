@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee, X, Trash } from 'lucide-react'
+import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee, X, Trash, Scale, BoxSelect } from 'lucide-react'
 import ImageUploader from '@/components/ImageUploader'
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
@@ -305,6 +305,72 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                     </div>
                                 </div>
                             </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor={`weight-${index}`} className="flex items-center">
+                                        <Scale className="mr-2 text-purple-500" size={16} />
+                                        Weight (kg) *
+                                    </Label>
+                                    <Input
+                                        id={`weight-${index}`}
+                                        type="number"
+                                        value={variation.weight}
+                                        onChange={(e) => handleVariationChange(index, 'weight', Number(e.target.value))}
+                                        min="0.01"
+                                        step="0.01"
+                                        required
+                                        placeholder="e.g., 1.5"
+                                    />
+                                    <p className="text-sm text-gray-500">
+                                        Approximate weight in kilograms
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor={`dimensions-${index}`} className="flex items-center">
+                                        <BoxSelect className="mr-2 text-yellow-500" size={16} />
+                                        Dimensions (cm) *
+                                    </Label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <Input
+                                            type="number"
+                                            value={variation.dimensions?.l}
+                                            onChange={(e) => handleVariationChange(index, 'dimensions', {
+                                                ...variation.dimensions,
+                                                l: Number(e.target.value)
+                                            })}
+                                            min="1"
+                                            required
+                                            placeholder="Length"
+                                        />
+                                        <Input
+                                            type="number"
+                                            value={variation.dimensions?.w}
+                                            onChange={(e) => handleVariationChange(index, 'dimensions', {
+                                                ...variation.dimensions,
+                                                w: Number(e.target.value)
+                                            })}
+                                            min="1"
+                                            required
+                                            placeholder="Width"
+                                        />
+                                        <Input
+                                            type="number"
+                                            value={variation.dimensions?.h}
+                                            onChange={(e) => handleVariationChange(index, 'dimensions', {
+                                                ...variation.dimensions,
+                                                h: Number(e.target.value)
+                                            })}
+                                            min="1"
+                                            required
+                                            placeholder="Height"
+                                        />
+                                    </div>
+                                    <p className="text-sm text-gray-500">
+                                        Length × Width × Height in centimeters
+                                    </p>
+                                </div>
+                            </div>
 
                             <div className="space-y-2">
                                 <Label className="flex items-center">
@@ -328,6 +394,9 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                     <Info className="mr-2 text-blue-500" size={16} />
                                     Product Details (Optional)
                                 </Label>
+                                <p className="text-sm text-gray-500">
+                                    Add product specifications like dimensions, color, material etc.
+                                </p>
                                 <div className="border rounded-md overflow-hidden">
                                     {/* Desktop layout */}
                                     <div className="hidden md:block">
@@ -459,13 +528,10 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                         </Button>
                                     </div>
                                 </div>
-                                <p className="text-sm text-gray-500">
-                                    Add product specifications like dimensions, color, material etc.
-                                </p>
+                                
                             </div>
                         </div>
                     </div>
-                    <hr className="my-4 bg-gray-200" />
                 </div>
             ))}
 

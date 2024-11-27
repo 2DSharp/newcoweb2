@@ -208,6 +208,10 @@ const apiService = {
             const response = await authenticatedApiClient.put(`/seller/products/drafts`,{ ...productData, id: draftId});
             return response.data;
         },
+        getDrafts: async () => {
+            const response = await authenticatedApiClient.get(`/seller/products/drafts`);
+            return response.data;
+        },
         getDraft: async (draftId) => {
             const response = await authenticatedApiClient.get(`/seller/products/drafts/${draftId}`);
             return response.data;

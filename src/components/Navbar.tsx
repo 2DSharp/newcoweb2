@@ -93,7 +93,7 @@ export function Navbar() {
                     <Input
                       type="search"
                       placeholder="Search products..."
-                      className="w-full pr-16 rounded-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-base"
+                      className="w-full pr-16 px-4 rounded-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-base"
                     />
                     <Button 
                       type="submit"
