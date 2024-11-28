@@ -10,21 +10,57 @@ import { Star, Truck, StarHalf } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import Link from 'next/link';
 function RatingSummary() {
-    return (
-        <div className="flex items-center gap-2">
-            <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                    <Star 
-                        key={i} 
-                        className={`w-4 h-4 ${i < 4 ? 'fill-current text-yellow-400' : 'text-gray-300'}`}
-                    />
-                ))}
-            </div>
-            <span className="text-sm font-medium text-gray-700">4.2</span>
-            <span className="text-sm text-gray-500">·</span>
-            <span className="text-sm text-gray-500">128 ratings</span>
-        </div>
-    );
+  return (
+      <div className="flex items-center gap-2">
+          <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                  <Star 
+                      key={i} 
+                      className={`w-4 h-4 ${i < 4 ? 'fill-current text-yellow-400' : 'text-gray-300'}`}
+                  />
+              ))}
+          </div>
+          <span className="text-sm font-medium text-gray-700">4.2</span>
+          <span className="text-sm text-gray-500">·</span>
+          <span className="text-sm text-gray-500">128 ratings</span>
+      </div>
+  );
+}
+// Local component for price display
+function PriceDisplay({ selectedVariant }: { selectedVariant: any }) {
+  return (
+    <div className="flex items-baseline gap-2">
+      <p className="text-2xl font-semibold text-gray-900">
+        {selectedVariant.pricing.finalPrice}
+      </p>
+      {selectedVariant.pricing.discount && (
+        <>
+          <p className="text-lg text-gray-500 line-through">
+            {selectedVariant.pricing.originalPrice}
+          </p>
+          <p className="text-green-600 font-medium">
+            {selectedVariant.pricing.discount.discountType === 'PERCENTAGE' && 
+              `${selectedVariant.pricing.discount.applicableDiscount}% off`
+            }
+            {selectedVariant.pricing.discount.discountType === 'FIXED' &&
+              `₹${selectedVariant.pricing.discount.applicableDiscount} off`
+            }
+            {selectedVariant.pricing.discount.discountType === 'BUY_AND_GET_FREE' &&
+              `Buy ${selectedVariant.pricing.discount.condition.minPurchaseQty} Get Free`
+            }
+            {selectedVariant.pricing.discount.condition.type === 'MIN_PURCHASE_QTY' && 
+              selectedVariant.pricing.discount.condition.minPurchaseQty > 1 && 
+              ` on buying ${selectedVariant.pricing.discount.condition.minPurchaseQty} + items`
+            
+            }
+            {selectedVariant.pricing.discount.condition.type === 'MIN_PURCHASE_AMOUNT' &&
+              ` on orders above ₹${selectedVariant.pricing.discount.condition.minPurchaseAmount}`
+            }
+          </p>
+        </>
+      )}
+    </div>
+  );
 }
 
 export function ProductInfo({ product }: { product: any }) {
@@ -66,21 +102,7 @@ export function ProductInfo({ product }: { product: any }) {
                         </div>
 
                         <div className="space-y-2">
-                            <div className="flex items-baseline gap-2">
-                                <p className="text-2xl font-semibold text-gray-900">
-                                    {selectedVariant.pricing.finalPrice}
-                                </p>
-                                {selectedVariant.pricing.discount && (
-                                    <>
-                                        <p className="text-lg text-gray-500 line-through">
-                                            {selectedVariant.pricing.originalPrice}
-                                        </p>
-                                        <p className="text-green-600 font-medium">
-                                            {selectedVariant.pricing.discount}% off
-                                        </p>
-                                    </>
-                                )}
-                            </div>
+                            <PriceDisplay selectedVariant={selectedVariant} />
                             <RatingSummary />
                         </div>
                         <Link 
@@ -101,21 +123,7 @@ export function ProductInfo({ product }: { product: any }) {
                     {/* Mobile Content */}
                     <div className="lg:hidden space-y-6">
                         <div className="space-y-2">
-                            <div className="flex items-baseline gap-2">
-                                <p className="text-2xl font-semibold text-gray-900">
-                                    {selectedVariant.pricing.finalPrice}
-                                </p>
-                                {selectedVariant.pricing.discount && (
-                                    <>
-                                        <p className="text-lg text-gray-500 line-through">
-                                            {selectedVariant.pricing.originalPrice}
-                                        </p>
-                                        <p className="text-green-600 font-medium">
-                                            {selectedVariant.pricing.discount}% off
-                                        </p>
-                                    </>
-                                )}
-                            </div>
+                            <PriceDisplay selectedVariant={selectedVariant} />
                             <RatingSummary />
                         </div>
                         {/* Mobile Variant Selector */}
