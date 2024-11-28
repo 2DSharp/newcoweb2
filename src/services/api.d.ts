@@ -118,6 +118,24 @@ interface ApiService {
     deleteDraft: (draftId: string) => Promise<ApiResponse<any>>;
     publishDraft: (draftId: string) => Promise<ApiResponse<any>>;
   };
+  discounts: {
+    create: (discountData: {
+      discountType: "PERCENTAGE" | "FIXED" | "BUY_AND_GET_FREE";
+      condition: {
+        type: "NO_CONDITION" | "MIN_PURCHASE_QTY" | "MIN_PURCHASE_AMOUNT" | "REFERRAL";
+        startDate: string;
+        endDate: string;
+        minPurchaseQty?: string;
+        minPurchaseAmount?: string;
+        referralCode?: string;
+      };
+      applicableDiscount: number;
+      triggerProducts: string[];
+      targetProducts: string[];
+    }) => Promise<ApiResponse<any>>;
+    delete: (discountId: string) => Promise<ApiResponse<any>>;
+    getList: () => Promise<ApiResponse<List<any>>>;
+  };
 }
 
 declare const apiService: ApiService;

@@ -21,6 +21,13 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useToast } from "@/hooks/use-toast";
 import apiService from '@/services/api';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { CalendarIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DatePicker } from "@/components/ui/date-picker";
 
 const schema = z.object({
   discountType: z.enum(["PERCENTAGE", "FIXED", "BUY_AND_GET_FREE"]),
@@ -28,11 +35,11 @@ const schema = z.object({
     type: z.enum(["NO_CONDITION", "MIN_PURCHASE_QTY", "MIN_PURCHASE_AMOUNT", "REFERRAL"]),
     startDate: z.string(),
     endDate: z.string(),
-    minPurchaseQty: z.number().optional(),
-    minPurchaseAmount: z.number().optional(),
+    minPurchaseQty: z.string().optional(),
+    minPurchaseAmount: z.string().optional(),
     referralCode: z.string().optional(),
   }),
-  applicableDiscount: z.number(),
+  applicableDiscount: z.any(),
   triggerProducts: z.array(z.string()),
   targetProducts: z.array(z.string()),
 });
@@ -59,9 +66,9 @@ export default function NewDiscountPage() {
   });
 
   const promotionType = watch("condition.type") || "NO_CONDITION";
-  const triggerProducts = watch("triggerProducts") || [];
-  const targetProducts = watch("targetProducts") || [];
 
+  const [selectedTriggerProducts, setSelectedTriggerProducts] = useState<string[]>([]);
+  const [selectedTargetProducts, setSelectedTargetProducts] = useState<string[]>([]);
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -69,7 +76,6 @@ export default function NewDiscountPage() {
         const formattedProducts = response.data.map(product => ({
           value: product.id.toString(),
           label: product.name,
-          image: product.thumbnail
         })) || [];
         setProducts(formattedProducts);
       } catch (error) {
@@ -85,16 +91,23 @@ export default function NewDiscountPage() {
     loadProducts();
   }, []);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: z.infer<typeof schema>) => {
     try {
       setLoading(true);
-      await apiService.discounts.create(data);
+      const submissionData = {
+        ...data,
+        triggerProducts: selectedTriggerProducts,
+        targetProducts: selectedTargetProducts,
+      };
+      
+      await apiService.discounts.create(submissionData);
       toast({
         title: "Success",
         description: "Discount created successfully",
       });
       router.push('/seller/discounts');
     } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: "Error",
         description: "Failed to create discount. Please try again.",
@@ -174,24 +187,40 @@ export default function NewDiscountPage() {
   <div>
     <Label>Products Required for Discount</Label>
     <MultiSelect
-      options={products}
-      value={formatSelectedValues(triggerProducts)}
-      onChange={(selectedOptions) => {
-        const values = selectedOptions?.map(option => option.value) || [];
-        setValue("triggerProducts", values);
-      }}
-      placeholder="Search and select products..."
-    />
+        options={products}
+        onValueChange={setSelectedTriggerProducts}
+        placeholder="Search and select products..."
+        variant="inverted"
+        animation={2}
+        maxCount={3}
+      />
   </div>
 )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Start Date</Label>
-                <Input type="date" {...register("condition.startDate")} />
+                <DatePicker
+                  value={watch("condition.startDate")}
+                  onChange={(date) => {
+                    setValue("condition.startDate", date);
+                    // If end date is before start date, update end date
+                    const endDate = watch("condition.endDate");
+                    if (date && endDate && new Date(endDate) < new Date(date)) {
+                      setValue("condition.endDate", date);
+                    }
+                  }}
+                  placeholder="Select start date"
+                  minDate={new Date()} // Can't select dates before today
+                />
               </div>
               <div>
                 <Label>End Date</Label>
-                <Input type="date" {...register("condition.endDate")} />
+                <DatePicker
+                  value={watch("condition.endDate")}
+                  onChange={(date) => setValue("condition.endDate", date)}
+                  placeholder="Select end date"
+                  minDate={new Date(watch("condition.startDate") || Date.now())} // Can't select dates before start date
+                />
               </div>
             </div>
           </div>
@@ -228,34 +257,31 @@ export default function NewDiscountPage() {
               <Label>Products to Apply Discount On</Label>
               {promotionType === "NO_CONDITION" ? (
                 <MultiSelect
-                  options={products}
-                  value={formatSelectedValues(triggerProducts)}
-                  onChange={(selectedOptions) => {
-                    const values = selectedOptions?.map(option => option.value) || [];
-                    setValue("triggerProducts", values);
-                    setValue("targetProducts", values);
-                  }}
-                  placeholder="Search and select products..."
-                />
+                options={products}
+                onValueChange={v => {setSelectedTriggerProducts(v); setSelectedTargetProducts}}
+                placeholder="Search and select products..."
+                variant="inverted"
+                animation={2}
+                maxCount={3}
+            />
               ) : (
                 <MultiSelect
-                  options={products}
-                  value={formatSelectedValues(targetProducts)}
-                  onChange={(selectedOptions) => {
-                    const values = selectedOptions?.map(option => option.value) || [];
-                    setValue("targetProducts", values);
-                  }}
-                  placeholder="Search and select products..."
-                />
+                options={products}
+                onValueChange={setSelectedTargetProducts}
+                placeholder="Search and select products..."
+                variant="inverted"
+                animation={2}
+                maxCount={3}
+              />
               )}
             </div>
           </div>
         </Card>
 
         <div className="flex justify-end">
-          <PrimaryButton type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? "Creating..." : "Create Discount"}
-          </PrimaryButton>
+          </Button>
         </div>
       </form>
     </div>

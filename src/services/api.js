@@ -247,6 +247,20 @@ const apiService = {
             return response.data;
         },
     },
+    discounts: {
+        create: async (discountData) => {
+            const response = await authenticatedApiClient.post('/seller/products/discounts', discountData);
+            return response.data;
+        },
+        delete: async (discountId) => {
+            const response = await authenticatedApiClient.delete(`/seller/discounts/${discountId}`);
+            return response.data;
+        },
+        getList: async () => {
+            const response = await authenticatedApiClient.get('/seller/discounts');
+            return response.data;
+        },
+    },
 
     files: {
         upload: async (formData) => {
