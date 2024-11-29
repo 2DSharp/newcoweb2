@@ -55,7 +55,7 @@ export function ProductActions({ productId, variant }: ProductActionsProps) {
             window.dispatchEvent(new CustomEvent('cartUpdated'));
 
             // Update cart count
-            router.push('/cart');
+            router.push('/cart?added=true&productId=' + productId);
         } catch (error) {
             toast({
                 title: "Error",

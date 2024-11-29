@@ -32,16 +32,23 @@ function RatingSummary() {
   );
 }
 // Local component for price display
-function PriceDisplay({ selectedVariant }: { selectedVariant: any }) {
+export function PriceDisplay({ selectedVariant, displayStyle }: { selectedVariant: any, displayStyle?: string }) {
   return (
     <div className="flex items-baseline gap-2">
+        {displayStyle === "small" ? (
+            <p className="text-lg font-medium text-gray-900">
+                ₹{selectedVariant.pricing.finalPrice}
+            </p>
+        ) : (
+            
       <p className="text-2xl font-semibold text-gray-900">
-        {selectedVariant.pricing.finalPrice}
-      </p>
+      ₹{selectedVariant.pricing.finalPrice}
+            </p>
+        )}
       {selectedVariant.pricing.discount && (
         <>
           <p className="text-lg text-gray-500 line-through">
-            {selectedVariant.pricing.originalPrice}
+          ₹{selectedVariant.pricing.originalPrice}
           </p>
           <p className="text-green-600 font-medium">
             {selectedVariant.pricing.discount.discountType === 'PERCENTAGE' && 
@@ -107,7 +114,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                         </div>
 
                         <div className="space-y-2">
-                            <PriceDisplay selectedVariant={selectedVariant} />
+                            <PriceDisplay selectedVariant={selectedVariant} displayStyle="large" />
                             <RatingSummary />
                         </div>
                         <Link 
@@ -128,7 +135,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     {/* Mobile Content */}
                     <div className="lg:hidden space-y-6">
                         <div className="space-y-2">
-                            <PriceDisplay selectedVariant={selectedVariant} />
+                            <PriceDisplay selectedVariant={selectedVariant} displayStyle="large" />
                             <RatingSummary />
                         </div>
                         {/* Mobile Variant Selector */}

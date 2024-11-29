@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Minus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,12 +17,19 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { parseCurrency } from '@/lib/utils';
+import { PriceDisplay } from '@/components/ProductInfo';
 export default function CartPage() {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [itemToDelete, setItemToDelete] = useState(null);
-
+    const searchParams = useSearchParams()
+    const { toast } = useToast();
+ 
+    const added = searchParams.get('added')
+  
     useEffect(() => {
         const loadCartItems = async () => {
             const authData = localStorage.getItem('auth_data');
@@ -46,14 +54,19 @@ export default function CartPage() {
 
                         const variant = product.stock.variations.find(v => v.variantId === item.variantId);
                         const pricing = variant.pricing;
-                        console.log("Pricing + " , pricing);
-
+                        if (!pricing || pricing.pricingId !== item.pricingId) {
+                            toast({
+                                title: "Price Changed",
+                                description: `The price of ${product.name}${variant.name ? ` - ${variant.name}` : ''} has changed since you added it to the cart. Current price: ₹${pricing.finalPrice}`,
+                                variant: "warning",
+                            });
+                        }
                         return {
                             ...item,
                             product,
                             variant,
                             pricing,
-                            priceChanged: !pricing
+                            priceChanged: !pricing || pricing.pricingId !== item.pricingId
                         };
                     } catch (error) {
                         console.error('Error loading product:', error);
@@ -67,6 +80,12 @@ export default function CartPage() {
         };
         
         loadCartItems();
+        if (added) {
+            toast({
+                title: "Item Added",
+                description: "Item has been added to your cart",
+            });
+        }
     }, []);
 
     const updateQuantity = async (item, newQuantity) => {
@@ -139,7 +158,10 @@ export default function CartPage() {
     }
 
   return (
+    
     <div className="container mx-auto px-4 py-8">
+          <Toaster />
+
       <h1 className="text-2xl font-bold mb-8">Your Cart</h1>
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
@@ -147,24 +169,26 @@ export default function CartPage() {
                     <div key={item.variantId} className="border rounded-lg p-4">
                         <div className="flex gap-4">
                             <div className="w-24 h-24 relative">
+                              <Link href={`/products/${item.product.id}`}>
                                 <Image
                                     src={item.variant.images[0].variations.thumbnail}
                                     alt={item.product.name}
                                     fill
                                     className="object-cover rounded-md"
                                 />
+                              </Link>
                             </div>
+
                             <div className="flex-1">
+                              <Link href={`/products/${item.product.id}`}>
                                 <h3 className="font-semibold">{item.product.name}</h3>
                                 {item.variant.name && (
                                     <p className="text-sm text-gray-500">{item.variant.name}</p>
                                 )}
-                                <div className="mt-2">
-                                    {item.priceChanged ? (
-                                        <p className="text-red-600">Price has changed since adding to cart</p>
-                                    ) : (
-                                        <p className="font-medium">₹{item.pricing.finalPrice}</p>
-                                    )}
+                               </Link>
+                               <div className="mt-2">
+                                        <PriceDisplay displayStyle="small" selectedVariant={item.variant} />
+                          
                                 </div>
                                 <div className="mt-4 flex items-center gap-2">
                                     <Button
@@ -203,22 +227,19 @@ export default function CartPage() {
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
             <div className="flex justify-between mb-2">
               <span>Subtotal</span>
-              <span>₹{cartItems.reduce((sum, item) => sum + (parseFloat(item.pricing.finalPrice) * item.quantity), 0).toFixed(2)}</span>
+              <span>₹{cartItems.reduce((sum, item) => sum + (parseCurrency(item.pricing.finalPrice) * item.quantity), 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between mb-2">
-              <span>Delivery Fee</span>  
-              <span>₹40.00</span>
+              <span>Delivery and Taxes</span>  
+              <span>55.00</span>
             </div>
-            <div className="flex justify-between mb-2">
-              <span>Taxes</span>
-              <span>₹{(cartItems.reduce((sum, item) => sum + (item.pricing.finalPrice * item.quantity), 0) * 0.18).toFixed(2)}</span>
-            </div>
+        
             <div className="flex justify-between font-semibold text-lg mt-4">
               <span>Total</span>
               <span>₹{(
-                cartItems.reduce((sum, item) => sum + (item.pricing.finalPrice * item.quantity), 0) + 
+                cartItems.reduce((sum, item) => sum + (parseCurrency(item.pricing.finalPrice) * item.quantity), 0) + 
                 40 + 
-                (cartItems.reduce((sum, item) => sum + (item.pricing.finalPrice * item.quantity), 0) * 0.18)
+                (cartItems.reduce((sum, item) => sum + (parseCurrency(item.pricing.finalPrice) * item.quantity), 0) * 0.18)
               ).toFixed(2)}</span>
             </div>
             <Button asChild className="w-full mt-6">
