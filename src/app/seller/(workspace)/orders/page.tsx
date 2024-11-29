@@ -1,118 +1,70 @@
-"use client";
+'use client';
 
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const orders = [
-  {
-    id: "#ORD-001",
-    customer: "Sarah Johnson",
-    date: "2024-03-15",
-    total: "$250.00",
-    status: "Pending",
-  },
-  {
-    id: "#ORD-002",
-    customer: "Michael Chen",
-    date: "2024-03-14",
-    total: "$150.00",
-    status: "Shipped",
-  },
-  {
-    id: "#ORD-003",
-    customer: "Emily Davis",
-    date: "2024-03-13",
-    total: "$350.00",
-    status: "Completed",
-  },
-  {
-    id: "#ORD-004",
-    customer: "James Wilson",
-    date: "2024-03-12",
-    total: "$200.00",
-    status: "Returned",
-  },
-];
+import { useState } from 'react';
+import OrdersHeader from '@/components/orders/OrdersHeader';
+import OrdersList from '@/components/orders/OrdersList';
+import OrderDetails from '@/components/orders/OrderDetails';
+import { Order } from '@/types/order';
+import { ordersData } from '@/data/ordersData';
 
 export default function OrdersPage() {
-  return (
-    <div className="min-h-screen flex flex-col py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl w-full mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold text-gray-900">Orders</h2>
-        </div>
+  const [orders, setOrders] = useState<Order[]>(ordersData);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-        <Card className="bg-white rounded-lg shadow p-6">
-          <Tabs defaultValue="pending" className="space-y-4">
-            <TabsList className="bg-gray-100 p-1 rounded-lg">
-              <TabsTrigger value="pending" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
-                Pending
-              </TabsTrigger>
-              <TabsTrigger value="shipped" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
-                Shipped
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
-                Completed
-              </TabsTrigger>
-              <TabsTrigger value="returned" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
-                Returned
-              </TabsTrigger>
-            </TabsList>
-            
-            {["pending", "shipped", "completed", "returned"].map((status) => (
-              <TabsContent key={status} value={status}>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-gray-600">Order ID</TableHead>
-                      <TableHead className="text-gray-600">Customer</TableHead>
-                      <TableHead className="text-gray-600">Date</TableHead>
-                      <TableHead className="text-gray-600">Total</TableHead>
-                      <TableHead className="text-gray-600">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orders
-                      .filter(
-                        (order) =>
-                          order.status.toLowerCase() === status.toLowerCase()
-                      )
-                      .map((order) => (
-                        <TableRow key={order.id} className="hover:bg-gray-50">
-                          <TableCell className="font-medium text-gray-900">{order.id}</TableCell>
-                          <TableCell className="text-gray-700">{order.customer}</TableCell>
-                          <TableCell className="text-gray-700">{order.date}</TableCell>
-                          <TableCell className="text-gray-700">{order.total}</TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                {
-                                  Pending: "bg-yellow-100 text-yellow-800",
-                                  Shipped: "bg-blue-100 text-blue-800",
-                                  Completed: "bg-green-100 text-green-800",
-                                  Returned: "bg-red-100 text-red-800",
-                                }[order.status]
-                              }`}
-                            >
-                              {order.status}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </Card>
+  const filteredOrders = orders.filter(order => {
+    const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
+    const matchesSearch = 
+      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const handleOrderSelect = (order: Order) => {
+    setSelectedOrder(order);
+  };
+
+  const handleUpdateOrder = (updatedOrder: Order) => {
+    setOrders(orders.map(order => 
+      order.id === updatedOrder.id ? updatedOrder : order
+    ));
+    setSelectedOrder(updatedOrder);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full mx-auto px-4 md:px-6 lg:px-8 xl:px-12 py-8">
+        <OrdersHeader 
+          filterStatus={filterStatus}
+          onFilterChange={setFilterStatus}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+        
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          <div className="lg:col-span-5 xl:col-span-4">
+            <OrdersList 
+              orders={filteredOrders}
+              selectedOrderId={selectedOrder?.id}
+              onOrderSelect={handleOrderSelect}
+            />
+          </div>
+          <div className="lg:col-span-7 xl:col-span-8">
+            {selectedOrder ? (
+              <OrderDetails 
+                order={selectedOrder}
+                onOrderUpdate={handleUpdateOrder}
+              />
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                <h3 className="text-lg text-gray-500">
+                  Select an order to view details
+                </h3>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
