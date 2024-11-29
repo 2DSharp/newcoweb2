@@ -1,6 +1,5 @@
 import { ProductInfo } from '@/components/ProductInfo';
 import { ChevronRight } from 'lucide-react';
-import { cookies } from 'next/headers';
 import apiService from '@/services/api';
 
 async function getProduct(id: string) {
@@ -10,27 +9,6 @@ async function getProduct(id: string) {
     if (!res.ok) return null;
     const data = await res.json();
     return data.data;
-}
-
-async function getInitialCartQuantity(productId: string, variantId: string) {
-    const cookieStore = cookies();
-    const token = cookieStore.get('token');
-    
-    if (token) {
-        // For logged-in users
-        try {
-            const cart = await getCart();
-            const cartItem = cart?.items?.find(
-                item => item.productId === productId && item.variantId === variantId
-            );
-            return cartItem?.quantity || 0;
-        } catch (error) {
-            console.error('Error fetching cart:', error);
-            return 0;
-        }
-    }
-    
-    return 0; // For server-side rendering, return 0 for guest users
 }
 
 export default async function ProductPage({ params }: { params: { id: string } }) {

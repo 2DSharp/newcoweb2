@@ -3,13 +3,24 @@
 import { useEffect, useState } from 'react';
 import apiService from '@/services/api';
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function CartPage() {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     useEffect(() => {
         const loadCartItems = async () => {
@@ -88,6 +99,30 @@ export default function CartPage() {
         }
     };
 
+    const handleDeleteItem = async () => {
+        if (!itemToDelete) return;
+
+        try {
+          const authData = localStorage.getItem('auth_data');
+          const { loginType } = authData ? JSON.parse(authData) : null;
+
+          if (loginType === 'BUYER') {
+              await apiService.cart.updateQuantity(itemToDelete.variantId, 0);
+          } else {
+              // Update local storage
+              const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+              const updatedCart = cart.filter(i => i.variantId !== itemToDelete.variantId);
+              localStorage.setItem('cart', JSON.stringify(updatedCart));
+            }
+     
+          setCartItems(prev => prev.filter(item => item.variantId !== itemToDelete.variantId));
+          setItemToDelete(null);
+          window.dispatchEvent(new CustomEvent('cartUpdated'));
+      } catch (error) {
+          console.error('Error removing item from cart:', error);
+      }
+    };
+
     if (loading) {
         return <div className="p-8">Loading...</div>;
     }
@@ -135,9 +170,19 @@ export default function CartPage() {
                                     <Button
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => updateQuantity(item, Math.max(0, item.quantity - 1))}
+                                        onClick={() => {
+                                            if (item.quantity === 1) {
+                                                setItemToDelete(item);
+                                            } else {
+                                                updateQuantity(item, item.quantity - 1);
+                                            }
+                                        }}
                                     >
-                                        <Minus className="h-4 w-4" />
+                                        {item.quantity === 1 ? (
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        ) : (
+                                            <Minus className="h-4 w-4" />
+                                        )}
                                     </Button>
                                     <span className="w-8 text-center">{item.quantity}</span>
                                     <Button
@@ -182,6 +227,20 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+      <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Remove Item</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to remove this item from your cart?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteItem}>Remove</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   )
 }

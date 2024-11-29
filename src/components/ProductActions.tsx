@@ -52,6 +52,8 @@ export function ProductActions({ productId, variant }: ProductActionsProps) {
                 });
             }
             localStorage.setItem('cart', JSON.stringify(cart));
+            window.dispatchEvent(new CustomEvent('cartUpdated'));
+
             // Update cart count
             router.push('/cart');
         } catch (error) {
