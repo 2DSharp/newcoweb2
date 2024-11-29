@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, ShoppingCart, User, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,30 @@ const MENU_ITEMS = [
 
 export function Navbar() {
   const [mounted, setMounted] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useState(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const updateCartCount = () => {
+      const authData = localStorage.getItem('auth_data');
+      if (authData) {
+        const { loginType } = JSON.parse(authData);
+        if (loginType === 'BUYER') {
+          // TODO: Implement API call to get cart count
+          return;
+        }
+      }
+      
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      setCartCount(cart.length);
+    };
+    
+    updateCartCount();
+    window.addEventListener('cartUpdated', updateCartCount);
+    return () => window.removeEventListener('cartUpdated', updateCartCount);
   }, []);
 
   if (!mounted) return null;
@@ -121,7 +142,7 @@ export function Navbar() {
                       <ShoppingCart size={28} />
                 
                       <span className="absolute -top-1 -right-1 h-5 w-5 text-xs font-medium text-white bg-primary rounded-full flex items-center justify-center">
-                        2
+                        {cartCount}
                       </span>
                       <span className="hidden md:inline-block text-sm text-gray-600">
                         Cart

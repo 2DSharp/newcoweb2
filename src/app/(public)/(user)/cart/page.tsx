@@ -1,40 +1,180 @@
-import Link from 'next/link'
-import { Button } from "@/components/ui/button"
-import { CartItem } from "@/components/CartItem"
+'use client';
 
-const cartItems = [
-  { id: 1, name: "Vintage Camera", price: 129.99, quantity: 1, image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&h=300&q=80" },
-  { id: 2, name: "Leather Backpack", price: 89.99, quantity: 2, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&h=300&q=80" },
-]
+import { useEffect, useState } from 'react';
+import apiService from '@/services/api';
+import { Button } from "@/components/ui/button";
+import { Plus, Minus } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default function CartPage() {
-  const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
-  const tax = subtotal * 0.1 // Assuming 10% tax
-  const total = subtotal + tax
+    const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadCartItems = async () => {
+            const authData = localStorage.getItem('auth_data');
+            let items = [];
+            
+            if (authData) {
+                const { loginType } = JSON.parse(authData);
+                if (loginType === 'BUYER') {
+                    // TODO: Implement API call to get cart items
+                    return;
+                }
+            }
+            
+            items = JSON.parse(localStorage.getItem('cart') || '[]');
+            
+            // Load product details in parallel
+            const itemsWithDetails = await Promise.all(
+                items.map(async (item) => {
+                    try {
+                      
+                        const product = await apiService.products.getProduct(item.productId);
+
+                        const variant = product.stock.variations.find(v => v.variantId === item.variantId);
+                        const pricing = variant.pricing;
+                        console.log("Pricing + " , pricing);
+
+                        return {
+                            ...item,
+                            product,
+                            variant,
+                            pricing,
+                            priceChanged: !pricing
+                        };
+                    } catch (error) {
+                        console.error('Error loading product:', error);
+                        return null;
+                    }
+                })
+            );
+            console.log(itemsWithDetails);
+            setCartItems(itemsWithDetails.filter(item => item !== null));
+            setLoading(false);
+        };
+        
+        loadCartItems();
+    }, []);
+
+    const updateQuantity = async (item, newQuantity) => {
+        const authData = localStorage.getItem('auth_data');
+        if (authData) {
+            const { loginType } = JSON.parse(authData);
+            if (loginType === 'BUYER') {
+                await apiService.cart.updateQuantity(item.variantId, newQuantity);
+                // Refresh cart items
+                // TODO: Implement API call to get updated cart items
+                return;
+            }
+        }
+
+        // Update local storage
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const cartItem = cart.find(i => i.variantId === item.variantId);
+        if (cartItem) {
+            cartItem.quantity = newQuantity;
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            // Update state
+            setCartItems(prevItems => 
+                prevItems.map(i => 
+                    i.variantId === item.variantId 
+                        ? { ...i, quantity: newQuantity }
+                        : i
+                )
+            );
+        }
+    };
+
+    if (loading) {
+        return <div className="p-8">Loading...</div>;
+    }
+
+    if (cartItems.length === 0) {
+        return (
+            <div className="p-8 text-center">
+                <h2 className="text-xl font-semibold mb-4">Your cart is empty</h2>
+                <Link href="/">
+                    <Button>Continue Shopping</Button>
+                </Link>
+            </div>
+        );
+    }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Your Cart</h1>
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          {cartItems.map((item) => (
-            <CartItem key={item.id} item={item} />
-          ))}
+        {cartItems.map((item) => (
+                    <div key={item.variantId} className="border rounded-lg p-4">
+                        <div className="flex gap-4">
+                            <div className="w-24 h-24 relative">
+                                <Image
+                                    src={item.variant.images[0].variations.thumbnail}
+                                    alt={item.product.name}
+                                    fill
+                                    className="object-cover rounded-md"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-semibold">{item.product.name}</h3>
+                                {item.variant.name && (
+                                    <p className="text-sm text-gray-500">{item.variant.name}</p>
+                                )}
+                                <div className="mt-2">
+                                    {item.priceChanged ? (
+                                        <p className="text-red-600">Price has changed since adding to cart</p>
+                                    ) : (
+                                        <p className="font-medium">₹{item.pricing.finalPrice}</p>
+                                    )}
+                                </div>
+                                <div className="mt-4 flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => updateQuantity(item, Math.max(0, item.quantity - 1))}
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <span className="w-8 text-center">{item.quantity}</span>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => updateQuantity(item, item.quantity + 1)}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
         </div>
         <div>
           <div className="bg-gray-100 p-6 rounded-lg">
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
             <div className="flex justify-between mb-2">
               <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>₹{cartItems.reduce((sum, item) => sum + (parseFloat(item.pricing.finalPrice) * item.quantity), 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between mb-2">
-              <span>Tax</span>
-              <span>${tax.toFixed(2)}</span>
+              <span>Delivery Fee</span>  
+              <span>₹40.00</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span>Taxes</span>
+              <span>₹{(cartItems.reduce((sum, item) => sum + (item.pricing.finalPrice * item.quantity), 0) * 0.18).toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-semibold text-lg mt-4">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>₹{(
+                cartItems.reduce((sum, item) => sum + (item.pricing.finalPrice * item.quantity), 0) + 
+                40 + 
+                (cartItems.reduce((sum, item) => sum + (item.pricing.finalPrice * item.quantity), 0) * 0.18)
+              ).toFixed(2)}</span>
             </div>
             <Button asChild className="w-full mt-6">
               <Link href="/checkout">Proceed to Checkout</Link>
