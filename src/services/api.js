@@ -246,6 +246,10 @@ const apiService = {
             });
             return response.data;
         },
+        getProduct: async (productId) => {
+            const response = await unauthenticatedApiClient.get(`/public/products/${productId}`);
+            return response.data.data;
+        },
     },
     discounts: {
         create: async (discountData) => {

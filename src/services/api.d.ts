@@ -112,6 +112,7 @@ interface ApiService {
 
   products: {
     createDraft: (productData: ProductDraft) => Promise<ApiResponse<string>>;
+    getProduct: (productId: string) => Promise<ApiResponse<Product>>;
     updateDraft: (draftId: string, productData: Partial<ProductDraft>) => Promise<ApiResponse<any>>;
     getDraft: (draftId: string) => Promise<ApiResponse<ProductDraft>>;
     getDrafts: () => Promise<ApiResponse<List<ProductDraft>>>;

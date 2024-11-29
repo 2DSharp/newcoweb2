@@ -9,6 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Star, Truck, StarHalf } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import Link from 'next/link';
+
+interface ProductInfoProps {
+    product: any;
+}
+
 function RatingSummary() {
   return (
       <div className="flex items-center gap-2">
@@ -63,7 +68,7 @@ function PriceDisplay({ selectedVariant }: { selectedVariant: any }) {
   );
 }
 
-export function ProductInfo({ product }: { product: any }) {
+export function ProductInfo({ product }: ProductInfoProps) {
     const [selectedVariant, setSelectedVariant] = useState(product.stock.variations[0]);
 
     return (
@@ -157,7 +162,7 @@ export function ProductInfo({ product }: { product: any }) {
                         </div>
 
                         {/* Product Actions */}
-                        <ProductActions variant={selectedVariant} />
+                        <ProductActions productId={product.id} variant={selectedVariant} />
 
                         {/* Description */}
                         <div>
