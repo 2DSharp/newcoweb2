@@ -16,6 +16,8 @@ import StockEditModal from '@/components/StockEditModal'
 import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+
 export default function ProductsListPage() {
     const router = useRouter()
     const [products, setProducts] = useState([])
@@ -111,6 +113,275 @@ export default function ProductsListPage() {
         }
     }
 
+    const ProductsTable = () => (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead className="text-gray-600">Image</TableHead>
+                    <TableHead className="text-gray-600">Name</TableHead>
+                    <TableHead className="text-gray-600">Status</TableHead>
+                    <TableHead className="text-gray-600">Price</TableHead>
+                    <TableHead className="text-gray-600">
+                        <div className="flex items-center">
+                            <span>Stock</span>
+                            <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button 
+                                            className="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                            }}
+                                        >
+                                            <Info className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent 
+                                        side="top" 
+                                        className="p-3 max-w-xs"
+                                    >
+                                        <div className="space-y-2">
+                                            <p className="font-medium">Stock Calculation</p>
+                                            <p>The sum of all fixed variants stock + custom variants stock</p>
+                                            <div className="space-y-1">
+                                                <p>🔴 Red: Out of stock</p>
+                                                <p>🟠 Orange: Low stock (&lt; 8)</p>
+                                                <p>🟢 Green: Good stock level</p>
+                                                <p>⚫ Gray: Custom order only</p>
+                                            </div>
+                                        </div>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    </TableHead>
+                    <TableHead className="text-gray-600">Category</TableHead>
+                    <TableHead className="text-gray-600">Date Created</TableHead>
+                    <TableHead className="text-gray-600">Actions</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {(showDrafts ? drafts : products).map((item) => {
+                    const stockInfo = getStockInfo(item.variants)
+                    const baseVariant = item.variants?.[0]
+                    
+                    return (
+                        <TableRow key={item.id}>
+                            <TableCell>{item.thumbnail ?
+                                <Image
+                                    src={item.thumbnail}
+                                    alt={item.name}
+                                    width={50}
+                                    height={50}
+                                    className="rounded-md"
+                                />
+                                : <div className="w-10 h-10 bg-gray-100 rounded-md"></div>
+                            }
+                            </TableCell>
+                            <TableCell>
+                                <Link href={`/products/${item.id}`}>
+                                {item.name}
+                                {item.variants?.length > 1 && (
+                                    <div className="text-sm text-gray-500">
+                                        + {item.variants.length - 1} variants
+                                    </div>
+                                )}
+                                </Link>
+                            </TableCell>
+                            <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-sm ${
+                                    showDrafts 
+                                        ? 'bg-gray-100 text-gray-800'
+                                        : item.active 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                    {showDrafts ? 'Unpublished' : (item.active ? 'Active' : 'Inactive')}
+                                </span>
+                            </TableCell>
+                            <TableCell>{(baseVariant && baseVariant.price) ? `₹${baseVariant.price.toFixed(2)}` : 'Not set'}</TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    <span className={`px-2 py-1 rounded ${stockInfo.className}`}>
+                                        {stockInfo.text}
+                                    </span>
+                                    {!showDrafts && hasFixedVariants(item.variants) && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setSelectedProduct(item)}
+                                        >
+                                            <Edit2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                {item.category} &gt; {item.subCategory}
+                                {item.finalCategory && ` > ${item.finalCategory}`}
+                            </TableCell>
+                            <TableCell>
+                                {item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : item.lastUpdatedAt ? format(new Date(item.lastUpdatedAt), 'MMM d, yyyy') : ''}
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    
+                                    {showDrafts ? (
+                                      <>
+                                         <Button
+                                         size="sm"
+                                         variant="ghost"
+                                         onClick={() => {
+                                          router.push(`/seller/products/new/${item.id}/1`)
+                                         }}
+                                     >
+                                         <Pencil className="h-4 w-4" />
+                                     </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteClick(item)}
+                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                        </>
+                                    ):
+                                    <Button
+                                        size="sm"
+                                        className="bg-gray-100 text-black hover:bg-black hover:text-white"
+                                        onClick={() => {
+                                            if (showDrafts) {
+                                                router.push(`/products/new/${item.id}/1`)
+                                            } else {
+                                                router.push(`/products/${item.id}`)
+                                            }
+                                        }}
+                                    >
+                                        Manage
+                                    </Button>
+                                    }
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    )
+                })}
+            </TableBody>
+        </Table>
+    );
+
+    const ProductsAccordion = () => (
+        <Accordion type="single" collapsible className="w-full">
+            {(showDrafts ? drafts : products).map((item) => {
+                const stockInfo = getStockInfo(item.variants);
+                const baseVariant = item.variants?.[0];
+                
+                return (
+                    <AccordionItem value={item.id} key={item.id} className="border rounded-lg mb-2">
+                        <AccordionTrigger className="px-4 hover:no-underline">
+                            <div className="flex items-center gap-4 w-full">
+                                {item.thumbnail ? (
+                                    <Image
+                                        src={item.thumbnail}
+                                        alt={item.name}
+                                        width={40}
+                                        height={40}
+                                        className="rounded-md"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 bg-gray-100 rounded-md" />
+                                )}
+                                <div className="flex-1 text-left">
+                                    <h3 className="font-medium">{item.name}</h3>
+                                    <p className="text-sm text-gray-500">
+                                        {baseVariant && baseVariant.price ? `₹${baseVariant.price.toFixed(2)}` : 'Price not set'}
+                                    </p>
+                                </div>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <p className="text-gray-500">Status</p>
+                                        <span className={`inline-block px-2 py-1 rounded-full text-sm mt-1 ${
+                                            showDrafts 
+                                                ? 'bg-gray-100 text-gray-800'
+                                                : item.active 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-gray-100 text-gray-800'
+                                        }`}>
+                                            {showDrafts ? 'Unpublished' : (item.active ? 'Active' : 'Inactive')}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Stock</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className={`inline-block px-2 py-1 rounded ${stockInfo.className}`}>
+                                                {stockInfo.text}
+                                            </span>
+                                            {!showDrafts && hasFixedVariants(item.variants) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setSelectedProduct(item)}
+                                                >
+                                                    <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Category</p>
+                                        <p className="mt-1">{item.category} &gt; {item.subCategory}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Created</p>
+                                        <p className="mt-1">{item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : ''}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex gap-2 pt-2">
+                                    {showDrafts ? (
+                                        <>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => router.push(`/seller/products/new/${item.id}/1`)}
+                                                className="flex-1"
+                                            >
+                                                <Pencil className="h-4 w-4 mr-2" />
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleDeleteClick(item)}
+                                                className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Delete
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 bg-gray-100 text-black hover:bg-black hover:text-white"
+                                            onClick={() => router.push(`/products/${item.id}`)}
+                                        >
+                                            Manage
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                )
+            })}
+        </Accordion>
+    );
+
     if (loading) {
         return (
             <div className="p-8">
@@ -145,161 +416,14 @@ export default function ProductsListPage() {
 
             <Card className="bg-white rounded-lg shadow">
                 <div className="p-4 md:p-6 overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="text-gray-600">Image</TableHead>
-                                <TableHead className="text-gray-600">Name</TableHead>
-                                <TableHead className="text-gray-600">Status</TableHead>
-                                <TableHead className="text-gray-600">Price</TableHead>
-                                <TableHead className="text-gray-600">
-                                    <div className="flex items-center">
-                                        <span>Stock</span>
-                                        <TooltipProvider delayDuration={0}>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <button 
-                                                        className="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                        onClick={(e) => {
-                                                            e.preventDefault()
-                                                            e.stopPropagation()
-                                                        }}
-                                                    >
-                                                        <Info className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-                                                    </button>
-                                                </TooltipTrigger>
-                                                <TooltipContent 
-                                                    side="top" 
-                                                    className="p-3 max-w-xs"
-                                                >
-                                                    <div className="space-y-2">
-                                                        <p className="font-medium">Stock Calculation</p>
-                                                        <p>The sum of all fixed variants stock + custom variants stock</p>
-                                                        <div className="space-y-1">
-                                                            <p>🔴 Red: Out of stock</p>
-                                                            <p>🟠 Orange: Low stock (&lt; 8)</p>
-                                                            <p>🟢 Green: Good stock level</p>
-                                                            <p>⚫ Gray: Custom order only</p>
-                                                        </div>
-                                                    </div>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                </TableHead>
-                                <TableHead className="text-gray-600">Category</TableHead>
-                                <TableHead className="text-gray-600">Date Created</TableHead>
-                                <TableHead className="text-gray-600">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {(showDrafts ? drafts : products).map((item) => {
-                                const stockInfo = getStockInfo(item.variants)
-                                const baseVariant = item.variants?.[0]
-                                
-                                return (
-                                    <TableRow key={item.id}>
-                                        <TableCell>{item.thumbnail ?
-                                            <Image
-                                                src={item.thumbnail}
-                                                alt={item.name}
-                                                width={50}
-                                                height={50}
-                                                className="rounded-md"
-                                            />
-                                            : <div className="w-10 h-10 bg-gray-100 rounded-md"></div>
-                                        }
-                                        </TableCell>
-                                        <TableCell>
-                                            <Link href={`/products/${item.id}`}>
-                                            {item.name}
-                                            {item.variants?.length > 1 && (
-                                                <div className="text-sm text-gray-500">
-                                                    + {item.variants.length - 1} variants
-                                                </div>
-                                            )}
-                                            </Link>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className={`px-2 py-1 rounded-full text-sm ${
-                                                showDrafts 
-                                                    ? 'bg-gray-100 text-gray-800'
-                                                    : item.active 
-                                                        ? 'bg-green-100 text-green-800' 
-                                                        : 'bg-gray-100 text-gray-800'
-                                            }`}>
-                                                {showDrafts ? 'Unpublished' : (item.active ? 'Active' : 'Inactive')}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>{(baseVariant && baseVariant.price) ? `₹${baseVariant.price.toFixed(2)}` : 'Not set'}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <span className={`px-2 py-1 rounded ${stockInfo.className}`}>
-                                                    {stockInfo.text}
-                                                </span>
-                                                {!showDrafts && hasFixedVariants(item.variants) && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setSelectedProduct(item)}
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.category} &gt; {item.subCategory}
-                                            {item.finalCategory && ` > ${item.finalCategory}`}
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : item.lastUpdatedAt ? format(new Date(item.lastUpdatedAt), 'MMM d, yyyy') : ''}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                
-                                                {showDrafts ? (
-                                                  <>
-                                                     <Button
-                                                     size="sm"
-                                                     variant="ghost"
-                                                     onClick={() => {
-                                                      router.push(`/seller/products/new/${item.id}/1`)
-                                                     }}
-                                                 >
-                                                     <Pencil className="h-4 w-4" />
-                                                 </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteClick(item)}
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                    </>
-                                                ):
-                                                <Button
-                                                    size="sm"
-                                                    className="bg-gray-100 text-black hover:bg-black hover:text-white"
-                                                    onClick={() => {
-                                                        if (showDrafts) {
-                                                            router.push(`/products/new/${item.id}/1`)
-                                                        } else {
-                                                            router.push(`/products/${item.id}`)
-                                                        }
-                                                    }}
-                                                >
-                                                    Manage
-                                                </Button>
-                                                }
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            })}
-                        </TableBody>
-                    </Table>
+                    {/* Show table on desktop */}
+                    <div className="hidden md:block">
+                        <ProductsTable />
+                    </div>
+                    {/* Show accordion on mobile for both products and drafts */}
+                    <div className="md:hidden">
+                        <ProductsAccordion />
+                    </div>
                 </div>
             </Card>
 

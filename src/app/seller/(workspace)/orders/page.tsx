@@ -51,18 +51,20 @@ export default function OrdersPage() {
             />
           </div>
           <div className="lg:col-span-7 xl:col-span-8">
-            {selectedOrder ? (
-              <OrderDetails 
-                order={selectedOrder}
-                onOrderUpdate={handleUpdateOrder}
-              />
-            ) : (
-              <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                <h3 className="text-lg text-gray-500">
-                  Select an order to view details
-                </h3>
-              </div>
-            )}
+            <div className="sticky top-4">
+              {selectedOrder ? (
+                <OrderDetails 
+                  order={selectedOrder}
+                  onOrderUpdate={handleUpdateOrder}
+                />
+              ) : (
+                <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                  <h3 className="text-lg text-gray-500">
+                    Select an order to view details
+                  </h3>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
