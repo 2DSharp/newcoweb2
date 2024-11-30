@@ -17,6 +17,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { ProductManagementOverlay } from '@/components/product-management/ProductManagementOverlay';
 
 export default function ProductsListPage() {
     const router = useRouter()
@@ -28,6 +29,7 @@ export default function ProductsListPage() {
     const { toast } = useToast()
     const [deleteModalOpen, setDeleteModalOpen] = useState(false)
     const [draftToDelete, setDraftToDelete] = useState(null)
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -113,6 +115,10 @@ export default function ProductsListPage() {
         }
     }
 
+    const handleManageClick = (productId: string) => {
+        setSelectedProductId(productId);
+    };
+
     const ProductsTable = () => (
         <Table>
             <TableHeader>
@@ -181,7 +187,7 @@ export default function ProductsListPage() {
                             </TableCell>
                             <TableCell>
                                 <Link href={`/products/${item.id}`}>
-                                {item.name}
+                                <span className=" font-medium">{item.name}</span>
                                 {item.variants?.length > 1 && (
                                     <div className="text-sm text-gray-500">
                                         + {item.variants.length - 1} variants
@@ -218,8 +224,10 @@ export default function ProductsListPage() {
                                 </div>
                             </TableCell>
                             <TableCell>
+                                <b className="font-medium">
                                 {item.category} &gt; {item.subCategory}
                                 {item.finalCategory && ` > ${item.finalCategory}`}
+                                </b>
                             </TableCell>
                             <TableCell>
                                 {item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : item.lastUpdatedAt ? format(new Date(item.lastUpdatedAt), 'MMM d, yyyy') : ''}
@@ -251,13 +259,7 @@ export default function ProductsListPage() {
                                     <Button
                                         size="sm"
                                         className="bg-gray-100 text-black hover:bg-black hover:text-white"
-                                        onClick={() => {
-                                            if (showDrafts) {
-                                                router.push(`/products/new/${item.id}/1`)
-                                            } else {
-                                                router.push(`/products/${item.id}`)
-                                            }
-                                        }}
+                                        onClick={() => handleManageClick(item.id)}
                                     >
                                         Manage
                                     </Button>
@@ -368,7 +370,7 @@ export default function ProductsListPage() {
                                         <Button
                                             size="sm"
                                             className="flex-1 bg-gray-100 text-black hover:bg-black hover:text-white"
-                                            onClick={() => router.push(`/products/${item.id}`)}
+                                            onClick={() => handleManageClick(item.id)}
                                         >
                                             Manage
                                         </Button>
@@ -446,6 +448,12 @@ export default function ProductsListPage() {
                 onConfirm={handleDeleteConfirm}
                 title="Delete Draft"
                 description={`Are you sure you want to delete "${draftToDelete?.name}"? This action cannot be undone.`}
+            />
+
+            <ProductManagementOverlay
+                productId={selectedProductId}
+                isOpen={!!selectedProductId}
+                onClose={() => setSelectedProductId(null)}
             />
         </div>
     )

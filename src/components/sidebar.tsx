@@ -11,7 +11,8 @@ import {
   Tags,
   Settings,
   Menu,
-  X
+  X,
+  Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -38,6 +39,11 @@ const routes = [
     href: "/seller/discounts",
   },
   {
+    label: "Store",
+    icon: Store,
+    href: "/seller/store",
+  },
+  {
     label: "Settings",
     icon: Settings,
     href: "/products/list/settings",
@@ -60,7 +66,7 @@ export function Sidebar() {
             href={route.href}
             onClick={() => setIsOpen(false)}
             className={cn(
-              "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium",
+              "flex items-center space-x-3 rounded-lg px-3 py-2 text-md font-medium",
               pathname === route.href
                 ? "bg-slate-100 text-slate-900"
                 : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"

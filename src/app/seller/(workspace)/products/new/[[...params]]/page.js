@@ -6,9 +6,9 @@ import { ArrowRight, ArrowLeft, Store, Clipboard, Layers, Check, Search } from '
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import ProductInfoForm from '../product-info-form'
-import SearchabilityDetailsForm from '../searchability'
-import ProductVariationsForm from '../product-variations-form'
+import ProductInfoForm from '@/components/product-configuration/product-info-form'
+import SearchabilityDetailsForm from '@/components/product-configuration/searchability'
+import ProductVariationsForm from '@/components/product-configuration/product-variations-form'
 import apiService from '@/services/api'
 import { Card } from "@/components/ui/card"
 

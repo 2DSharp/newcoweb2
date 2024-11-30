@@ -239,6 +239,10 @@ const apiService = {
             const response = await authenticatedApiClient.get('/seller/products/');
             return response.data;
         },
+        getSellerProductDetails: async (productId) => {
+            const response = await authenticatedApiClient.get(`/seller/products/${productId}`);
+            return response.data;
+        },
         updateStock: async (productId, variantId, quantity) => {
             const response = await authenticatedApiClient.put(`/seller/products/${productId}/stock`, {
                 variantId,
@@ -249,6 +253,10 @@ const apiService = {
         getProduct: async (productId) => {
             const response = await unauthenticatedApiClient.get(`/public/products/${productId}`);
             return response.data.data;
+        },
+        updateProduct: async (productId, productData) => {
+            const response = await authenticatedApiClient.put(`/seller/products/${productId}`, productData);
+            return response.data;
         },
     },
     discounts: {
