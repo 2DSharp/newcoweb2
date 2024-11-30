@@ -1,0 +1,35 @@
+/* Scope all styles to the settings page */
+.settings-page {
+    /* Form input styles */
+    .form-input {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
+        bg-white
+        transition-colors duration-200
+        hover:border-gray-400
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none;
+    }
+
+    .form-input-with-icon {
+        @apply pl-10 pr-4 py-2 border border-gray-300 rounded-lg 
+        bg-white
+        transition-colors duration-200
+        hover:border-gray-400
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none;
+    }
+
+    .form-textarea {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
+        bg-white
+        transition-colors duration-200
+        hover:border-gray-400
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none;
+    }
+
+    .form-select {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
+        bg-white
+        transition-colors duration-200
+        hover:border-gray-400
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none;
+    }
+} 

@@ -46,7 +46,7 @@ const routes = [
   {
     label: "Settings",
     icon: Settings,
-    href: "/products/list/settings",
+    href: "/seller/settings",
   },
 ];
 
