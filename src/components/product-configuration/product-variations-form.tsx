@@ -4,11 +4,142 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee, X, Trash, Scale, BoxSelect } from 'lucide-react'
+import { Plus, Trash2, ImageIcon, Tag, Package, Clock, Info, Barcode, IndianRupee, X, Trash, Scale, BoxSelect, Settings2 } from 'lucide-react'
 import ImageUploader from '@/components/ImageUploader'
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Separator } from "@/components/ui/separator"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type CustomizationOption = {
+    title: string;
+    type: 'text' | 'select_one' | 'select_multiple';
+    options?: string[];
+};
+
+const CustomizationOptionsForm = ({ variation, index, handleVariationChange }) => {
+    const customizationOptions = variation.customizationOptions || [];
+
+    const handleOptionChange = (optionIndex: number, field: keyof CustomizationOption, value: any) => {
+        const updatedOptions = [...customizationOptions];
+        if (!updatedOptions[optionIndex]) {
+            updatedOptions[optionIndex] = { title: '', type: 'text' };
+        }
+        
+        // Reset options when type changes
+        if (field === 'type' && value !== 'select_one' && value !== 'select_multiple') {
+            delete updatedOptions[optionIndex].options;
+        }
+        
+        updatedOptions[optionIndex] = {
+            ...updatedOptions[optionIndex],
+            [field]: value
+        };
+        
+        handleVariationChange(index, 'customizationOptions', updatedOptions);
+    };
+
+    const addOption = () => {
+        handleVariationChange(index, 'customizationOptions', [...customizationOptions, { title: '', type: 'text' }]);
+    };
+
+    const removeOption = (optionIndex: number) => {
+        const updatedOptions = customizationOptions.filter((_, i) => i !== optionIndex);
+        handleVariationChange(index, 'customizationOptions', updatedOptions);
+    };
+
+    const handleOptionsStringChange = (optionIndex: number, value: string) => {
+        const optionsArray = value.split(',').map(opt => opt.trim());
+        handleOptionChange(optionIndex, 'options', optionsArray);
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center">
+                <Label className="flex items-center">
+                    <Settings2 className="mr-2 text-blue-500" size={16} />
+                    Customization Options
+                </Label>
+            </div>
+            <p className="text-sm text-gray-500">
+                Add the finer customizations you want to offer. Example: Color, Size, Pattern etc.
+            </p>
+            
+            {/* Options List */}
+            <div className="space-y-4">
+                {customizationOptions.map((option, optionIndex) => (
+                    <div key={optionIndex} className="border rounded-lg p-4 space-y-4">
+                        <div className="flex justify-between items-center">
+                            <h4 className="font-medium">Option {optionIndex + 1}</h4>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeOption(optionIndex)}
+                            >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Field Name</Label>
+                                <Input
+                                    value={option.title || ''}
+                                    onChange={(e) => handleOptionChange(optionIndex, 'title', e.target.value)}
+                                    placeholder="e.g., Color, Size, Pattern"
+                                />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label>Input Type</Label>
+                                <Select
+                                    value={option.type}
+                                    onValueChange={(value) => handleOptionChange(optionIndex, 'type', value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select input type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="text">Text Input</SelectItem>
+                                        <SelectItem value="select_one">Select One Option</SelectItem>
+                                        <SelectItem value="select_multiple">Select Multiple Options</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        
+                        {(option.type === 'select_one' || option.type === 'select_multiple') && (
+                            <div className="space-y-2">
+                                <Label>Options (comma-separated)</Label>
+                                <Input
+                                    value={option.options?.join(', ') || ''}
+                                    onChange={(e) => handleOptionsStringChange(optionIndex, e.target.value)}
+                                    placeholder="e.g., Small, Medium, Large"
+                                />
+                                <p className="text-sm text-gray-500">
+                                    Enter options separated by commas
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* Add Option Button moved to bottom */}
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addOption}
+                className={customizationOptions.length > 0 ? "mt-2" : ""}
+            >
+                <Plus className="h-4 w-4 mr-2" />
+                {customizationOptions.length === 0 ? "Add First Option" : "Add Another Option"}
+            </Button>
+        </div>
+    );
+};
 
 export default function ProductVariationsForm({ formData, updateFormData, isManagementOverlay = false }) {
     const [validationError, setValidationError] = useState(false);
@@ -542,6 +673,14 @@ export default function ProductVariationsForm({ formData, updateFormData, isMana
                                 </div>
                                 
                             </div>
+
+                            <Separator className="my-6" />
+    
+                        <CustomizationOptionsForm
+                            variation={variation}
+                            index={index}
+                            handleVariationChange={handleVariationChange}
+                        />
                         </div>
                     </div>
                 </div>
