@@ -150,7 +150,7 @@ export function ProductManagementOverlay({ productId, isOpen, onClose }: Product
               </AccordionItem>
 
               <AccordionItem value="variations">
-                <AccordionTrigger>Stock & Pricing</AccordionTrigger>
+                <AccordionTrigger>Variations</AccordionTrigger>
                 <AccordionContent>
                   <ProductVariationsForm
                     formData={formData}

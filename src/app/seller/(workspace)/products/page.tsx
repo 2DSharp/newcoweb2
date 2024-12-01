@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
-import { Info, Plus, Pencil, Trash2 } from "lucide-react"
+import { Info, Plus, Pencil, Trash2, TicketPercent, BadgeIndianRupee, IndianRupee } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import apiService from '@/services/api'
@@ -196,10 +196,21 @@ export default function ProductsListPage() {
                             <TableHead className="text-gray-600">Image</TableHead>
                             <TableHead className="text-gray-600">Name</TableHead>
                             <TableHead className="text-gray-600">Status</TableHead>
-                            <TableHead className="text-gray-600">Price</TableHead>
+                            <TableHead className="text-gray-600">
+                            <div className="flex items-center gap-2">
+                                    Price
+                                    <IndianRupee className="h-4 w-4" />
+                                </div>
+                            </TableHead>
+                            <TableHead className="text-gray-600">
+                                <div className="flex items-center gap-2">
+                                    Discount
+                                    <TicketPercent className="h-4 w-4 text-green-600" />
+                                </div>
+                            </TableHead>
                             <TableHead className="text-gray-600">
                                 <div className="flex items-center">
-                                    <span>Stock</span>
+                                    <span>Inventory</span>
                                     <TooltipProvider delayDuration={0}>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
@@ -272,31 +283,35 @@ export default function ProductsListPage() {
                                             }`}>
                                                 {item.active ? 'Active' : 'Inactive'}
                                             </span>
-                                            {!showDrafts && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setEditActivation(item)}
-                                                >
-                                                    <Edit2 className="h-4 w-4" />
-                                                </Button>
-                                            )}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setEditActivation(item)}
+                                            >
+                                                <Edit2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                             {(baseVariant && baseVariant.price) ? 
                                                 `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
-                                            {!showDrafts && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setEditPrice(item)}
-                                                >
-                                                    <Edit2 className="h-4 w-4" />
-                                                </Button>
-                                            )}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setEditPrice(item)}
+                                            >
+                                                <Edit2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        {baseVariant?.pricing?.discount?.discountType 
+                                            ? <span className="text-green-600">
+                                                {baseVariant.pricing.discount.discountType.replace(/_/g, ' ')}
+                                              </span>
+                                            : <span className="text-gray-500">None</span>
+                                        }
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
@@ -407,33 +422,27 @@ export default function ProductsListPage() {
                                                     }`}>
                                                         {item.active ? 'Active' : 'Inactive'}
                                                     </span>
-                                                    {!showDrafts && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => setEditActivation(item)}
-                                                        >
-                                                            <Edit2 className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setEditActivation(item)}
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500">Price</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span>
-                                                        {baseVariant && baseVariant.price ? 
-                                                            `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
-                                                    </span>
-                                                    {!showDrafts && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => setEditPrice(item)}
-                                                        >
-                                                            <Edit2 className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
+                                                    {(baseVariant && baseVariant.price) ? 
+                                                        `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setEditPrice(item)}
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
                                             </div>
                                             <div>
@@ -460,6 +469,20 @@ export default function ProductsListPage() {
                                             <div>
                                                 <p className="text-gray-500">Created</p>
                                                 <p className="mt-1">{item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : ''}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 flex items-center gap-2">
+                                                    <TicketPercent className="h-4 w-4 text-green-600" />
+                                                    Discount
+                                                </p>
+                                                <div className="mt-1">
+                                                    {baseVariant?.pricing?.discount?.discountType 
+                                                        ? <span className="text-green-600">
+                                                            {baseVariant.pricing.discount.discountType.replace(/_/g, ' ')}
+                                                          </span>
+                                                        : <span className="text-gray-500">None</span>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                         
