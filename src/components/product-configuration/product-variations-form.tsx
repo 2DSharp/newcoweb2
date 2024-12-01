@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Separator } from "@/components/ui/separator"
 
-export default function ProductVariationsForm({ formData, updateFormData }) {
+export default function ProductVariationsForm({ formData, updateFormData, isManagementOverlay = false }) {
     const [validationError, setValidationError] = useState(false);
 
     React.useEffect(() => {
@@ -174,8 +174,8 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                     />
                                     <p className="text-sm text-gray-500">
                                         {index === 0 
-                                            ? "Optional name for your base product variation"
-                                            : "Give this variation a unique, descriptive name to differentiate it"
+                                                ? "Optional name for your base product variation"
+                                                : "Give this variation a unique, descriptive name to differentiate it"
                                         }
                                     </p>
                                 </div>
@@ -189,64 +189,71 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                         value={variation.sku}
                                         onChange={(e) => handleVariationChange(index, 'sku', e.target.value)}
                                         placeholder="e.g., PROD-001-BLU, CUSTOM-LARGE-001"
+                                        disabled={isManagementOverlay}
+                                        className={isManagementOverlay ? "bg-gray-100" : ""}
                                     />
                                     <p className="text-sm text-gray-500">
-                                        Optional unique identifier for inventory tracking
+                                        {isManagementOverlay 
+                                            ? "SKU cannot be changed after creation"
+                                            : "Optional unique identifier for inventory tracking"
+                                        }
                                     </p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4">
-                                {/* Price and Calculations Row */}
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor={`price-${index}`} className="flex items-center">
-                                            <IndianRupee className="mr-2 text-green-500" size={16} />
-                                            Selling Price Per Unit *
-                                        </Label>
-                                        <Input
-                                            id={`price-${index}`}
-                                            type="number"
-                                            value={variation.price}
-                                            onChange={(e) => handleVariationChange(index, 'price', Number(e.target.value))}
-                                            step="1"
-                                            required
-                                        />
-                                        <p className="text-sm text-gray-500">
-                                            The final price that will be displayed to the customer. This price will be inclusive of all shipping and taxes.
-                                        </p>
-                                    </div>
-
-                                    {/* Live Calculations */}
-                                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
-                                        <Label className="text-sm text-gray-600">Commission (6% + GST)</Label>
-                                        <div className="text-lg font-semibold text-red-600">
-                                            ₹ {variation.price ? (((variation.price * 0.06) * 1.18).toFixed(2)) : '0.00'}
+                                {/* Hide price calculations section if in management overlay */}
+                                {!isManagementOverlay && (
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`price-${index}`} className="flex items-center">
+                                                <IndianRupee className="mr-2 text-green-500" size={16} />
+                                                Selling Price Per Unit *
+                                            </Label>
+                                            <Input
+                                                id={`price-${index}`}
+                                                type="number"
+                                                value={variation.price}
+                                                onChange={(e) => handleVariationChange(index, 'price', Number(e.target.value))}
+                                                step="1"
+                                                required
+                                            />
+                                            <p className="text-sm text-gray-500">
+                                                The final price that will be displayed to the customer. This price will be inclusive of all shipping and taxes.
+                                            </p>
                                         </div>
-                                        <p className="text-xs text-gray-500">Platform fee + 18% GST</p>
-                                    </div>
 
-                                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
-                                        <Label className="text-sm text-gray-600">Delivery + GST</Label>
-                                        <div className="text-lg font-semibold text-orange-600">
-                                            ₹ {variation.price ? ((85 * 1.18).toFixed(2)) : '0.00'}
+                                        {/* Live Calculations */}
+                                        <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                            <Label className="text-sm text-gray-600">Commission (6% + GST)</Label>
+                                            <div className="text-lg font-semibold text-red-600">
+                                                ₹ {variation.price ? (((variation.price * 0.06) * 1.18).toFixed(2)) : '0.00'}
+                                            </div>
+                                            <p className="text-xs text-gray-500">Platform fee + 18% GST</p>
                                         </div>
-                                        <p className="text-xs text-gray-500">₹85 shipping + 18% GST</p>
-                                    </div>
 
-                                    <div className="space-y-2 bg-green-50 p-3 rounded-lg">
-                                        <Label className="text-sm text-gray-600">Your Earnings</Label>
-                                        <div className="text-lg font-semibold text-green-600">
-                                            ₹ {variation.price ? (
-                                                (variation.price - 
-                                                (variation.price * 0.06 * 1.18) - 
-                                                (85 * 1.18)
-                                                ).toFixed(2)
-                                            ) : '0.00'}
+                                        <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                            <Label className="text-sm text-gray-600">Delivery + GST</Label>
+                                            <div className="text-lg font-semibold text-orange-600">
+                                                ₹ {variation.price ? ((85 * 1.18).toFixed(2)) : '0.00'}
+                                            </div>
+                                            <p className="text-xs text-gray-500">₹85 shipping + 18% GST</p>
                                         </div>
-                                        <p className="text-xs text-gray-500">Final amount after all deductions</p>
+
+                                        <div className="space-y-2 bg-green-50 p-3 rounded-lg">
+                                            <Label className="text-sm text-gray-600">Your Earnings</Label>
+                                            <div className="text-lg font-semibold text-green-600">
+                                                ₹ {variation.price ? (
+                                                    (variation.price - 
+                                                    (variation.price * 0.06 * 1.18) - 
+                                                    (85 * 1.18)
+                                                    ).toFixed(2)
+                                                ) : '0.00'}
+                                            </div>
+                                            <p className="text-xs text-gray-500">Final amount after all deductions</p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Stock and Processing Time Row */}
                                 <div className="space-y-4">
@@ -263,28 +270,31 @@ export default function ProductVariationsForm({ formData, updateFormData }) {
                                     </p>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor={`stock-${index}`} className="flex items-center">
-                                                <Package className="mr-2 text-orange-500" size={16} />
-                                                Stock
-                                            </Label>
-                                            <Input
-                                                id={`stock-${index}`}
-                                                type="number"
-                                                value={variation.stock}
-                                                onChange={(e) => handleVariationChange(index, 'stock', Number(e.target.value))}
-                                                min="0"
-                                                disabled={variation.isCustom}
-                                                className={variation.isCustom ? 'bg-gray-100' : ''}
-                                                placeholder="Available quantity"
-                                            />
-                                            <p className="text-sm text-gray-500">
-                                                {variation.isCustom 
-                                                    ? "Stock tracking disabled for custom variations"
-                                                    : "Number of items available for immediate purchase"
-                                                }
-                                            </p>
-                                        </div>
+                                        {/* Hide stock field if in management overlay */}
+                                        {!isManagementOverlay && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`stock-${index}`} className="flex items-center">
+                                                    <Package className="mr-2 text-orange-500" size={16} />
+                                                    Stock
+                                                </Label>
+                                                <Input
+                                                    id={`stock-${index}`}
+                                                    type="number"
+                                                    value={variation.stock}
+                                                    onChange={(e) => handleVariationChange(index, 'stock', Number(e.target.value))}
+                                                    min="0"
+                                                    disabled={variation.isCustom}
+                                                    className={variation.isCustom ? 'bg-gray-100' : ''}
+                                                    placeholder="Available quantity"
+                                                />
+                                                <p className="text-sm text-gray-500">
+                                                    {variation.isCustom 
+                                                        ? "Stock tracking disabled for custom variations"
+                                                        : "Number of items available for immediate purchase"
+                                                    }
+                                                </p>
+                                            </div>
+                                        )}
 
                                         <div className="space-y-2">
                                             <Label htmlFor={`processing-${index}`} className="flex items-center">

@@ -155,6 +155,7 @@ export function ProductManagementOverlay({ productId, isOpen, onClose }: Product
                   <ProductVariationsForm
                     formData={formData}
                     updateFormData={updateFormData}
+                    isManagementOverlay={true}
                   />
                   <div className="mt-4 flex justify-end">
                     <Button 
