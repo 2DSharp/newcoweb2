@@ -238,8 +238,7 @@ export default function CartPage() {
               <span>Total</span>
               <span>₹{(
                 cartItems.reduce((sum, item) => sum + (parseCurrency(item.pricing.finalPrice) * item.quantity), 0) + 
-                40 + 
-                (cartItems.reduce((sum, item) => sum + (parseCurrency(item.pricing.finalPrice) * item.quantity), 0) * 0.18)
+                55 
               ).toFixed(2)}</span>
             </div>
             <Button asChild className="w-full mt-6">

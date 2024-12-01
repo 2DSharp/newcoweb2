@@ -10,26 +10,29 @@ import { format } from 'date-fns'
 import apiService from '@/services/api'
 import Image from 'next/image'
 import { Card } from "@/components/ui/card"
-import { PrimaryButton } from '@/components/ui/primary-button';
 import { Edit2 } from 'lucide-react'
-import StockEditModal from '@/components/StockEditModal'
+import StockEditModal from './StockEditModal'
 import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ProductManagementOverlay } from '@/components/product-management/ProductManagementOverlay';
+import PriceEditModal from './PriceEditModal';
+import ActivationModal from './ActivationModal';
 
 export default function ProductsListPage() {
     const router = useRouter()
     const [products, setProducts] = useState([])
     const [drafts, setDrafts] = useState([])
     const [loading, setLoading] = useState(true)
-    const [selectedProduct, setSelectedProduct] = useState(null)
+    const [editStock, setEditStock] = useState(null)
     const [showDrafts, setShowDrafts] = useState(false)
     const { toast } = useToast()
     const [deleteModalOpen, setDeleteModalOpen] = useState(false)
     const [draftToDelete, setDraftToDelete] = useState(null)
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+    const [editPrice, setEditPrice] = useState(null);
+    const [editActivation, setEditActivation] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -119,6 +122,16 @@ export default function ProductsListPage() {
         setSelectedProductId(productId);
     };
 
+    const handlePriceUpdate = async () => {
+        const response = await apiService.products.getList();
+        setProducts(response.data);
+    };
+
+    const handleActivationUpdate = async () => {
+        const response = await apiService.products.getList();
+        setProducts(response.data);
+    };
+
     const ProductsTable = () => (
         <Table>
             <TableHeader>
@@ -196,17 +209,34 @@ export default function ProductsListPage() {
                                 </Link>
                             </TableCell>
                             <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-sm ${
-                                    showDrafts 
-                                        ? 'bg-gray-100 text-gray-800'
-                                        : item.active 
-                                            ? 'bg-green-100 text-green-800' 
-                                            : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                    {showDrafts ? 'Unpublished' : (item.active ? 'Active' : 'Inactive')}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`px-2 py-1 rounded-full text-sm ${
+                                        item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                        {item.active ? 'Active' : 'Inactive'}
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setEditActivation(item)}
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </TableCell>
-                            <TableCell>{(baseVariant && baseVariant.price) ? `₹${baseVariant.price.toFixed(2)}` : 'Not set'}</TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    {(baseVariant && baseVariant.price) ? 
+                                        `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setEditPrice(item)}
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </TableCell>
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     <span className={`px-2 py-1 rounded ${stockInfo.className}`}>
@@ -216,7 +246,7 @@ export default function ProductsListPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setSelectedProduct(item)}
+                                            onClick={() => setEditStock(item)}
                                         >
                                             <Edit2 className="h-4 w-4" />
                                         </Button>
@@ -296,9 +326,6 @@ export default function ProductsListPage() {
                                 )}
                                 <div className="flex-1 text-left">
                                     <h3 className="font-medium">{item.name}</h3>
-                                    <p className="text-sm text-gray-500">
-                                        {baseVariant && baseVariant.price ? `₹${baseVariant.price.toFixed(2)}` : 'Price not set'}
-                                    </p>
                                 </div>
                             </div>
                         </AccordionTrigger>
@@ -307,15 +334,36 @@ export default function ProductsListPage() {
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <p className="text-gray-500">Status</p>
-                                        <span className={`inline-block px-2 py-1 rounded-full text-sm mt-1 ${
-                                            showDrafts 
-                                                ? 'bg-gray-100 text-gray-800'
-                                                : item.active 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-gray-100 text-gray-800'
-                                        }`}>
-                                            {showDrafts ? 'Unpublished' : (item.active ? 'Active' : 'Inactive')}
-                                        </span>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className={`inline-block px-2 py-1 rounded-full text-sm ${
+                                                item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                            }`}>
+                                                {item.active ? 'Active' : 'Inactive'}
+                                            </span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setEditActivation(item)}
+                                            >
+                                                <Edit2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Price</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span>
+                                                {baseVariant && baseVariant.price ? 
+                                                    `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
+                                            </span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setEditPrice(item)}
+                                            >
+                                                <Edit2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Stock</p>
@@ -327,7 +375,7 @@ export default function ProductsListPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => setSelectedProduct(item)}
+                                                    onClick={() => setEditStock(item)}
                                                 >
                                                     <Edit2 className="h-4 w-4" />
                                                 </Button>
@@ -429,12 +477,12 @@ export default function ProductsListPage() {
                 </div>
             </Card>
 
-            {selectedProduct && (
+            {editStock && (
                 <StockEditModal
-                    isOpen={!!selectedProduct}
-                    onClose={() => setSelectedProduct(null)}
-                    variants={selectedProduct.variants}
-                    productId={selectedProduct.id}
+                    isOpen={!!editStock}
+                    onClose={() => setEditStock(null)}
+                    variants={editStock.variants}
+                    productId={editStock.id}
                     onStockUpdate={handleStockUpdate}
                 />
             )}
@@ -455,6 +503,25 @@ export default function ProductsListPage() {
                 isOpen={!!selectedProductId}
                 onClose={() => setSelectedProductId(null)}
             />
+
+            {editPrice && (
+                <PriceEditModal
+                    isOpen={!!editPrice}
+                    onClose={() => setEditPrice(null)}
+                    variants={editPrice.variants}
+                    productId={editPrice.id}
+                    onPriceUpdate={handlePriceUpdate}
+                />
+            )}
+
+            {editActivation && (
+                <ActivationModal
+                    isOpen={!!editActivation}
+                    onClose={() => setEditActivation(null)}
+                    product={editActivation}
+                    onActivationUpdate={handleActivationUpdate}
+                />
+            )}
         </div>
     )
 }

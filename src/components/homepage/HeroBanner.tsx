@@ -18,7 +18,7 @@ export default function HeroBanner() {
       </div>
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
         <h1 className="text-4xl md:text-6xl font-bold mb-6">
-          Discover Trending Products
+          A passion driven marketplace for whatever tickles you
         </h1>
         <p className="text-xl md:text-2xl text-gray-200 max-w-2xl">
           Shop the latest trends and discover unique products from around the world.

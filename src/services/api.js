@@ -258,6 +258,20 @@ const apiService = {
             const response = await authenticatedApiClient.put(`/seller/products/${productId}`, productData);
             return response.data;
         },
+        updatePricing: async (productId, variants) => {
+            const response = await authenticatedApiClient.put(`/seller/products/${productId}/pricing`, {
+                variants
+            });
+            return response.data;
+        },
+        updateActivation: async (productId, variantId, active) => {
+            const response = await authenticatedApiClient.put(`/seller/products/activation`, {
+                productId,
+                variantId,
+                active
+            });
+            return response.data;
+        },
     },
     discounts: {
         create: async (discountData) => {
