@@ -81,6 +81,33 @@ interface ProductVariation {
   images: string[];
 }
 
+interface DiscountProduct {
+  id: string;
+  name: string;
+}
+
+interface DiscountCondition {
+  type: "NO_CONDITION" | "MIN_PURCHASE_QTY" | "MIN_PURCHASE_AMOUNT" | "REFERRAL";
+  startDate: string;
+  endDate: string;
+  minPurchaseAmount: number | null;
+  minPurchaseQty: number | null;
+  referralCode: string | null;
+}
+
+interface Discount {
+  id: string;
+  name: string;
+  discountType: "PERCENTAGE" | "FIXED" | "BUY_AND_GET_FREE";
+  active: boolean;
+  applicableDiscount: number;
+  createdAt: string;
+  updatedAt: string | null;
+  triggerProducts: DiscountProduct[];
+  targetProducts: DiscountProduct[];
+  condition: DiscountCondition;
+}
+
 interface ApiService {
   cms: {
     getStateList: () => Promise<ApiResponse<State[]>>;
@@ -135,7 +162,9 @@ interface ApiService {
       targetProducts: string[];
     }) => Promise<ApiResponse<any>>;
     delete: (discountId: string) => Promise<ApiResponse<any>>;
-    getList: () => Promise<ApiResponse<List<any>>>;
+    getList: () => Promise<ApiResponse<Discount[]>>;
+    activate: (discountId: string) => Promise<ApiResponse<any>>;
+    deactivate: (discountId: string) => Promise<ApiResponse<any>>;
   };
 }
 

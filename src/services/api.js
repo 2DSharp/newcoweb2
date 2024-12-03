@@ -278,12 +278,16 @@ const apiService = {
             const response = await authenticatedApiClient.post('/seller/products/discounts', discountData);
             return response.data;
         },
-        delete: async (discountId) => {
-            const response = await authenticatedApiClient.delete(`/seller/discounts/${discountId}`);
+        getList: async () => {
+            const response = await authenticatedApiClient.get('/seller/products/discounts');
             return response.data;
         },
-        getList: async () => {
-            const response = await authenticatedApiClient.get('/seller/discounts');
+        activate: async (discountId) => {
+            const response = await authenticatedApiClient.put(`/seller/products/discounts/${discountId}/activate`);
+            return response.data;
+        },
+        deactivate: async (discountId) => {
+            const response = await authenticatedApiClient.delete(`/seller/products/discounts/${discountId}`);
             return response.data;
         },
     },
