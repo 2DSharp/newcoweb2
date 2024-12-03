@@ -164,26 +164,26 @@ export default function ProductVariationsForm({ formData, updateFormData, isMana
     const handleVariationChange = (index, field, value) => {
         const updatedVariations = [...formData.variations]
             // Ensure the variation at this index exists and has all required fields
-    if (!updatedVariations[index]) {
-        updatedVariations[index] = {
-            details: {},
-            images: []
+        if (!updatedVariations[index]) {
+            updatedVariations[index] = {
+                details: {},
+                images: []
+            }
         }
-    }
 
     // Special handling for images to ensure they're properly scoped to this variation
-    if (field === 'images') {
-        updatedVariations[index] = {
-            ...updatedVariations[index],
-            images: [...value] // Create new array to prevent reference issues
+        if (field === 'images') {
+            updatedVariations[index] = {
+                ...updatedVariations[index],
+                images: [...value] // Create new array to prevent reference issues
+            }
+        } else {
+            updatedVariations[index] = {
+                ...updatedVariations[index],
+                [field]: value
+            }
         }
-    } else {
-        updatedVariations[index] = {
-            ...updatedVariations[index],
-            [field]: value
-        }
-    }
-        updateFormData('variations', updatedVariations)
+            updateFormData('variations', updatedVariations)
     }
 
     const addVariation = () => {
@@ -674,7 +674,6 @@ export default function ProductVariationsForm({ formData, updateFormData, isMana
                                 
                             </div>
 
-                            <Separator className="my-6" />
     
                         <CustomizationOptionsForm
                             variation={variation}
@@ -684,6 +683,7 @@ export default function ProductVariationsForm({ formData, updateFormData, isMana
                         </div>
                     </div>
                 </div>
+                
             ))}
 
             {validationError && (
@@ -694,6 +694,7 @@ export default function ProductVariationsForm({ formData, updateFormData, isMana
                     </AlertDescription>
                 </Alert>
             )}
+            <Separator className="my-6" />
 
             <Button
                 variant="outline"

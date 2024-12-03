@@ -33,10 +33,14 @@ export function ProductManagementOverlay({ productId, isOpen, onClose }: Product
         const response = await apiService.products.getSellerProductDetails(productId);
         const formattedData = {
           ...response.data,
+          stock: null,
+    
           personalizationText: response.data.stock?.personalizationText || false,
           variations: response.data.stock?.variations?.map(variation => ({
             ...variation,
             isCustom: variation.type === 'CUSTOM',
+            pricing: null,
+            customizationOptions: variation.customizationOptions || [],
             details: variation.details || {},
             dimensions: {
               l: variation.dimensions?.l || 0,

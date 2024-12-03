@@ -192,12 +192,12 @@ export default function ProductsListPage() {
             ) : (
                 <Table>
                     <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-b border-gray-200 bg-gray-50/50">
                             <TableHead className="text-gray-600">Image</TableHead>
                             <TableHead className="text-gray-600">Name</TableHead>
                             <TableHead className="text-gray-600">Status</TableHead>
                             <TableHead className="text-gray-600">
-                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2">
                                     Price
                                     <IndianRupee className="h-4 w-4" />
                                 </div>
@@ -254,7 +254,10 @@ export default function ProductsListPage() {
                             const baseVariant = item.variants?.[0]
                             
                             return (
-                                <TableRow key={item.id}>
+                                <TableRow 
+                                    key={item.id}
+                                    className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                                >
                                     <TableCell>{item.thumbnail ?
                                         <Image
                                             src={item.thumbnail}
@@ -277,32 +280,38 @@ export default function ProductsListPage() {
                                         </Link>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                             <span className={`px-2 py-1 rounded-full text-sm ${
                                                 item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                                             }`}>
                                                 {item.active ? 'Active' : 'Inactive'}
                                             </span>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setEditActivation(item)}
-                                            >
-                                                <Edit2 className="h-4 w-4" />
-                                            </Button>
+                                            {!showDrafts && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setEditActivation(item)}
+                                                    className="h-7 w-7 p-0"
+                                                >
+                                                    <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                             {(baseVariant && baseVariant.price) ? 
                                                 `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setEditPrice(item)}
-                                            >
-                                                <Edit2 className="h-4 w-4" />
-                                            </Button>
+                                            {!showDrafts && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setEditPrice(item)}
+                                                    className="h-7 w-7 p-0"
+                                                >
+                                                    <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -314,7 +323,7 @@ export default function ProductsListPage() {
                                         }
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                             <span className={`px-2 py-1 rounded ${stockInfo.className}`}>
                                                 {stockInfo.text}
                                             </span>
@@ -323,6 +332,7 @@ export default function ProductsListPage() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setEditStock(item)}
+                                                    className="h-7 w-7 p-0"
                                                 >
                                                     <Edit2 className="h-4 w-4" />
                                                 </Button>
