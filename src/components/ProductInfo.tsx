@@ -124,12 +124,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
                         >
                             <b>Sold by {product.storeName}</b>
                         </Link>
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:block">{product.stock.variations.length > 1 &&
                             <VariantSelector
                                 variants={product.stock.variations}
                                 selectedVariant={selectedVariant}
                                 onVariantChange={setSelectedVariant}
-                            />
+                            />}
                         </div>
                     </div>
 
@@ -140,15 +140,17 @@ export function ProductInfo({ product }: ProductInfoProps) {
                             <RatingSummary />
                         </div>
                         {/* Mobile Variant Selector */}
+                        {product.stock.variations.length > 1 &&
                         <div className="overflow-x-auto pb-4 -mx-4 px-4">
                             <div className="inline-flex gap-4">
-                                <VariantSelector
-                                    variants={product.stock.variations}
-                                    selectedVariant={selectedVariant}
-                                    onVariantChange={setSelectedVariant}
-                                />
+                            <VariantSelector
+                                variants={product.stock.variations}
+                                selectedVariant={selectedVariant}
+                                onVariantChange={setSelectedVariant}
+                            />
                             </div>
                         </div>
+                        }
                     </div>
 
                     {/* Common Content for Both Mobile and Desktop */}
