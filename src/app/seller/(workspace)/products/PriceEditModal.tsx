@@ -56,12 +56,10 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
-    console.log("VARIANTS", variants)
     const newPrices: Record<string, number> = {};
     variants.forEach(variant => {
       newPrices[variant.variantId] = variant.activePricing.basePrice;
     });
-    console.log("NEW PRICES", newPrices)
     setPrices(newPrices);
   }, [variants]);
 
@@ -120,16 +118,6 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
           </div>
         </div>
 
-        {variant.activePricing.discount && (
-          <>
-            <Separator />
-            <div className="flex justify-between text-sm text-green-600">
-              <span>{variant.activePricing.discount.name}</span>
-              <span>- ₹{variant.activePricing.discount.value.toFixed(2)}</span>
-            </div>
-          </>
-        )}
-
         <Separator />
         <div className="flex justify-between font-semibold">
           <span>Final Price</span>
@@ -153,7 +141,7 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
       setLoading(true);
       const variantsData = Object.entries(prices).map(([variantId, basePrice]) => ({
         variantId,
-        basePrice: Number(basePrice)
+        price: Number(basePrice)
       }));
 
       await apiService.products.updatePricing(productId, variantsData);

@@ -320,7 +320,7 @@ export default function ProductsListPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="text-sm text-green-600">
-                                            {baseVariant?.activePricing?.discount ? 
+                                            {baseVariant?.activePricing?.discount && baseVariant.activePricing.discount.active ? 
                                                 baseVariant.activePricing.discount.name 
                                             : 'None'
                                             }
