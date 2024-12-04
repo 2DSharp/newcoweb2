@@ -9,8 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Star, Truck, StarHalf } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import Link from 'next/link';
-import { Label } from '@/components/ui/label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+
 
 interface ProductInfoProps {
     product: any;

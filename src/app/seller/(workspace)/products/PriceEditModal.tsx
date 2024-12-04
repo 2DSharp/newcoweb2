@@ -55,6 +55,11 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
   });
   const [confirmed, setConfirmed] = useState(false);
 
+  // Check if any variant has active discounts
+  const hasActiveDiscounts = variants.some(variant => 
+    variant.activePricing?.discount?.active
+  );
+
   useEffect(() => {
     const newPrices: Record<string, number> = {};
     variants.forEach(variant => {
@@ -154,7 +159,7 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update prices",
+        description: error.response.data.message,
         variant: "destructive",
       });
     } finally {
@@ -179,10 +184,17 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
           </SheetHeader>
 
           <div className="mt-6 space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-700">
-              Price changes will affect all future orders. Existing orders will maintain their original prices.
-              <br />
-            </div>
+            {hasActiveDiscounts ? (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg text-sm text-yellow-800">
+                <div className="font-medium">Price Update Blocked</div>
+                <p>You need to deactivate all discounts linked with this product before updating prices.</p>
+              </div>
+            ) : (
+              <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-700">
+                Price changes will affect all future orders. Existing orders will maintain their original prices.
+                <br />
+              </div>
+            )}
 
             {variants.map(variant => (
               <div key={variant.variantId} className="space-y-4">
@@ -204,6 +216,7 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
                       }}
                       min="0"
                       step="0.01"
+                      disabled={hasActiveDiscounts}
                     />
                   </div>
                 </div>
@@ -223,6 +236,7 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
                 id="terms"
                 checked={confirmed}
                 onCheckedChange={(checked) => setConfirmed(checked as boolean)}
+                disabled={hasActiveDiscounts}
               />
               <div className="grid gap-1.5 leading-none">
                 <label
@@ -242,7 +256,7 @@ export default function PriceEditOverlay({ isOpen, onClose, variants, productId,
               <Button 
                 className="w-full" 
                 onClick={handleSubmit} 
-                disabled={loading || !confirmed}
+                disabled={loading || !confirmed || hasActiveDiscounts}
               >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
