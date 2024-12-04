@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ProductManagementOverlay } from '@/components/product-management/ProductManagementOverlay';
-import PriceEditModal from './PriceEditModal';
+import PriceEditOverlay from './PriceEditModal';
 import ActivationModal from './ActivationModal';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -299,9 +299,13 @@ export default function ProductsListPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-1">
-                                            {(baseVariant && baseVariant.price) ? 
-                                                `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
+                                        <div className="flex items-center gap-2">
+                                            {(baseVariant?.activePricing) ? (
+                                                <div>
+                                                    <div className="font-medium">₹{baseVariant.activePricing.price.toFixed(2)}</div>
+                                                   
+                                                </div>
+                                            ) : 'Not set'}
                                             {!showDrafts && (
                                                 <Button
                                                     variant="ghost"
@@ -315,12 +319,12 @@ export default function ProductsListPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        {baseVariant?.pricing?.discount?.discountType 
-                                            ? <span className="text-green-600">
-                                                {baseVariant.pricing.discount.discountType.replace(/_/g, ' ')}
-                                              </span>
-                                            : <span className="text-gray-500">None</span>
-                                        }
+                                        <div className="text-sm text-green-600">
+                                            {baseVariant?.activePricing?.discount ? 
+                                                baseVariant.activePricing.discount.name 
+                                            : 'None'
+                                            }
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1">
@@ -444,8 +448,16 @@ export default function ProductsListPage() {
                                             <div>
                                                 <p className="text-gray-500">Price</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    {(baseVariant && baseVariant.price) ? 
-                                                        `₹${baseVariant.price.toFixed(2)}` : 'Not set'}
+                                                    {(baseVariant?.activePricing) ? (
+                                                        <div>
+                                                            <div className="font-medium">₹{baseVariant.activePricing.price.toFixed(2)}</div>
+                                                            {baseVariant.activePricing.discount && (
+                                                                <div className="text-sm text-green-600">
+                                                                    {baseVariant.activePricing.discount.name}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : 'Not set'}
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -486,12 +498,13 @@ export default function ProductsListPage() {
                                                     Discount
                                                 </p>
                                                 <div className="mt-1">
-                                                    {baseVariant?.pricing?.discount?.discountType 
-                                                        ? <span className="text-green-600">
-                                                            {baseVariant.pricing.discount.discountType.replace(/_/g, ' ')}
-                                                          </span>
-                                                        : <span className="text-gray-500">None</span>
-                                                    }
+                                                    {baseVariant?.activePricing?.discount ? (
+                                                        <div className="text-green-600 font-medium">
+                                                            {baseVariant.activePricing.discount.name}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-500">None</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -630,11 +643,11 @@ export default function ProductsListPage() {
             />
 
             {editPrice && (
-                <PriceEditModal
+                <PriceEditOverlay
                     isOpen={!!editPrice}
                     onClose={() => setEditPrice(null)}
-                    variants={editPrice.variants}
-                    productId={editPrice.id}
+                    variants={editPrice?.variants || []}
+                    productId={editPrice?.id}
                     onPriceUpdate={handlePriceUpdate}
                 />
             )}
