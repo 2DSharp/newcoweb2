@@ -80,6 +80,7 @@ export function ProductActions({ productId, variant }: ProductActionsProps) {
             <Button 
                 className="flex-1 h-14 text-base font-medium hover:bg-black/90 text-white transition-colors duration-200"
                 disabled={!variant.inStock}
+                onClick={() => router.push(`/checkout?product=${productId}&variantId=${variant.variantId}&quantity=1&pricingVariantId=${variant.pricing.pricingId}`)}
             >
                 Buy Now
             </Button>

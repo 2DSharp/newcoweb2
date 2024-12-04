@@ -1,15 +1,18 @@
-import {NextResponse} from "next/server";
-export async function GET(request) {
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
+export async function GET() {
     // Get cookies from the request object
-    const cookies = request.cookies;
+    const cookieStore = cookies();
 
     // Retrieve the refresh token using the get method
-    const refreshToken = cookies.get('refreshToken')?.value;
+    const refreshToken = cookieStore.get('refreshToken')?.value;
 
     if (!refreshToken) {
-        return NextResponse.json({ message: 'No refresh token found' },
-            {status: 404});
+        return NextResponse.json(
+            { message: 'No refresh token found' },
+            { status: 404 }
+        );
     }
 
     return NextResponse.json({ refreshToken });

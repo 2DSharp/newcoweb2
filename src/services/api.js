@@ -14,15 +14,15 @@ const API_CONFIG = {
 
 
 // Create Axios instance
-const authenticatedApiClient = axios.create({
+export const authenticatedApiClient = axios.create({
     baseURL: "http://localhost:8080"
 });
 
-const authenticatedFileUploadClient = axios.create({
+export const authenticatedFileUploadClient = axios.create({
     baseURL: "http://localhost:5000"
 });
 
-const unauthenticatedApiClient = axios.create({
+export const unauthenticatedApiClient = axios.create({
     baseURL: "http://localhost:8080"
 });
 
@@ -180,7 +180,78 @@ const apiService = {
             return response.data;
         },
     },
-
+    identity: {
+        requestOtp: async (phone) => {
+            console.log("Here")
+          try {
+            const response = await unauthenticatedApiClient.post('/identity/login/otp', {
+              phone
+            });
+    
+            return response.data;
+          } catch (error) {
+            return {
+              status: 'FAIL',
+              message: error?.response?.data?.message || 'Failed to send OTP',
+              successful: false
+            };
+          }
+        },
+    
+        verifyOtp: async (verificationId, nonce) => {
+          try {
+            const response = await unauthenticatedApiClient.post('/identity/verify-contact', {
+              verificationId,
+              nonce
+            });
+    
+            const data = response.data;
+    
+            if (data.successful) {
+              // Set the refresh token in HTTP-only cookie
+              await fetch('/api/auth/set-refresh-token', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refreshToken: data.data.refreshToken }),
+              });
+    
+              // Store access token in memory or secure storage
+              localStorage.setItem('access_token', data.data.accessToken);
+            }
+    
+            return data;
+          } catch (error) {
+            return {
+              status: 'FAIL',
+              message: error?.response?.data?.message || 'Failed to verify OTP',
+              successful: false
+            };
+          }
+        },
+    
+        logout: async () => {
+          try {
+            // Clear HTTP-only cookie
+            await fetch('/api/auth/set-refresh-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refreshToken: '' }),
+            });
+    
+            // Clear local storage
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('auth_data');
+          } catch (error) {
+            console.error('Error during logout:', error);
+          }
+        },
+    
+      },
+    
     // Store endpoints
     store: {
         create: async (storeData) => {
@@ -291,7 +362,25 @@ const apiService = {
             return response.data;
         },
     },
-
+    accounts: {
+        getAddresses: async () => {
+          const response = await authenticatedApiClient.get('/accounts/addresses/');
+          return response.data;
+        },
+    
+        addAddress: async (addressData) => {
+          const response = await authenticatedApiClient.post('/accounts/addresses', addressData);
+          return response.data;
+        },
+      },
+    
+      orders: {
+        create: async (orderData) => {
+          const response = await authenticatedApiClient.post('/buy/order', orderData);
+          return response.data;
+        },
+      },
+    
     files: {
         upload: async (formData) => {
             const response = await authenticatedFileUploadClient.post('/files/upload', formData, {
