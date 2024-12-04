@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from "@/components/ui/date-picker";
 
 const schema = z.object({
+  name: z.string().min(1, "Name is required"),
   discountType: z.enum(["PERCENTAGE", "FIXED", "BUY_AND_GET_FREE"]),
   condition: z.object({
     type: z.enum(["NO_CONDITION", "MIN_PURCHASE_QTY", "MIN_PURCHASE_AMOUNT", "REFERRAL"]),
@@ -53,6 +54,7 @@ export default function NewDiscountPage() {
   const { register, handleSubmit, watch, formState: { errors }, setValue } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
+      name: "",
       discountType: "PERCENTAGE",
       condition: {
         type: "NO_CONDITION",
@@ -65,7 +67,7 @@ export default function NewDiscountPage() {
     }
   });
 
-  const promotionType = watch("condition.type") || "NO_CONDITION";
+  const promotionType = watch("condition.type");
 
   const [selectedTriggerProducts, setSelectedTriggerProducts] = useState<string[]>([]);
   const [selectedTargetProducts, setSelectedTargetProducts] = useState<string[]>([]);
@@ -97,7 +99,9 @@ export default function NewDiscountPage() {
       const submissionData = {
         ...data,
         triggerProducts: selectedTriggerProducts,
-        targetProducts: selectedTargetProducts,
+        targetProducts: promotionType === "NO_CONDITION" 
+          ? selectedTriggerProducts 
+          : selectedTargetProducts,
       };
       
       await apiService.discounts.create(submissionData);
@@ -135,13 +139,35 @@ export default function NewDiscountPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Basic Information</h2>
+            
+            <div>
+              <Label>Discount Name</Label>
+              <Input 
+                {...register("name")} 
+                placeholder="Enter a name for this discount"
+                className={errors.name ? "border-red-500" : ""}
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 space-y-6">
+          <div className="space-y-4">
             <h2 className="text-lg font-semibold">Promotion Conditions</h2>
             
             <div>
               <Label>Buyer purchases</Label>
-              <Select onValueChange={value => setValue("condition.type", value)} defaultValue={promotionType}>
+              <Select 
+                value={promotionType}
+                onValueChange={value => setValue("condition.type", value)} 
+                defaultValue="NO_CONDITION"
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select condition type" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="NO_CONDITION">No Condition</SelectItem>
@@ -257,22 +283,25 @@ export default function NewDiscountPage() {
               <Label>Products to Apply Discount On</Label>
               {promotionType === "NO_CONDITION" ? (
                 <MultiSelect
-                options={products}
-                onValueChange={v => {setSelectedTriggerProducts(v); setSelectedTargetProducts}}
-                placeholder="Search and select products..."
-                variant="inverted"
-                animation={2}
-                maxCount={3}
-            />
+                  options={products}
+                  onValueChange={(v) => {
+                    setSelectedTriggerProducts(v);
+                    setSelectedTargetProducts(v); // Automatically set both to the same value
+                  }}
+                  placeholder="Search and select products..."
+                  variant="inverted"
+                  animation={2}
+                  maxCount={3}
+                />
               ) : (
                 <MultiSelect
-                options={products}
-                onValueChange={setSelectedTargetProducts}
-                placeholder="Search and select products..."
-                variant="inverted"
-                animation={2}
-                maxCount={3}
-              />
+                  options={products}
+                  onValueChange={setSelectedTargetProducts}
+                  placeholder="Search and select products..."
+                  variant="inverted"
+                  animation={2}
+                  maxCount={3}
+                />
               )}
             </div>
           </div>
