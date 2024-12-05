@@ -110,62 +110,117 @@ interface Discount {
 
 interface ApiService {
   cms: {
-    getStateList: () => Promise<ApiResponse<State[]>>;
-    getCategories: (level: number) => Promise<ApiResponse<Category[]>>;
+    getStateList: () => Promise<ApiResponse<any>>;
+    getCategories: (level: number) => Promise<ApiResponse<any>>;
   };
 
   auth: {
     login: (credentials: LoginCredentials) => Promise<ApiResponse<LoginResponse>>;
-    refreshToken: (credentials: { refreshToken: string }) => Promise<ApiResponse<{
-      accessToken: string;
-      userId: string;
-      loginType: string;
-      newRefreshToken: string;
-    }>>;
+    refreshToken: (credentials: { refreshToken: string }) => Promise<ApiResponse<any>>;
     register: (userData: RegisterData) => Promise<ApiResponse<any>>;
     verifyOtp: (data: OtpVerificationData) => Promise<ApiResponse<any>>;
+    requestOtp: (phone: string) => Promise<ApiResponse<string>>;
+  };
+
+  identity: {
+    requestOtp: (phone: string) => Promise<ApiResponse<string>>;
+    verifyOtp: (verificationId: string, nonce: string) => Promise<ApiResponse<AuthResponse>>;
+    logout: () => Promise<void>;
   };
 
   store: {
-    create: (storeData: StoreData) => Promise<ApiResponse<any>>;
-    update: (storeId: string, storeData: Partial<StoreData>) => Promise<ApiResponse<any>>;
-    getDetails: (storeId: string) => Promise<ApiResponse<StoreData>>;
+    create: (storeData: any) => Promise<ApiResponse<any>>;
+    update: (storeId: string, storeData: any) => Promise<ApiResponse<any>>;
+    getDetails: (storeId: string) => Promise<ApiResponse<any>>;
   };
 
   profile: {
-    get: () => Promise<ApiResponse<ProfileData>>;
-    update: (profileData: Partial<ProfileData>) => Promise<ApiResponse<ProfileData>>;
+    get: () => Promise<ApiResponse<any>>;
+    update: (profileData: any) => Promise<ApiResponse<any>>;
   };
 
   products: {
-    createDraft: (productData: ProductDraft) => Promise<ApiResponse<string>>;
-    getProduct: (productId: string) => Promise<ApiResponse<Product>>;
-    updateDraft: (draftId: string, productData: Partial<ProductDraft>) => Promise<ApiResponse<any>>;
-    getDraft: (draftId: string) => Promise<ApiResponse<ProductDraft>>;
-    getDrafts: () => Promise<ApiResponse<List<ProductDraft>>>;
+    createDraft: (productData: any) => Promise<ApiResponse<any>>;
+    updateDraft: (draftId: string, productData: any) => Promise<ApiResponse<any>>;
+    getDrafts: () => Promise<ApiResponse<any>>;
+    getDraft: (draftId: string) => Promise<ApiResponse<any>>;
     deleteDraft: (draftId: string) => Promise<ApiResponse<any>>;
     publishDraft: (draftId: string) => Promise<ApiResponse<any>>;
+    getList: () => Promise<ApiResponse<any>>;
+    getSellerProductDetails: (productId: string) => Promise<ApiResponse<any>>;
+    updateStock: (productId: string, variantId: string, quantity: number) => Promise<ApiResponse<any>>;
+    getProduct: (productId: string) => Promise<ApiResponse<any>>;
+    updateProduct: (productId: string, productData: any) => Promise<ApiResponse<any>>;
+    updatePricing: (productId: string, variants: any[]) => Promise<ApiResponse<any>>;
+    updateActivation: (productId: string, variantId: string, active: boolean) => Promise<ApiResponse<any>>;
   };
+
   discounts: {
-    create: (discountData: {
-      discountType: "PERCENTAGE" | "FIXED" | "BUY_AND_GET_FREE";
-      condition: {
-        type: "NO_CONDITION" | "MIN_PURCHASE_QTY" | "MIN_PURCHASE_AMOUNT" | "REFERRAL";
-        startDate: string;
-        endDate: string;
-        minPurchaseQty?: string;
-        minPurchaseAmount?: string;
-        referralCode?: string;
-      };
-      applicableDiscount: number;
-      triggerProducts: string[];
-      targetProducts: string[];
-    }) => Promise<ApiResponse<any>>;
-    delete: (discountId: string) => Promise<ApiResponse<any>>;
-    getList: () => Promise<ApiResponse<Discount[]>>;
+    create: (discountData: any) => Promise<ApiResponse<any>>;
+    getList: () => Promise<ApiResponse<any>>;
     activate: (discountId: string) => Promise<ApiResponse<any>>;
     deactivate: (discountId: string) => Promise<ApiResponse<any>>;
   };
+
+  accounts: {
+    getAddresses: () => Promise<ApiResponse<Address[]>>;
+    addAddress: (addressData: AddressInput) => Promise<ApiResponse<Address>>;
+  };
+
+  orders: {
+    create: (orderData: OrderInput) => Promise<ApiResponse<{ orderId: string }>>;
+  };
+
+  files: {
+    upload: (formData: FormData) => Promise<ApiResponse<any>>;
+  };
+}
+
+interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  userId: string;
+  loginType: string;
+  expiry: string;
+}
+
+interface Address {
+  id: string;
+  label: string | null;
+  name: string | null;
+  phone: string | null;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pinCode: number;
+  landmark: string;
+  default: boolean;
+}
+
+interface AddressInput {
+  label?: string;
+  name?: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  landmark?: string;
+  isDefault: boolean;
+}
+
+interface OrderInput {
+  item: {
+    product: string;
+    variantId: string;
+    quantity: number;
+    pricingVariantId: string;
+  };
+  paymentMethod: string;
+  deliveryAddress: Address;
+  billingAddress: Address;
 }
 
 declare const apiService: ApiService;

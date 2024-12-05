@@ -115,7 +115,7 @@ authenticatedApiClient.interceptors.response.use(
     }
 );
 // API Services
-const apiService = {
+export const apiService = {
 
     cms: {
         getStateList: async () => {
