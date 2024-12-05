@@ -17,13 +17,12 @@ import { format } from "date-fns";
 import apiService from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import type { Discount, DiscountProduct } from "@/services/api.d.ts";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function DiscountsPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [discounts, setDiscounts] = useState<Discount[]>([]);
+  const [discounts, setDiscounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState<string | null>(null);
 
@@ -48,7 +47,7 @@ export default function DiscountsPage() {
     }
   };
 
-  const handleToggleActivation = async (discount: Discount) => {
+  const handleToggleActivation = async (discount: any) => {
     try {
       setToggleLoading(discount.id);
       
@@ -87,7 +86,7 @@ export default function DiscountsPage() {
     }
   };
 
-  const getConditionText = (discount: Discount) => {
+  const getConditionText = (discount) => {
     switch (discount.condition.type) {
       case "MIN_PURCHASE_QTY":
         return `Min ${discount.condition.minPurchaseQty} items`;
@@ -100,7 +99,7 @@ export default function DiscountsPage() {
     }
   };
 
-  const getDiscountText = (discount: Discount) => {
+  const getDiscountText = (discount) => {
     switch (discount.discountType) {
       case "PERCENTAGE":
         return `${discount.applicableDiscount}% off`;
@@ -113,7 +112,7 @@ export default function DiscountsPage() {
     }
   };
 
-  const ToggleSwitch = ({ discount }: { discount: Discount }) => (
+  const ToggleSwitch = ({ discount }: { discount: any }) => (
     <div className="flex items-center gap-2">
       <Switch
         checked={discount.active}
@@ -190,7 +189,7 @@ export default function DiscountsPage() {
     </Table>
   );
 
-  const renderProducts = (products: DiscountProduct[]) => (
+  const renderProducts = (products) => (
     products.map((product) => (
       <div key={product.id} className="text-sm">
         {product.name}
