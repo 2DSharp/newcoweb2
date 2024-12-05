@@ -1,6 +1,6 @@
 'use client';
 
-import {OnboardingForm} from '../../../../../components/OnboardingForm';
+import {OnboardingForm} from '@/components/OnboardingForm';
 // @ts-ignore
 import EntryPageLayout from "@/app/seller/(auth)/layout";
 import { redirect } from 'next/navigation'
