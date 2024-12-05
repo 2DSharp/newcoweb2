@@ -6,6 +6,7 @@ import { Search, ShoppingCart, User, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import Image from 'next/image';
 
 const MENU_ITEMS = [
   { name: "Explore", href: "/explore" },
@@ -71,9 +72,13 @@ export function Navbar() {
                       {/* Logo in Mobile Menu */}
                       <div className="p-4 border-b">
                         <Link href="/" className="flex-shrink-0">
-                          <div className="h-10 w-28 bg-gray-200 rounded flex items-center justify-center text-sm text-gray-600">
-                            LOGO
-                          </div>
+                        <Image
+                              src="/faveron.svg"
+                              alt="Logo"
+                              width={100}
+                              height={50}
+                              className="mx-auto"
+                            />
                         </Link>
                       </div>
                       
@@ -97,9 +102,13 @@ export function Navbar() {
 
                 {/* Logo */}
                 <Link href="/" className="flex-shrink-0">
-                  <div className="h-10 w-28 bg-gray-200 rounded flex items-center justify-center text-sm text-gray-600">
-                    LOGO
-                  </div>
+                <Image
+                              src="/faveron.svg"
+                              alt="Logo"
+                              width={150}
+                              height={50}
+                              className="mx-auto"
+                            />
                 </Link>
               </div>
 

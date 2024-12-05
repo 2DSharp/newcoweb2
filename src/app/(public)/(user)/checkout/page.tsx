@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ const PAYMENT_METHODS = [
   { id: "CASH_ON_DELIVERY", label: "Cash on Delivery" },
 ];
 
-export default function CheckoutPage() {
+function CheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -208,7 +208,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Place Order</h1>
+      <h1 className="text-2xl font-bold mb-8">Checkout</h1>
       
       {/* Product Summary */}
       {product && (
@@ -240,7 +240,7 @@ export default function CheckoutPage() {
         {/* Addresses Section */}
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Delivering to</h2>
+            <h2 className="text-xl font-semibold">Delivery Address</h2>
             <Button
               variant="outline"
               onClick={() => setShowAddressForm(!showAddressForm)}
@@ -422,18 +422,10 @@ export default function CheckoutPage() {
             {PAYMENT_METHODS.map((method) => (
               <div
                 key={method.id}
-                className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:border-primary transition-colors"
-                onClick={() => setPaymentMethod(method.id)}
+                className="flex items-center space-x-2 border rounded-lg p-4"
               >
-                <div className="flex items-center flex-1">
-                  <RadioGroupItem value={method.id} id={method.id} />
-                  <Label 
-                    htmlFor={method.id} 
-                    className="flex-1 ml-2 cursor-pointer"
-                  >
-                    {method.label}
-                  </Label>
-                </div>
+                <RadioGroupItem value={method.id} id={method.id} />
+                <Label htmlFor={method.id}>{method.label}</Label>
               </div>
             ))}
           </RadioGroup>
@@ -484,3 +476,15 @@ export default function CheckoutPage() {
   );
 }
 
+export default function CheckoutPageFull() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }
+    >
+      <CheckoutPage />
+    </Suspense>
+  )
+}

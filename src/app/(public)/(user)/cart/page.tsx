@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import apiService from '@/services/api';
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, Trash2 } from 'lucide-react';
+import { Plus, Minus, Trash2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation'
@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { parseCurrency } from '@/lib/utils';
 import { PriceDisplay } from '@/components/ProductInfo';
-export default function CartPage() {
+function CartPage() {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [itemToDelete, setItemToDelete] = useState(null);
@@ -58,7 +58,7 @@ export default function CartPage() {
                             toast({
                                 title: "Price Changed",
                                 description: `The price of ${product.name}${variant.name ? ` - ${variant.name}` : ''} has changed since you added it to the cart. Current price: ₹${pricing.finalPrice}`,
-                                variant: "warning",
+                                variant: "destructive",
                             });
                         }
                         return {
@@ -265,3 +265,15 @@ export default function CartPage() {
   )
 }
 
+export default function CartPageFull() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }
+    >
+      <CartPage />
+    </Suspense>
+  )
+}

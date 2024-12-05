@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, KeyboardEvent } from "react";
+import { useState, useRef, KeyboardEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import apiService from "@/services/api";
-export default function LoginPage() {
+function LoginPage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [verificationId, setVerificationId] = useState<string | null>(null);
@@ -126,10 +126,10 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Image
-            src="/logo.png"
+            src="/faveron.svg"
             alt="Logo"
-            width={48}
-            height={48}
+            width={400}
+            height={400}
             className="mx-auto"
           />
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
@@ -273,3 +273,16 @@ export default function LoginPage() {
     </div>
   );
 } 
+
+export default function LoginPageFull() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }
+    >
+      <LoginPage />
+    </Suspense>
+  )
+}
