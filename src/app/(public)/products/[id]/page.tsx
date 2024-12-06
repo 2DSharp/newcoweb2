@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import apiService from '@/services/api';
 
 async function getProduct(id: string) {
-    const res = await fetch(`http://localhost:8080/public/products/${id}`, {
+    const res = await fetch(`https://dev-api.faveron.com/public/products/${id}`, {
         cache: 'no-store',
     });
     if (!res.ok) return null;

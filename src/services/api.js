@@ -15,7 +15,7 @@ const API_CONFIG = {
 
 // Create Axios instance
 export const authenticatedApiClient = axios.create({
-    baseURL: "http://localhost:8080"
+    baseURL: API_CONFIG.baseURL
 });
 
 export const authenticatedFileUploadClient = axios.create({
@@ -23,7 +23,7 @@ export const authenticatedFileUploadClient = axios.create({
 });
 
 export const unauthenticatedApiClient = axios.create({
-    baseURL: "http://localhost:8080"
+    baseURL: API_CONFIG.baseURL
 });
 
 
