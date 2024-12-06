@@ -4,7 +4,7 @@ import {AuthService} from "@/services/authService";
 
 // API Configuration
 const API_CONFIG = {
-    baseURL: process.env.BASE_API_BASEURL,
+    baseURL: 'https://dev-api.faveron.com',
     timeout: parseInt(process.env.VITE_API_TIMEOUT || '30000'),
     headers: {
         'Content-Type': 'application/json',
