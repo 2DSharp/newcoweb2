@@ -140,6 +140,10 @@ export const apiService = {
             const response = await unauthenticatedSearchClient.get(`/search/?q=${encodeURIComponent(searchTerm)}`);
             return response.data;
         },
+        getSuggestions: async (searchTerm) => {
+            const response = await unauthenticatedSearchClient.get(`/search/suggest?q=${encodeURIComponent(searchTerm)}`);
+            return response.data;
+        },
     },
     // Auth endpoints
     auth: {
