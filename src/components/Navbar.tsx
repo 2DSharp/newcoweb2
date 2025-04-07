@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const MENU_ITEMS = [
   { name: "Explore", href: "/explore" },
@@ -24,14 +25,16 @@ const MENU_ITEMS = [
 export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
-  useState(() => {
+  useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
     const updateCartCount = () => {
-      const authData = localStorage.getItem('auth_data');
+      const authData = localStorage.getItem('buyer_data');
       if (authData) {
         const { loginType } = JSON.parse(authData);
         if (loginType === 'BUYER') {
@@ -48,6 +51,13 @@ export function Navbar() {
     window.addEventListener('cartUpdated', updateCartCount);
     return () => window.removeEventListener('cartUpdated', updateCartCount);
   }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   if (!mounted) return null;
 
@@ -105,7 +115,7 @@ export function Navbar() {
                 <Image
                               src="/faveron.svg"
                               alt="Logo"
-                              width={150}
+                              width={180}
                               height={50}
                               className="mx-auto"
                             />
@@ -117,13 +127,15 @@ export function Navbar() {
                 {/* Search - Desktop */}
                 <form 
                   className="hidden md:flex flex-1 max-w-3xl" 
-                  onSubmit={(e) => e.preventDefault()}
+                  onSubmit={handleSearch}
                 >
                   <div className="relative w-full flex">
                     <Input
                       type="search"
                       placeholder="Search products..."
                       className="w-full pr-16 px-4 rounded-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-base"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     <Button 
                       type="submit"
@@ -165,13 +177,15 @@ export function Navbar() {
             {/* Search - Mobile */}
             <form 
               className="md:hidden" 
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSearch}
             >
               <div className="relative w-full flex">
                 <Input
                   type="search"
                   placeholder="Search products..."
                   className="w-full pr-16 rounded-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-base"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Button 
                   type="submit"

@@ -4,7 +4,7 @@ import {AuthService} from "@/services/authService";
 
 // API Configuration
 const API_CONFIG = {
-    baseURL: 'https://dev-api.faveron.com',
+    baseURL: 'http://localhost:8080',
     timeout: parseInt(process.env.VITE_API_TIMEOUT || '30000'),
     headers: {
         'Content-Type': 'application/json',
@@ -26,15 +26,18 @@ export const unauthenticatedApiClient = axios.create({
     baseURL: API_CONFIG.baseURL
 });
 
+export const unauthenticatedSearchClient = axios.create({
+    baseURL: "http://localhost:5000"
+});
 
 // Request Interceptor
 authenticatedApiClient.interceptors.request.use(
     (config) => {
-        if (!localStorage.getItem('auth_data')) {
+        if (!localStorage.getItem('auth_data') && !localStorage.getItem('buyer_data')) {
             return config;
         }
 
-        const token = JSON.parse(localStorage.getItem('auth_data')).accessToken;
+        const token = JSON.parse(localStorage.getItem('auth_data') || localStorage.getItem('buyer_data')).accessToken;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
 
@@ -64,11 +67,15 @@ authenticatedApiClient.interceptors.response.use(
                 if (!refreshToken) {
                     throw new Error('No refresh token found');
                 }
+                let authDataKey = 'auth_data';
+                if (localStorage.getItem('buyer_data')) {
+                    authDataKey = 'buyer_data';
+                }
 
                 // Call backend refresh token endpoint
                 const response = await unauthenticatedApiClient.post('/identity/refresh-token', {
-                    userId: JSON.parse(localStorage.getItem('auth_data')).userId,
-                    loginType: JSON.parse(localStorage.getItem('auth_data')).loginType,
+                    userId: JSON.parse(localStorage.getItem(authDataKey)).userId,
+                    loginType: JSON.parse(localStorage.getItem(authDataKey)).loginType,
                     token: refreshToken
                 });
 
@@ -84,7 +91,7 @@ authenticatedApiClient.interceptors.response.use(
                 });
 
                 // Update localStorage with new access token and user info
-                localStorage.setItem('auth_data', JSON.stringify({
+                localStorage.setItem(authDataKey, JSON.stringify({
                     accessToken,
                     userId,
                     loginType
@@ -128,7 +135,12 @@ export const apiService = {
             return response.data;
         },
     },
-
+    search: {
+        query: async (searchTerm) => {
+            const response = await unauthenticatedSearchClient.get(`/search/?q=${encodeURIComponent(searchTerm)}`);
+            return response.data;
+        },
+    },
     // Auth endpoints
     auth: {
         login: async (credentials) => {
@@ -245,6 +257,7 @@ export const apiService = {
             // Clear local storage
             localStorage.removeItem('access_token');
             localStorage.removeItem('auth_data');
+            localStorage.removeItem('buyer_data');
           } catch (error) {
             console.error('Error during logout:', error);
           }
@@ -322,8 +335,13 @@ export const apiService = {
             return response.data;
         },
         getProduct: async (productId) => {
-            const response = await unauthenticatedApiClient.get(`/public/products/${productId}`);
-            return response.data.data;
+            try {
+                const response = await unauthenticatedApiClient.get(`/public/products/${productId}`);
+                return response.data;
+            } catch (error) {
+                console.error('Error fetching product:', error);
+                throw error;
+            }
         },
         updateProduct: async (productId, productData) => {
             const response = await authenticatedApiClient.put(`/seller/products/${productId}`, productData);

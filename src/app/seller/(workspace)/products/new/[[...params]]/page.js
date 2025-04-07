@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
-import { ArrowRight, ArrowLeft, Store, Clipboard, Layers, Check, Search } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Store, Clipboard, Layers, Check, Search, Wand2, Pencil, ArrowLeftCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
@@ -11,17 +11,22 @@ import SearchabilityDetailsForm from '@/components/product-configuration/searcha
 import ProductVariationsForm from '@/components/product-configuration/product-variations-form'
 import apiService from '@/services/api'
 import { Card } from "@/components/ui/card"
+import ImageUploader from '@/components/ImageUploader'
+import { Loader2 } from 'lucide-react'
 
 export default function ProductCreationWizard() {
     const router = useRouter()
     const params = useParams()
     
-    const [step, setStep] = useState(1)
+    const [step, setStep] = useState(0)
     const [draftId, setDraftId] = useState(null)
     const [formData, setFormData] = useState({
         variations: [{}]
     })
     const [isInitialLoad, setIsInitialLoad] = useState(true)
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [uploadedImages, setUploadedImages] = useState([])
+    const [showImageUploader, setShowImageUploader] = useState(false)
 
     // Initialize from URL params
     useEffect(() => {
@@ -181,6 +186,56 @@ export default function ProductCreationWizard() {
         }
     }
 
+    
+    const handleAIGeneration = async () => {
+        setIsGenerating(true)
+        try {
+            // Call AI metadata generation endpoint
+            const response = await fetch('http://localhost:5000/ai/generate-metadata', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_ids: uploadedImages.map(img => img.imgId)
+                })
+            })
+            
+            if (!response.ok) {
+                throw new Error('Failed to generate metadata')
+            }
+            
+            const data = await response.json()
+            
+            // Create draft with generated metadata and preserve image order
+            const draftData = {
+                ...data.metadata,
+                stock: {
+                    ...data.metadata.stock,
+                    variations: data.metadata.stock.variations.map((variation, index) => ({
+                        ...variation,
+                        images: uploadedImages.map(img => ({
+                            imgId: img.imgId,
+                            thumbnail: index === 0 && img === uploadedImages[0] // Set first image as thumbnail
+                        }))
+                    }))
+                }
+            }
+            
+            const draftResponse = await apiService.products.createDraft(draftData)
+            setDraftId(draftResponse.data)
+            setFormData(prev => ({
+                ...prev,
+                ...draftData
+            }))
+            setStep(1) // Move to first step of the wizard
+        } catch (error) {
+            console.error('Failed to generate product:', error)
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+    
     const handleBack = async () => {
         try {
             if (draftId) {
@@ -207,6 +262,7 @@ export default function ProductCreationWizard() {
     }
 
     const steps = [
+        { title: "Choose Method", icon: <Wand2 className="w-4 h-4" /> },
         { title: "Product Info", icon: <Store className="w-4 h-4" /> },
         { title: "Stock & Pricing", icon: <Layers className="w-4 h-4" /> },
         { title: "Searchability", icon: <Search className="w-4 h-4" /> }
@@ -214,6 +270,69 @@ export default function ProductCreationWizard() {
 
     const renderStepContent = () => {
         switch (step) {
+            case 0:
+                return (
+                    <div className="space-y-8 p-6">
+                        {!showImageUploader ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setStep(1)}>
+                                    <div className="flex flex-col items-center text-center space-y-4">
+                                        <Pencil className="w-12 h-12 text-indigo-600" />
+                                        <h3 className="text-xl font-semibold">Manual Entry</h3>
+                                        <p className="text-gray-500">Fill in all product details manually</p>
+                                    </div>
+                                </Card>
+                                
+                                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setShowImageUploader(true)}>
+                                    <div className="flex flex-col items-center text-center space-y-4">
+                                        <Wand2 className="w-12 h-12 text-indigo-600" />
+                                        <h3 className="text-xl font-semibold">AI Magic</h3>
+                                        <p className="text-gray-500">Upload images and let us magically generate product details using AI!</p>
+                                    </div>
+                                </Card>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setShowImageUploader(false)}
+                                        className="text-gray-500 hover:text-gray-700"
+                                    >
+                                        <ArrowLeftCircle className="mr-2 h-4 w-4" />
+                                        Back to options
+                                    </Button>
+                                </div>
+                                
+                                <div className="transition-all duration-300 ease-in-out">
+                                    <div className="space-y-4">
+                                        <ImageUploader
+                                            images={uploadedImages}
+                                            onChange={setUploadedImages}
+                                            maxImages={5}
+                                            variationIndex={0}
+                                        />
+                                        
+                                        <Button 
+                                            className="w-full" 
+                                            onClick={handleAIGeneration}
+                                            disabled={uploadedImages.length === 0 || isGenerating}
+                                        >
+                                            {isGenerating ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Generating...
+                                                </>
+                                            ) : (
+                                                'Generate Product'
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )
             case 1:
                 return <ProductInfoForm handleSubmit={handleSubmit} formData={formData} updateFormData={updateFormData} />
             case 2:
@@ -279,7 +398,7 @@ export default function ProductCreationWizard() {
                         <Button
                             variant="outline"
                             onClick={handleBack}
-                            disabled={step === 1}
+                            disabled={step === 0}
                             className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />

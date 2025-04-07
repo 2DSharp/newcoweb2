@@ -18,7 +18,8 @@ export function ProductActions({ productId, variant }: ProductActionsProps) {
     const addToCart = async () => {
 
         try {
-            const authData = localStorage.getItem('auth_data');
+            console.log('Adding to cart');
+            const authData = localStorage.getItem('buyer_data');
             if (authData) {
                 const { loginType } = JSON.parse(authData);
                 if (loginType === 'BUYER') {
