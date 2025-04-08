@@ -14,9 +14,7 @@ const API_CONFIG = {
 
 
 // Create Axios instance
-export const authenticatedApiClient = axios.create({
-    baseURL: API_CONFIG.baseURL
-});
+const authenticatedApiClient = axios.create(API_CONFIG);
 
 export const authenticatedFileUploadClient = axios.create({
     baseURL: "http://localhost:5000"
@@ -33,14 +31,13 @@ export const unauthenticatedSearchClient = axios.create({
 // Request Interceptor
 authenticatedApiClient.interceptors.request.use(
     (config) => {
-        if (!localStorage.getItem('auth_data') && !localStorage.getItem('buyer_data')) {
-            return config;
-        }
-
-        const token = JSON.parse(localStorage.getItem('auth_data') || localStorage.getItem('buyer_data')).accessToken;
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-
+        // Try to get both buyer and seller data
+        const buyerData = localStorage.getItem('buyer_data');
+        const sellerData = localStorage.getItem('seller_data');
+        
+        if (buyerData || sellerData) {
+            const data = JSON.parse(buyerData || sellerData);
+            config.headers.Authorization = `Bearer ${data.accessToken}`;
         }
         return config;
     },
@@ -167,13 +164,22 @@ export const apiService = {
                         body: JSON.stringify({ refreshToken }),
                     });
 
-                    // Store access token and user info in localStorage
-                    localStorage.setItem('auth_data', JSON.stringify({
-                        accessToken,
-                        userId,
-                        loginType
-                    }));
+                    if (loginType === 'BUYER') {
+                        localStorage.setItem('buyer_data', JSON.stringify({
+                            accessToken,
+                            userId,
+                            loginType
+                        }));
+                    } else {
+                        // Store access token and user info in localStorage
+                        localStorage.setItem('seller_data', JSON.stringify({
+                            accessToken,
+                            userId,
+                            loginType
+                        }));
 
+                    }
+                
                     return response.data;
                 }
                 

@@ -59,10 +59,35 @@ function CheckoutPage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
 
   useEffect(() => {
+    const checkAuth = () => {
+      const authData = localStorage.getItem('buyer_data');
+      if (!authData) {
+        // Not logged in, redirect to login
+        const currentUrl = window.location.href;
+        router.push(`/login?redirectUrl=${encodeURIComponent(currentUrl)}`);
+        return false;
+      }
+
+      const { loginType } = JSON.parse(authData);
+      if (loginType !== 'BUYER') {
+        // Not a buyer, redirect to login
+        const currentUrl = window.location.href;
+        router.push(`/login?redirectUrl=${encodeURIComponent(currentUrl)}`);
+        return false;
+      }
+
+      return true;
+    };
+
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
+
+        // Check authentication first
+        if (!checkAuth()) {
+          return;
+        }
 
         // Get product details
         const productId = searchParams.get("product");
@@ -75,8 +100,7 @@ function CheckoutPage() {
         }
 
         // Load product details
-        const productResponse = await apiService.products.getProduct(productId);
-
+        const productResponse = (await apiService.products.getProduct(productId)).data;
         const variant = productResponse.stock.variations.find(
           (v: any) => v.variantId === variantId
         );
@@ -92,6 +116,7 @@ function CheckoutPage() {
           pricingVariantId
         });
 
+        console.log("Here");
         // Load addresses
         const addressResponse = await apiService.accounts.getAddresses();
         if (addressResponse.successful) {
@@ -114,7 +139,7 @@ function CheckoutPage() {
     };
 
     loadData();
-  }, [searchParams]);
+  }, [router, searchParams]);
 
   const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();

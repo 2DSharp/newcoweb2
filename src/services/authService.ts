@@ -3,7 +3,8 @@ import apiService from "@/services/api";
 
 export class AuthService {
     private static instance: AuthService;
-    private readonly STORAGE_KEY = 'auth_data';
+    private readonly BUYER_STORAGE_KEY = 'buyer_data';
+    private readonly SELLER_STORAGE_KEY = 'seller_data';
 
     private constructor() {}
 
@@ -12,6 +13,10 @@ export class AuthService {
             AuthService.instance = new AuthService();
         }
         return AuthService.instance;
+    }
+
+    private getStorageKey(loginType: string): string {
+        return loginType === 'BUYER' ? this.BUYER_STORAGE_KEY : this.SELLER_STORAGE_KEY;
     }
 
     async setAuthData(response: AuthResponse): Promise<void> {
@@ -25,6 +30,7 @@ export class AuthService {
         });
 
         const expiresAt = new Date(response.expiry).getTime();
+        const storageKey = this.getStorageKey(response.loginType);
 
         // Store other data (except refresh token) in localStorage
         const payload: TokenPayload = {
@@ -33,14 +39,18 @@ export class AuthService {
             loginType: response.loginType,
             expiresAt: expiresAt
         };
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(payload));
+
+        localStorage.setItem(storageKey, JSON.stringify(payload));
     }
 
     async refreshTokens(): Promise<boolean> {
         try {
-            const authData = this.getAuthData();
-            if (!authData) {
-                console.error('No Auth data found');
+            // Try to get both buyer and seller data
+            const buyerData = this.getBuyerData();
+            const sellerData = this.getSellerData();
+            
+            if (!buyerData && !sellerData) {
+                console.error('No auth data found');
                 return false;
             }
 
@@ -48,9 +58,11 @@ export class AuthService {
             const tokenResponse = await fetch('/api/auth/get-refresh-token');
             const { refreshToken } = await tokenResponse.json();
 
+            // Use the active session data
+            const activeData = buyerData || sellerData;
             const refreshTokenRequest: RefreshTokenRequest = {
-                userId: authData.userId,
-                loginType: authData.loginType,
+                userId: activeData.userId,
+                loginType: activeData.loginType,
                 token: refreshToken
             };
 
@@ -66,8 +78,17 @@ export class AuthService {
         }
     }
 
-    getAuthData(): TokenPayload | null {
-        const data = localStorage.getItem(this.STORAGE_KEY);
+    getBuyerData(): TokenPayload | null {
+        return this.getAuthDataByType('BUYER');
+    }
+
+    getSellerData(): TokenPayload | null {
+        return this.getAuthDataByType('SELLER');
+    }
+
+    private getAuthDataByType(loginType: string): TokenPayload | null {
+        const storageKey = this.getStorageKey(loginType);
+        const data = localStorage.getItem(storageKey);
         if (!data) return null;
         try {
             const parsed = JSON.parse(data) as TokenPayload;
@@ -77,14 +98,23 @@ export class AuthService {
         }
     }
 
-    isTokenExpired(): boolean {
-        const authData = this.getAuthData();
+    isTokenExpired(loginType: string): boolean {
+        const authData = this.getAuthDataByType(loginType);
         if (!authData) return true;
         return Date.now() >= authData.expiresAt;
     }
 
-    clearAuth(): void {
-        localStorage.removeItem(this.STORAGE_KEY);
+    clearAuth(loginType?: string): void {
+        if (loginType) {
+            // Clear specific auth type
+            const storageKey = this.getStorageKey(loginType);
+            localStorage.removeItem(storageKey);
+        } else {
+            // Clear all auth data
+            localStorage.removeItem(this.BUYER_STORAGE_KEY);
+            localStorage.removeItem(this.SELLER_STORAGE_KEY);
+        }
+        
         // Clear refresh token cookie
         fetch('/api/auth/set-refresh-token', {
             method: 'POST',
