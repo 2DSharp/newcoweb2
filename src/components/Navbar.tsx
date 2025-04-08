@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { Search, ShoppingCart, User, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiService } from '@/services/api';
 
 const MENU_ITEMS = [
@@ -34,6 +34,15 @@ type SuggestionResponse = {
   suggestions: Suggestion[];
 };
 
+// Helper functions for URL parameter handling
+const encodeSearchQuery = (query: string) => {
+  return query.trim().replace(/\s+/g, '+');
+};
+
+const decodeSearchQuery = (query: string) => {
+  return query.replace(/\+/g, ' ');
+};
+
 export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [cartCount, setCartCount] = useState(0);
@@ -41,8 +50,19 @@ export function Navbar() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
+  const suggestionsRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Sync search query with URL parameter
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      setSearchQuery(decodeSearchQuery(query));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     setMounted(true);
@@ -101,18 +121,66 @@ export function Navbar() {
     []
   );
 
-  // Handle search query change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    fetchSuggestions(query);
+  // Handle keyboard navigation
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+          handleSuggestionClick(suggestions[highlightedIndex].text);
+        } else {
+          handleSearch(e);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        break;
+    }
   };
+
+  // Update highlighted suggestion in search box
+  useEffect(() => {
+    if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+      setSearchQuery(suggestions[highlightedIndex].text);
+    }
+  }, [highlightedIndex, suggestions]);
+
+  // Scroll highlighted suggestion into view
+  useEffect(() => {
+    if (suggestionsRef.current && highlightedIndex >= 0) {
+      const highlightedElement = suggestionsRef.current.children[highlightedIndex];
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [highlightedIndex]);
 
   // Handle suggestion click
   const handleSuggestionClick = (suggestion: string) => {
     setSearchQuery(suggestion);
     setShowSuggestions(false);
-    router.push(`/search?q=${encodeURIComponent(suggestion)}`);
+    setHighlightedIndex(-1);
+    router.push(`/search?q=${encodeSearchQuery(suggestion)}`);
+  };
+
+  // Handle search query change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    setHighlightedIndex(-1);
+    fetchSuggestions(query);
   };
 
   // Handle search form submission
@@ -120,7 +188,8 @@ export function Navbar() {
     e.preventDefault();
     if (searchQuery.trim()) {
       setShowSuggestions(false);
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setHighlightedIndex(-1);
+      router.push(`/search?q=${encodeSearchQuery(searchQuery)}`);
     }
   };
 
@@ -128,7 +197,10 @@ export function Navbar() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
+        // Add a small delay to allow click events on suggestions to fire first
+        setTimeout(() => {
+          setShowSuggestions(false);
+        }, 200);
       }
     };
 
@@ -202,10 +274,10 @@ export function Navbar() {
               </div>
 
               {/* Search and Actions container */}
-              <div className="flex flex-1 items-center justify-end gap-4">
+              <div className="flex flex-1 items-center gap-4">
                 {/* Search - Desktop */}
                 <div 
-                  className="hidden md:flex flex-1 max-w-3xl relative" 
+                  className="hidden md:flex flex-1 max-w-3xl relative ml-4" 
                   ref={searchRef}
                 >
                   <form 
@@ -214,11 +286,12 @@ export function Navbar() {
                   >
                     <div className="relative w-full flex">
                       <Input
-                        type="search"
+                        type="text"
                         placeholder="Search products..."
                         className="w-full pr-16 px-4 rounded-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-base"
                         value={searchQuery}
                         onChange={handleSearchChange}
+                        onKeyDown={handleKeyDown}
                         onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                         style={{ WebkitAppearance: 'none' }}
                       />
@@ -234,16 +307,27 @@ export function Navbar() {
                   
                   {/* Search Suggestions Dropdown */}
                   {showSuggestions && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 z-50 max-h-80 overflow-y-auto">
+                    <div 
+                      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 z-50 max-h-80 overflow-y-auto"
+                      onMouseDown={(e) => {
+                        // Prevent the blur event from hiding suggestions
+                        e.preventDefault();
+                      }}
+                    >
                       {isLoading ? (
                         <div className="p-4 text-center text-gray-500">Loading suggestions...</div>
                       ) : suggestions.length > 0 ? (
-                        <ul>
+                        <ul ref={suggestionsRef}>
                           {suggestions.map((suggestion, index) => (
                             <li 
                               key={index}
-                              className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center"
+                              className={`px-4 py-2 cursor-pointer flex items-center ${
+                                index === highlightedIndex 
+                                  ? 'bg-primary/10 text-primary' 
+                                  : 'hover:bg-gray-50'
+                              }`}
                               onClick={() => handleSuggestionClick(suggestion.text)}
+                              onMouseEnter={() => setHighlightedIndex(index)}
                             >
                               <Search className="h-4 w-4 mr-2 text-gray-400" />
                               <span>{suggestion.text}</span>
