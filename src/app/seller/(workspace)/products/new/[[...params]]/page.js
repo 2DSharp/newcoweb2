@@ -25,6 +25,7 @@ export default function ProductCreationWizard() {
     })
     const [isInitialLoad, setIsInitialLoad] = useState(true)
     const [isGenerating, setIsGenerating] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [uploadedImages, setUploadedImages] = useState([])
     const [showImageUploader, setShowImageUploader] = useState(false)
 
@@ -162,11 +163,13 @@ export default function ProductCreationWizard() {
                 await apiService.products.updateDraft(draftId, formattedData)
                 if (step === 3) {
                     try {
-                        console.log("Step ! 3")
+                        setIsSubmitting(true)
+                        console.log("Submitting product...")
                         const data = await apiService.products.publishDraft(draftId)
-                        router.push('/products/' + data.data)
+                        router.push('/seller/products')
                     } catch (error) {
                         console.error('Failed to submit product:', error)
+                        setIsSubmitting(false)
                     }
                 }
             } else if (step === 1) {
@@ -180,7 +183,9 @@ export default function ProductCreationWizard() {
                 })
                 setDraftId(response.data)
             }
-            setStep(prev => prev + 1)
+            if (!isSubmitting) {
+                setStep(prev => prev + 1)
+            }
         } catch (error) {
             console.error('Failed to save draft:', error)
         }
@@ -269,25 +274,35 @@ export default function ProductCreationWizard() {
     ]
 
     const renderStepContent = () => {
+        if (isSubmitting) {
+            return (
+                <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                    <h2 className="text-xl font-semibold text-gray-900">Listing your awesome product</h2>
+                    <p className="text-gray-500">This may take a few moments...</p>
+                </div>
+            )
+        }
+
         switch (step) {
             case 0:
                 return (
                     <div className="space-y-8 p-6">
                         {!showImageUploader ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setStep(1)}>
-                                    <div className="flex flex-col items-center text-center space-y-4">
-                                        <Pencil className="w-12 h-12 text-indigo-600" />
-                                        <h3 className="text-xl font-semibold">Manual Entry</h3>
-                                        <p className="text-gray-500">Fill in all product details manually</p>
-                                    </div>
-                                </Card>
-                                
                                 <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setShowImageUploader(true)}>
                                     <div className="flex flex-col items-center text-center space-y-4">
                                         <Wand2 className="w-12 h-12 text-indigo-600" />
                                         <h3 className="text-xl font-semibold">AI Magic</h3>
                                         <p className="text-gray-500">Upload images and let us magically generate product details using AI!</p>
+                                    </div>
+                                </Card>
+                                
+                                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setStep(1)}>
+                                    <div className="flex flex-col items-center text-center space-y-4">
+                                        <Pencil className="w-12 h-12 text-indigo-600" />
+                                        <h3 className="text-xl font-semibold">Manual Entry</h3>
+                                        <p className="text-gray-500">Fill in all product details manually</p>
                                     </div>
                                 </Card>
                             </div>
@@ -361,14 +376,14 @@ export default function ProductCreationWizard() {
                                 type="button"
                                 onClick={() => index < step && setStep(index + 1)}
                                 className={`flex flex-col items-center ${
-                                    index < step ? 'text-indigo-600' : 'text-muted-foreground'
+                                    index <= step || isSubmitting ? 'text-indigo-600' : 'text-muted-foreground'
                                 }`}
-                                disabled={index > step - 1}
+                                disabled={index > step || isSubmitting}
                             >
                                 <div className={`rounded-full p-2 ${
-                                    index < step ? 'bg-indigo-600 text-white' : 'bg-muted'
+                                    index <= step || isSubmitting ? 'bg-indigo-600 text-white' : 'bg-muted'
                                 }`}>
-                                    {index < step - 1 ? (
+                                    {index < step || isSubmitting ? (
                                         <Check className="w-4 h-4" />
                                     ) : (
                                         stepItem.icon
@@ -381,7 +396,7 @@ export default function ProductCreationWizard() {
 
                     <div>
                         <Progress 
-                            value={(step) * (100 / steps.length)} 
+                            value={isSubmitting ? 100 : (step) * (100 / steps.length)} 
                             className="w-full bg-indigo-100" 
                         />
                     </div>
@@ -393,31 +408,34 @@ export default function ProductCreationWizard() {
                 </div>
 
                 {/* Bottom buttons */}
-                <div className="bg-white rounded-lg p-4">
-                    <div className="flex justify-between">
-                        <Button
-                            variant="outline"
-                            onClick={handleBack}
-                            disabled={step === 0}
-                            className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back
-                        </Button>
+                {!isSubmitting && (
+                    <div className="bg-white rounded-lg p-4">
+                        <div className="flex justify-between">
+                            <Button
+                                variant="outline"
+                                onClick={handleBack}
+                                disabled={step === 0}
+                                className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                            >
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Back
+                            </Button>
 
-                        <Button
-                            onClick={handleNextStep}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                            {step === 3 ? 'Submit Product' : (
-                                <>
-                                    Next
-                                    <ArrowRight className="h-4 w-4 ml-2" />
-                                </>
-                            )}
-                        </Button>
+                            <Button
+                                onClick={handleNextStep}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                disabled={isSubmitting}
+                            >
+                                {step === 3 ? 'Submit Product' : (
+                                    <>
+                                        Next
+                                        <ArrowRight className="h-4 w-4 ml-2" />
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     )
