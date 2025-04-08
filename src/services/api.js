@@ -5,7 +5,7 @@ import {AuthService} from "@/services/authService";
 // API Configuration
 const API_CONFIG = {
     baseURL: 'http://localhost:8080',
-    timeout: parseInt(process.env.VITE_API_TIMEOUT || '30000'),
+    timeout: parseInt(process.env.VITE_API_TIMEOUT || '60000'),
     headers: {
         'Content-Type': 'application/json',
     },

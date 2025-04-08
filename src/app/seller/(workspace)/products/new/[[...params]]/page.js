@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
-import { ArrowRight, ArrowLeft, Store, Clipboard, Layers, Check, Search, Wand2, Pencil, ArrowLeftCircle } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Store, Clipboard, Layers, Check, Search, Wand2, Pencil, ArrowLeftCircle, Loader2, Sparkles, Banana, Coffee, Wrench, Rocket } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
@@ -12,7 +12,30 @@ import ProductVariationsForm from '@/components/product-configuration/product-va
 import apiService from '@/services/api'
 import { Card } from "@/components/ui/card"
 import ImageUploader from '@/components/ImageUploader'
-import { Loader2 } from 'lucide-react'
+import MonkeyLoadingScreen from '@/components/MonkeyLoadingScreen'
+import { AnimatingButton } from '@/components/animatingbutton'
+
+const AI_LOADING_MESSAGES = [
+    "Monkeys are analyzing your images... 🐵",
+    "Our AI monkeys are brainstorming... 🧠",
+    "One monkey spilled coffee on the keyboard... ☕",
+    "The monkeys are arguing about the perfect description... 🗣️",
+    "Someone brought bananas to the meeting... 🍌",
+    "The monkeys are doing their final checks... ✅",
+    "A monkey just discovered the copy-paste shortcut... 📋",
+    "The coffee machine is working overtime... ☕",
+    "Monkeys are debating color schemes... 🎨",
+    "Someone found the emoji keyboard... 😅"
+]
+
+const MONKEY_ACTIONS = [
+    { emoji: "🐵", action: "typing furiously" },
+    { emoji: "🙈", action: "covering eyes" },
+    { emoji: "🙉", action: "covering ears" },
+    { emoji: "🙊", action: "covering mouth" },
+    { emoji: "🐒", action: "swinging on chair" },
+    { emoji: "🦍", action: "thinking deeply" }
+]
 
 export default function ProductCreationWizard() {
     const router = useRouter()
@@ -28,6 +51,12 @@ export default function ProductCreationWizard() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [uploadedImages, setUploadedImages] = useState([])
     const [showImageUploader, setShowImageUploader] = useState(false)
+    const [currentLoadingMessage, setCurrentLoadingMessage] = useState(0)
+    const [loadingProgress, setLoadingProgress] = useState(0)
+    const [currentMonkeyAction, setCurrentMonkeyAction] = useState(0)
+    const [chaosElements, setChaosElements] = useState([])
+    const [randomMessages, setRandomMessages] = useState([])
+    const [showSparkles, setShowSparkles] = useState(false)
 
     // Initialize from URL params
     useEffect(() => {
@@ -95,6 +124,66 @@ export default function ProductCreationWizard() {
             setIsInitialLoad(true)
         }
     }, [draftId])
+
+    useEffect(() => {
+        let messageInterval
+        let monkeyInterval
+        let chaosInterval
+
+        if (isGenerating) {
+            // Select 3 random messages
+            const shuffled = [...AI_LOADING_MESSAGES].sort(() => 0.5 - Math.random())
+            setRandomMessages(shuffled.slice(0, 3))
+
+            // Rotate through random messages
+            messageInterval = setInterval(() => {
+                setRandomMessages(prev => {
+                    const newMessages = [...prev]
+                    newMessages.shift()
+                    const remainingMessages = AI_LOADING_MESSAGES.filter(msg => !newMessages.includes(msg))
+                    if (remainingMessages.length > 0) {
+                        newMessages.push(remainingMessages[Math.floor(Math.random() * remainingMessages.length)])
+                    }
+                    return newMessages
+                })
+            }, 3000)
+
+            // Rotate through monkey actions
+            monkeyInterval = setInterval(() => {
+                setCurrentMonkeyAction(prev => (prev + 1) % MONKEY_ACTIONS.length)
+            }, 2000)
+
+            // Add random chaos elements
+            chaosInterval = setInterval(() => {
+                setChaosElements(prev => {
+                    const newElements = [...prev]
+                    if (newElements.length > 3) newElements.shift()
+                    newElements.push({
+                        id: Date.now(),
+                        type: Math.random() > 0.5 ? 'banana' : 'coffee',
+                        position: {
+                            x: Math.random() * 80 + 10,
+                            y: Math.random() * 40 + 10
+                        }
+                    })
+                    return newElements
+                })
+            }, 1500)
+        }
+
+        return () => {
+            clearInterval(messageInterval)
+            clearInterval(monkeyInterval)
+            clearInterval(chaosInterval)
+        }
+    }, [isGenerating])
+
+    useEffect(() => {
+        if (showSparkles) {
+            const timer = setTimeout(() => setShowSparkles(false), 2000)
+            return () => clearTimeout(timer)
+        }
+    }, [showSparkles])
 
     const createProductDraft = async () => {
         const draftData = {
@@ -165,8 +254,10 @@ export default function ProductCreationWizard() {
                     try {
                         setIsSubmitting(true)
                         console.log("Submitting product...")
-                        const data = await apiService.products.publishDraft(draftId)
-                        router.push('/seller/products')
+                        await apiService.products.publishDraft(draftId)
+                        console.log("Product published successfully")
+                        await router.push('/seller/products')
+                        return
                     } catch (error) {
                         console.error('Failed to submit product:', error)
                         setIsSubmitting(false)
@@ -194,6 +285,8 @@ export default function ProductCreationWizard() {
     
     const handleAIGeneration = async () => {
         setIsGenerating(true)
+        setLoadingProgress(0)
+        setCurrentLoadingMessage(0)
         try {
             // Call AI metadata generation endpoint
             const response = await fetch('http://localhost:5000/ai/generate-metadata', {
@@ -211,6 +304,7 @@ export default function ProductCreationWizard() {
             }
             
             const data = await response.json()
+            setLoadingProgress(100)
             
             // Create draft with generated metadata and preserve image order
             const draftData = {
@@ -284,25 +378,66 @@ export default function ProductCreationWizard() {
             )
         }
 
+        if (isGenerating) {
+            return <MonkeyLoadingScreen progress={loadingProgress} />
+        }
+
         switch (step) {
             case 0:
                 return (
                     <div className="space-y-8 p-6">
                         {!showImageUploader ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setShowImageUploader(true)}>
-                                    <div className="flex flex-col items-center text-center space-y-4">
-                                        <Wand2 className="w-12 h-12 text-indigo-600" />
-                                        <h3 className="text-xl font-semibold">AI Magic</h3>
-                                        <p className="text-gray-500">Upload images and let us magically generate product details using AI!</p>
+                                <Card 
+                                    className="p-6 cursor-pointer relative overflow-hidden transform transition-transform duration-300 hover:scale-105 bg-gradient-to-r from-purple-500 via-orange-500 to-violet-500"
+                                    onClick={() => {
+                                        setShowSparkles(true)
+                                        setShowImageUploader(true)
+                                    }}
+                                >
+                                    {showSparkles && (
+                                        <div className="absolute inset-0 overflow-hidden">
+                                            {[...Array(20)].map((_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="absolute w-2 h-2 bg-yellow-400 rounded-full animate-sparkle"
+                                                    style={{
+                                                        left: `${Math.random() * 100}%`,
+                                                        top: `${Math.random() * 100}%`,
+                                                        animationDelay: `${Math.random() * 1}s`,
+                                                        transform: `scale(${Math.random() * 0.5 + 0.5})`
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="relative z-10 flex flex-col items-center text-center space-y-4">
+                                        <div className="relative z-20">
+                                            <div className="relative">
+                                                <Wand2 className="w-12 h-12 text-white" />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-white">AI Magic</h3>
+                                        <p className="text-white/90">
+                                            Upload images and let us magically generate product details using AI!
+                                        </p>
                                     </div>
                                 </Card>
                                 
-                                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setStep(1)}>
+                                <Card 
+                                    className="p-6 cursor-pointer transform transition-transform duration-300 hover:scale-105 bg-white"
+                                    onClick={() => setStep(1)}
+                                >
                                     <div className="flex flex-col items-center text-center space-y-4">
-                                        <Pencil className="w-12 h-12 text-indigo-600" />
-                                        <h3 className="text-xl font-semibold">Manual Entry</h3>
-                                        <p className="text-gray-500">Fill in all product details manually</p>
+                                        <div className="relative z-20">
+                                            <div className="relative">
+                                                <Pencil className="w-12 h-12 text-indigo-600" />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-indigo-600">Manual Entry</h3>
+                                        <p className="text-gray-700">
+                                            Fill in all product details manually
+                                        </p>
                                     </div>
                                 </Card>
                             </div>
@@ -312,7 +447,7 @@ export default function ProductCreationWizard() {
                                     <Button
                                         variant="ghost"
                                         onClick={() => setShowImageUploader(false)}
-                                        className="text-gray-500 hover:text-gray-700"
+                                        className="text-gray-500 hover:text-gray-700 transition-colors duration-300"
                                     >
                                         <ArrowLeftCircle className="mr-2 h-4 w-4" />
                                         Back to options
@@ -329,10 +464,11 @@ export default function ProductCreationWizard() {
                                         />
                                         
                                         <Button 
-                                            className="w-full" 
+                                            className="w-full relative overflow-hidden group" 
                                             onClick={handleAIGeneration}
                                             disabled={uploadedImages.length === 0 || isGenerating}
                                         >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/20 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                             {isGenerating ? (
                                                 <>
                                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -353,7 +489,10 @@ export default function ProductCreationWizard() {
             case 2:
                 return <ProductVariationsForm formData={formData} updateFormData={updateFormData} />
             case 3:
-                return <SearchabilityDetailsForm formData={formData} updateFormData={updateFormData} />
+                return (
+                        <SearchabilityDetailsForm formData={formData} updateFormData={updateFormData} />
+                        
+                )
             default:
                 return null
         }
@@ -437,6 +576,27 @@ export default function ProductCreationWizard() {
                     </div>
                 )}
             </div>
+
+            <style jsx global>{`
+                @keyframes sparkle {
+                    0% {
+                        transform: scale(0) rotate(0deg);
+                        opacity: 0;
+                    }
+                    50% {
+                        transform: scale(1) rotate(180deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: scale(0) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+
+                .animate-sparkle {
+                    animation: sparkle 1.5s ease-out forwards;
+                }
+            `}</style>
         </div>
     )
 }
