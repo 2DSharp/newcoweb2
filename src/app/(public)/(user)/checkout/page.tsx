@@ -116,7 +116,6 @@ function CheckoutPage() {
           pricingVariantId
         });
 
-        console.log("Here");
         // Load addresses
         const addressResponse = await apiService.accounts.getAddresses();
         if (addressResponse.successful) {
@@ -201,7 +200,7 @@ function CheckoutPage() {
 
       const response = await apiService.orders.create(orderData);
       if (response.successful) {
-        router.push(`/orders/${response.orderId}`);
+        router.push(`/orders/${response.data}`);
       } else {
         throw new Error(response.message || "Failed to place order");
       }
@@ -254,7 +253,7 @@ function CheckoutPage() {
               )}
               <p className="mt-1">Quantity: {product.quantity}</p>
               <p className="mt-1 font-medium">
-                ₹{(product.selectedVariant.pricing.finalPrice * product.quantity).toFixed(2)}
+                ₹{(parseFloat(product.selectedVariant.pricing.finalPrice.replace(/,/g, '')) * product.quantity).toFixed(2)}
               </p>
             </div>
           </div>
@@ -415,8 +414,9 @@ function CheckoutPage() {
                 >
                   <div className="flex justify-between">
                     <div>
-                      <p className="font-medium">{address.addressLine1}</p>
-                      <p className="text-sm text-gray-600">{address.addressLine2}</p>
+                    <p className="font-medium">{address.name}</p>
+                    <p className="text-sm text-gray-600">{address.addressLine1}</p>
+                    <p className="text-sm text-gray-600">{address.addressLine2}</p>
                       <p className="text-sm text-gray-600">
                         {address.city}, {address.state} {address.pinCode}
                       </p>
@@ -425,7 +425,8 @@ function CheckoutPage() {
                           Landmark: {address.landmark}
                         </p>
                       )}
-                    </div>
+                    <p className="text-sm text-black-600">Phone: {address.phone}</p>
+                  </div>
                     {address.default && (
                       <span className="text-sm text-primary">Default</span>
                     )}
@@ -461,9 +462,8 @@ function CheckoutPage() {
               <span>
                 ₹
                 {product
-                  ? (
-                      product.selectedVariant.pricing.finalPrice * product.quantity
-                    ).toFixed(2)
+                  ? 
+                    (parseFloat(product.selectedVariant.pricing.finalPrice.replace(/,/g, '')) * product.quantity).toFixed(2)
                   : "0.00"}
               </span>
             </div>
@@ -477,7 +477,7 @@ function CheckoutPage() {
                 ₹
                 {product
                   ? (
-                      product.selectedVariant.pricing.finalPrice * product.quantity +
+                      (parseFloat(product.selectedVariant.pricing.finalPrice.replace(/,/g, '')) * product.quantity) +
                       40
                     ).toFixed(2)
                   : "0.00"}

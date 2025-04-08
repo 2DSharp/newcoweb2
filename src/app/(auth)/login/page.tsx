@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, KeyboardEvent, Suspense } from "react";
+import { useState, useRef, KeyboardEvent, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +90,32 @@ function LoginPage() {
     }
   };
 
+  const transferCartItems = async (userId: string) => {
+    const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (localCart.length === 0) return;
+
+    try {
+      // Transform cart items to match API format
+      const cartItems = localCart.map(item => ({
+        product: item.productId,
+        variantId: item.variantId,
+        quantity: item.quantity,
+        pricingVariantId: item.pricingId
+      }));
+
+      await apiService.cart.addItems(cartItems);
+      
+      // Clear local cart after successful transfer
+      localStorage.removeItem('cart');
+      
+      // Trigger cart update event
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (error) {
+      console.error('Failed to transfer cart items:', error);
+      setError("Failed to transfer your cart items. Please try again later.");
+    }
+  };
+
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -105,11 +131,17 @@ function LoginPage() {
       setLoading(true);
       const response = await apiService.identity.verifyOtp(verificationId!, otpValue);
       if (response.successful) {
-        localStorage.setItem("auth_data", JSON.stringify({
+        localStorage.setItem("buyer_data", JSON.stringify({
           userId: response.data.userId,
           loginType: response.data.loginType,
           expiry: response.data.expiry
         }));
+
+        // If user is a buyer, transfer cart items
+        if (response.data.loginType === 'BUYER') {
+          await transferCartItems(response.data.userId);
+        }
+
         router.push(redirectUrl);
       } else {
         setError(response.message || "Invalid OTP");

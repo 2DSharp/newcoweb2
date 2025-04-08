@@ -407,6 +407,14 @@ export const apiService = {
           const response = await authenticatedApiClient.post('/buy/order', orderData);
           return response.data;
         },
+        getDetails: async (orderId) => {
+          const response = await authenticatedApiClient.get(`/buy/order/${orderId}`);
+          return response.data;
+        },
+        getList: async () => {
+          const response = await authenticatedApiClient.get('/buy/order');
+          return response.data;
+        },
       },
     
     files: {

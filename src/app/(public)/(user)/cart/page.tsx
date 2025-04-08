@@ -30,66 +30,76 @@ function CartPage() {
  
     const added = searchParams.get('added')
   
+    // Add a function to listen for cart updates
     useEffect(() => {
-        const loadCartItems = async () => {
-            const authData = localStorage.getItem('auth_data');
-            let items = [];
-            
-            if (authData) {
-                const { loginType } = JSON.parse(authData);
-                if (loginType === 'BUYER') {
-                    // TODO: Implement API call to get cart items
-                    return;
-                }
-            }
-            
-            items = JSON.parse(localStorage.getItem('cart') || '[]');
-            
-            // Load product details in parallel
-            const itemsWithDetails = await Promise.all(
-                items.map(async (item) => {
-                    try {
-                      
-                        const product = await apiService.products.getProduct(item.productId);
-
-                        const variant = product.stock.variations.find(v => v.variantId === item.variantId);
-                        const pricing = variant.pricing;
-                        if (!pricing || pricing.pricingId !== item.pricingId) {
-                            toast({
-                                title: "Price Changed",
-                                description: `The price of ${product.name}${variant.name ? ` - ${variant.name}` : ''} has changed since you added it to the cart. Current price: ₹${pricing.finalPrice}`,
-                                variant: "destructive",
-                            });
-                        }
-                        return {
-                            ...item,
-                            product,
-                            variant,
-                            pricing,
-                            priceChanged: !pricing || pricing.pricingId !== item.pricingId
-                        };
-                    } catch (error) {
-                        console.error('Error loading product:', error);
-                        return null;
-                    }
-                })
-            );
-            console.log(itemsWithDetails);
-            setCartItems(itemsWithDetails.filter(item => item !== null));
-            setLoading(false);
+        const handleCartUpdate = () => {
+            loadCartItems();
         };
+
+        window.addEventListener('cartUpdated', handleCartUpdate);
+        return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+    }, []);
+
+    // Separate loadCartItems into its own function
+    const loadCartItems = async () => {
+        const authData = localStorage.getItem('buyer_data');
+        let items = [];
         
+        if (authData) {
+            const { loginType } = JSON.parse(authData);
+            if (loginType === 'BUYER') {
+                // TODO: Implement API call to get cart items
+                return;
+            }
+        }
+        
+        items = JSON.parse(localStorage.getItem('cart') || '[]');
+        // Load product details in parallel
+        const itemsWithDetails = await Promise.all(
+            items.map(async (item) => {
+                try {
+                    const product = (await apiService.products.getProduct(item.productId)).data;
+                    const variant = product.stock.variations.find(v => v.variantId === item.variantId);
+                    const pricing = variant.pricing;
+                    if (!pricing || pricing.pricingId !== item.pricingId) {
+                        toast({
+                            title: "Price Changed",
+                            description: `The price of ${product.name}${variant.name ? ` - ${variant.name}` : ''} has changed since you added it to the cart. Current price: ₹${pricing.finalPrice}`,
+                            variant: "destructive",
+                        });
+                    }
+                    return {
+                        ...item,
+                        product,
+                        variant,
+                        pricing,
+                        priceChanged: !pricing || pricing.pricingId !== item.pricingId
+                    };
+                } catch (error) {
+                    console.error('Error loading product:', error);
+                    return null;
+                }
+            })
+        );
+        
+        setCartItems(itemsWithDetails.filter(item => item !== null));
+        setLoading(false);
+    };
+
+    // Initial load
+    useEffect(() => {
         loadCartItems();
+        
         if (added) {
             toast({
                 title: "Item Added",
                 description: "Item has been added to your cart",
             });
         }
-    }, []);
+    }, [added]); // Add 'added' to dependency array
 
     const updateQuantity = async (item, newQuantity) => {
-        const authData = localStorage.getItem('auth_data');
+        const authData = localStorage.getItem('buyer_data');
         if (authData) {
             const { loginType } = JSON.parse(authData);
             if (loginType === 'BUYER') {
@@ -122,7 +132,7 @@ function CartPage() {
         if (!itemToDelete) return;
 
         try {
-          const authData = localStorage.getItem('auth_data');
+          const authData = localStorage.getItem('buyer_data');
           const { loginType } = authData ? JSON.parse(authData) : null;
 
           if (loginType === 'BUYER') {
