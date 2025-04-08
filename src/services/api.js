@@ -31,12 +31,16 @@ export const unauthenticatedSearchClient = axios.create({
 // Request Interceptor
 authenticatedApiClient.interceptors.request.use(
     (config) => {
-        // Try to get both buyer and seller data
-        const buyerData = localStorage.getItem('buyer_data');
-        const sellerData = localStorage.getItem('seller_data');
+        // Check if the URL contains '/seller/' to determine which auth data to use
+        const isSellerEndpoint = config.url?.includes('/seller/');
         
-        if (buyerData || sellerData) {
-            const data = JSON.parse(buyerData || sellerData);
+        // Try to get the appropriate auth data
+        const authData = isSellerEndpoint 
+            ? localStorage.getItem('seller_data')
+            : localStorage.getItem('buyer_data');
+        
+        if (authData) {
+            const data = JSON.parse(authData);
             config.headers.Authorization = `Bearer ${data.accessToken}`;
         }
         return config;
@@ -57,6 +61,17 @@ authenticatedApiClient.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
+                // Determine which auth data to use based on the endpoint
+                const isSellerEndpoint = originalRequest.url?.includes('/seller/');
+                const authDataKey = isSellerEndpoint ? 'seller_data' : 'buyer_data';
+                const authData = localStorage.getItem(authDataKey);
+
+                if (!authData) {
+                    throw new Error('No auth data found');
+                }
+
+                const { userId, loginType } = JSON.parse(authData);
+
                 // Get refresh token from HTTP-only cookie via Next.js API
                 const refreshTokenResponse = await fetch('/api/auth/get-refresh-token');
                 const { refreshToken } = await refreshTokenResponse.json();
@@ -64,20 +79,17 @@ authenticatedApiClient.interceptors.response.use(
                 if (!refreshToken) {
                     throw new Error('No refresh token found');
                 }
-                let authDataKey = 'auth_data';
-                if (localStorage.getItem('buyer_data')) {
-                    authDataKey = 'buyer_data';
-                }
 
                 // Call backend refresh token endpoint
                 const response = await unauthenticatedApiClient.post('/identity/refresh-token', {
-                    userId: JSON.parse(localStorage.getItem(authDataKey)).userId,
-                    loginType: JSON.parse(localStorage.getItem(authDataKey)).loginType,
+                    userId,
+                    loginType,
                     token: refreshToken
                 });
 
-                const { accessToken, userId, loginType } = response.data.data;
-                const newRefreshToken = response.data.data.refreshToken
+                const { accessToken, userId: newUserId, loginType: newLoginType } = response.data.data;
+                const newRefreshToken = response.data.data.refreshToken;
+
                 // Store new refresh token in HTTP-only cookie
                 await fetch('/api/auth/set-refresh-token', {
                     method: 'POST',
@@ -90,8 +102,8 @@ authenticatedApiClient.interceptors.response.use(
                 // Update localStorage with new access token and user info
                 localStorage.setItem(authDataKey, JSON.stringify({
                     accessToken,
-                    userId,
-                    loginType
+                    userId: newUserId,
+                    loginType: newLoginType
                 }));
 
                 // Update the authorization header
@@ -413,6 +425,12 @@ export const apiService = {
         },
         getList: async () => {
           const response = await authenticatedApiClient.get('/buy/order');
+          return response.data;
+        },
+        getSellerOrders: async (status) => {
+          const response = await authenticatedApiClient.get('/seller/orders/', {
+            params: { status }
+          });
           return response.data;
         },
       },

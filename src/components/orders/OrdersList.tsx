@@ -1,57 +1,61 @@
 'use client';
 
-import { format } from 'date-fns';
-import { Order } from '@/types/order';
+import { Order } from '@/app/seller/(workspace)/orders/page';
+import { formatCurrency } from '@/lib/utils';
 
 interface OrdersListProps {
   orders: Order[];
-  selectedOrderId?: string;
+  selectedOrderId: string | null;
   onOrderSelect: (order: Order) => void;
 }
 
-export default function OrdersList({ orders, selectedOrderId, onOrderSelect }: OrdersListProps) {
-  const getStatusColor = (status: Order['status']) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      processing: 'bg-blue-100 text-blue-800',
-      ready_for_shipping: 'bg-purple-100 text-purple-800',
-      shipped: 'bg-indigo-100 text-indigo-800',
-      delivered: 'bg-green-100 text-green-800'
-    };
-    return colors[status];
+export default function OrdersList({
+  orders,
+  selectedOrderId,
+  onOrderSelect,
+}: OrdersListProps) {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="divide-y divide-gray-100">
-        {orders.map((order) => (
-          <button
-            key={order.id}
-            onClick={() => onOrderSelect(order)}
-            className={`w-full text-left p-4 hover:bg-gray-50 transition-colors duration-150 ${
-              selectedOrderId === order.id ? 'bg-blue-50' : ''
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900">Order #{order.id}</p>
-                <p className="mt-1 text-sm text-gray-500">{order.customer.name}</p>
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                {order.status.replace('_', ' ').charAt(0).toUpperCase() + order.status.slice(1)}
-              </span>
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <div
+          key={order.id}
+          onClick={() => onOrderSelect(order)}
+          className={`p-4 rounded-lg cursor-pointer transition-colors ${
+            selectedOrderId === order.id
+              ? 'bg-blue-50 border border-blue-200'
+              : 'bg-white border border-gray-200 hover:border-blue-200'
+          }`}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="font-medium text-gray-900">Order #{order.id}</h3>
+              <p className="text-sm text-gray-500">
+                {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+              </p>
             </div>
-            <div className="mt-2 flex items-center justify-between text-sm">
-              <span className="text-gray-500">
-                {format(new Date(order.date), 'MMM d, yyyy')}
-              </span>
-              <span className="font-medium text-gray-900">
-                ${order.amount.toLocaleString()}
-              </span>
+            <div className="text-right">
+              <p className="font-medium text-gray-900">
+                {formatCurrency(order.subTotal)}
+              </p>
+              <p className="text-sm text-gray-500">
+                {formatDate(order.createdAt)}
+              </p>
             </div>
-          </button>
-        ))}
-      </div>
+          </div>
+          <div className="text-sm text-gray-600">
+            {order.items[0]?.productName}
+            {order.items.length > 1 && ` +${order.items.length - 1} more`}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

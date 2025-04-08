@@ -1,10 +1,11 @@
 'use client';
 
 import { Search, Filter } from 'lucide-react';
+import { OrderStatus } from '@/app/seller/(workspace)/orders/page';
 
 interface OrdersHeaderProps {
-  filterStatus: string;
-  onFilterChange: (status: string) => void;
+  filterStatus: OrderStatus;
+  onFilterChange: (status: OrderStatus) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
@@ -15,6 +16,13 @@ export default function OrdersHeader({
   searchQuery,
   onSearchChange
 }: OrdersHeaderProps) {
+  const statusOptions: { value: OrderStatus; label: string }[] = [
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'IN_TRANSIT', label: 'In Transit' },
+    { value: 'COMPLETED', label: 'Completed' },
+    { value: 'FAILED', label: 'Failed' },
+  ];
+
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <h1 className="text-2xl font-bold text-gray-900">Orders Management</h1>
@@ -35,15 +43,14 @@ export default function OrdersHeader({
           <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <select
             value={filterStatus}
-            onChange={(e) => onFilterChange(e.target.value)}
+            onChange={(e) => onFilterChange(e.target.value as OrderStatus)}
             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white w-full sm:w-48"
           >
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="ready_for_shipping">Ready for Shipping</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>

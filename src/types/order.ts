@@ -1,33 +1,30 @@
-export type OrderStatus = 'pending' | 'processing' | 'ready_for_shipping' | 'shipped' | 'delivered';
+export type OrderStatus = 'NEW' | 'ACTIVE' | 'IN_TRANSIT' | 'COMPLETED' | 'FAILED';
 
 export interface OrderItem {
   id: number;
-  productId: number;
+  productCode: string;
+  sku: string;
   productName: string;
-  image: string;
+  variantId: string;
+  variantName: string;
+  instructions: string | null;
   quantity: number;
-  processedQuantity: number;
   price: number;
-  customization?: string;
-  isCustomizationVerified: boolean;
+  discountApplied: number | null;
+  status: string;
+  orderId: string;
+  createdAt: string;
+  totalPrice: string;
+  processedQuantity?: number;
+  isCustomizationVerified?: boolean;
 }
 
 export interface Order {
   id: string;
-  customer: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  date: string;
-  items: OrderItem[];
+  subTotal: number;
   status: OrderStatus;
-  amount: number;
-  shippingAddress: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
+  items: OrderItem[];
+  createdAt: string;
+  updatedAt: string;
+  expectedBy: string;
 }
