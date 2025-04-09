@@ -2,13 +2,22 @@
 
 import { useState, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, MapPin } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, MapPin, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiService } from '@/services/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AddressForm } from '@/components/address/AddressForm';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 const MENU_ITEMS = [
   { name: "Explore", href: "/explore" },
@@ -43,6 +52,20 @@ const decodeSearchQuery = (query: string) => {
   return query.replace(/\+/g, ' ');
 };
 
+interface Address {
+  id: string;
+  label?: string;
+  name: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pinCode: number;
+  isDefault: boolean;
+  landmark?: string;
+}
+
 export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [cartCount, setCartCount] = useState(0);
@@ -51,13 +74,23 @@ export function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [savedAddressDetails, setSavedAddressDetails] = useState<{
+    id: string;
+    name: string;
+    city: string;
+    pinCode: string;
+  } | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [profile, setProfile] = useState<{
     firstName: string | null;
     lastName: string | null;
     defaultAddress: {
       name: string;
       city: string;
-      pincode: string;
+      pinCode: string;
     } | null;
     cartItemCount: number;
   } | null>(null);
@@ -105,6 +138,121 @@ export function Navbar() {
     window.addEventListener('cartUpdated', updateCartCount);
     return () => window.removeEventListener('cartUpdated', updateCartCount);
   }, []);
+
+  // Load selected address
+  useEffect(() => {
+    const savedAddressDetailsStr = localStorage.getItem('selectedAddressDetails');
+    
+    if (savedAddressDetailsStr) {
+      try {
+        const details = JSON.parse(savedAddressDetailsStr);
+        setSavedAddressDetails(details);
+      } catch (error) {
+        console.error('Error parsing saved address details:', error);
+      }
+    }
+  }, []);
+
+  // Save address details to localStorage
+  const saveAddressToLocalStorage = (address: any) => {
+    if (!address) return;
+    
+    const addressDetails = {
+      id: address.id,
+      name: formatName(address.name),
+      city: address.city,
+      pinCode: getPincode(address)
+    };
+    
+    localStorage.setItem('selectedAddressDetails', JSON.stringify(addressDetails));
+    setSavedAddressDetails(addressDetails);
+  };
+
+  // Load addresses when modal opens
+  const loadAddresses = async () => {
+    try {
+      const response = await apiService.accounts.getAddresses();
+      if (response.successful) {
+        console.log("Loaded addresses:", response.data);
+        setAddresses(response.data);
+        
+        // If no address is selected yet, use default or first one
+        if (!savedAddressDetails && response.data.length > 0) {
+          const defaultAddress = response.data.find(addr => addr.isDefault || (addr as any).default);
+          const addressToSelect = defaultAddress || response.data[0];
+          
+          if (addressToSelect) {
+            const addressDetails = {
+              id: addressToSelect.id,
+              name: formatName(addressToSelect.name),
+              city: addressToSelect.city,
+              pinCode: addressToSelect.pinCode || addressToSelect.pincode
+            };
+            
+            localStorage.setItem('selectedAddressDetails', JSON.stringify(addressDetails));
+            setSavedAddressDetails(addressDetails);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading addresses:', error);
+    }
+  };
+
+  const handleOpenAddressModal = () => {
+    setShowAddressModal(true);
+    loadAddresses();
+  };
+
+  const handleSelectAddress = (addressId: string) => {
+    const selectedAddr = addresses.find(addr => addr.id === addressId);
+    if (selectedAddr) {
+      saveAddressToLocalStorage(selectedAddr);
+    }
+    setShowAddressModal(false);
+  };
+
+  const handleAddNewAddress = () => {
+    setEditingAddress(null);
+    setShowAddressForm(true);
+  };
+
+  const handleSubmitAddress = async (addressData: any) => {
+    try {
+      let response;
+      if (editingAddress) {
+        response = await apiService.accounts.updateAddress(editingAddress.id, addressData);
+      } else {
+        response = await apiService.accounts.addAddress(addressData);
+      }
+      
+      if (response.successful) {
+        await loadAddresses();
+        setShowAddressForm(false);
+        
+        // If this is a new address and it should be selected
+        if (!editingAddress) {
+          saveAddressToLocalStorage(response.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving address:', error);
+    }
+  };
+
+  // Get selected address details
+  const selectedAddress = addresses.find(addr => addr.id === savedAddressDetails?.id);
+  
+  // Format name to get first word only
+  const formatName = (name: string) => {
+    return name?.split(' ')[0] || '';
+  };
+
+  // Get the pincode value handling different property names
+  const getPincode = (address: any) => {
+    // Handle different property names that might come from the API
+    return address?.pinCode || address?.pincode || '';
+  };
 
   // Debounce function for search suggestions
   const debounce = (func: Function, delay: number) => {
@@ -208,7 +356,7 @@ export function Navbar() {
     if (searchQuery.trim()) {
       setShowSuggestions(false);
       setHighlightedIndex(-1);
-      router.push(`/search?q=${encodeSearchQuery(searchQuery)}`, { replace: true });
+      router.push(`/search?q=${encodeSearchQuery(searchQuery)}`);
     }
   };
 
@@ -234,7 +382,7 @@ export function Navbar() {
   return (
     <div className="sticky top-0 z-50 bg-white">
       <header className="border-b">
-        <nav className="max-w-7xl mx-auto px-4">
+        <nav className="max-w-[1536px] mx-auto px-4">
           <div className="flex flex-col py-4 gap-4">
             {/* Top Row */}
             <div className="flex items-center w-full">
@@ -291,12 +439,37 @@ export function Navbar() {
                             />
                 </Link>
 
-                {/* Delivery Address */}
-                {profile?.defaultAddress && (
-                  <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 border-l pl-4">
-                    <MapPin className="h-4 w-4" />
-                    <span>Delivering to {profile.defaultAddress.name}, {profile.defaultAddress.city}, {profile.defaultAddress.pincode}</span>
-                  </div>
+                {/* Delivery Address Button */}
+                {(selectedAddress || savedAddressDetails || profile?.defaultAddress) && (
+                  <button 
+                    onClick={handleOpenAddressModal}
+                    className="hidden md:flex items-start gap-3 text-sm border-l pl-4 pr-4 py-1 max-w-[240px] hover:bg-gray-50 rounded group"
+                  >
+                    <MapPin className="h-4 w-4 text-gray-500 mt-1 flex-shrink-0" />
+                    <div>
+                      <div className="flex items-center text-xs">
+                        <span className="text-gray-500">Deliver to: </span>
+                        <span className="font-medium text-gray-800 ml-1 max-w-[120px] truncate">
+                          {selectedAddress 
+                            ? formatName(selectedAddress.name)
+                            : savedAddressDetails
+                              ? savedAddressDetails.name
+                              : profile?.defaultAddress 
+                                ? formatName(profile.defaultAddress.name)
+                                : ''}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {selectedAddress 
+                          ? `${selectedAddress.city}, ${getPincode(selectedAddress)}`
+                          : savedAddressDetails
+                            ? `${savedAddressDetails.city}, ${savedAddressDetails.pinCode}`
+                            : profile?.defaultAddress 
+                              ? `${profile.defaultAddress.city}, ${profile.defaultAddress.pinCode || ''}`
+                              : ''}
+                      </div>
+                    </div>
+                  </button>
                 )}
               </div>
 
@@ -304,7 +477,7 @@ export function Navbar() {
               <div className="flex flex-1 items-center gap-4">
                 {/* Search - Desktop */}
                 <div 
-                  className="hidden md:flex flex-1 max-w-3xl relative ml-4" 
+                  className="hidden md:flex flex-1 max-w-4xl relative ml-4" 
                   ref={searchRef}
                 >
                   <form 
@@ -463,7 +636,7 @@ export function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden lg:block border-t">
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-[1536px] mx-auto px-4">
             <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-4">
               {MENU_ITEMS.map((item) => (
                 <Link 
@@ -478,6 +651,81 @@ export function Navbar() {
           </div>
         </div>
       </header>
+      
+      {/* Address Selection Modal */}
+      <Dialog open={showAddressModal} onOpenChange={setShowAddressModal}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Select Delivery Address</DialogTitle>
+          </DialogHeader>
+          
+          {showAddressForm ? (
+            <AddressForm
+              initialData={editingAddress}
+              onSubmit={handleSubmitAddress}
+              onCancel={() => setShowAddressForm(false)}
+            />
+          ) : (
+            <div className="py-4">
+              {addresses.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 mb-4">
+                  {addresses.map((address) => {
+                    const isSelected = address.id === savedAddressDetails?.id;
+                    return (
+                      <Card 
+                        key={address.id} 
+                        className={`cursor-pointer hover:border-primary transition-colors ${isSelected ? 'border-primary bg-primary/5' : ''}`}
+                        onClick={() => handleSelectAddress(address.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium flex items-center gap-2">
+                                {address.name}
+                                {address.label && (
+                                  <span className="text-xs text-gray-500">({address.label})</span>
+                                )}
+                                {(address.isDefault || (address as any).default) && (
+                                  <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">
+                                    Default
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500 mt-1">{address.addressLine1}</p>
+                              <p className="text-sm text-gray-500">{address.addressLine2}</p>
+                              <p className="text-sm text-gray-500">
+                                {address.city}, {address.state} - {getPincode(address)}
+                              </p>
+                              <p className="text-sm text-gray-500">Phone: {address.phone}</p>
+                            </div>
+                            {isSelected && (
+                              <div className="bg-primary text-white rounded-full p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <MapPin className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                  <p>No addresses found</p>
+                </div>
+              )}
+              
+              <Button onClick={handleAddNewAddress} className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Address
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

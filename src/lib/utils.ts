@@ -21,3 +21,25 @@ export function formatCurrency(amount: number): string {
     maximumFractionDigits: 2,
   }).format(amount);
 }
+
+export async function getPincodeDetails(pincode: string) {
+    try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await response.json();
+        
+        if (data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+            const postOffice = data[0].PostOffice[0];
+            return {
+                district: postOffice.District,
+                state: postOffice.State,
+                area: postOffice.Name,
+                region: postOffice.Region,
+                division: postOffice.Division
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching pincode details:', error);
+        return null;
+    }
+}

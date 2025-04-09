@@ -413,6 +413,11 @@ export const apiService = {
           return response.data;
         },
 
+        updateAddress: async (addressId, addressData) => {
+            const response = await authenticatedApiClient.put(`/accounts/addresses/${addressId}`, addressData);
+            return response.data;
+          },
+
         getProfile: async () => {
           const response = await authenticatedApiClient.get('/accounts/profile');
           return response.data;

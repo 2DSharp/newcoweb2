@@ -59,7 +59,7 @@ function AccountPage() {
   }
 
   const menuItems = [
-    { label: "Orders", icon: <Package className="mr-2 h-4 w-4" />, href: "/account/orders" },
+    { label: "Orders", icon: <Package className="mr-2 h-4 w-4" />, href: "/orders" },
     { label: "Cart", icon: <ShoppingCart className="mr-2 h-4 w-4" />, href: "/cart" },
     { label: "Addresses", icon: <MapPin className="mr-2 h-4 w-4" />, href: "/account/addresses" },
     { label: "Payment Methods", icon: <CreditCard className="mr-2 h-4 w-4" />, href: "/account/payments" },

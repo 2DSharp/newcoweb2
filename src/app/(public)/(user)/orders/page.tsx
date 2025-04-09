@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import apiService from '@/services/api';
 
@@ -76,6 +77,30 @@ export default function OrdersPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">Your Orders</h1>
+        <div className="bg-white p-8 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
+          <div className="w-64 h-64 relative mb-6">
+            <Image 
+              src="/sad-cat.jpg" 
+              alt="Disappointed cat" 
+              layout="fill" 
+              objectFit="contain"
+              className="rounded-lg"
+            />
+          </div>
+          <h2 className="text-xl font-medium text-gray-800 mb-2">No orders yet</h2>
+          <p className="text-gray-600 mb-6">Looks like you haven't placed any orders yet.</p>
+          <Button asChild className="px-8">
+            <Link href="/">Start Shopping</Link>
+          </Button>
         </div>
       </div>
     );
