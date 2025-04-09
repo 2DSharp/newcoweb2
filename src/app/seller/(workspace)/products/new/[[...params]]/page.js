@@ -338,11 +338,11 @@ export default function ProductCreationWizard() {
     
     const handleBack = async () => {
         try {
-            // if (step === 0 && showImageUploader) {
-            //     setShowImageUploader(false)
-            //     setUploadedImages([]) // Clear uploaded images
-            //     return
-            // }
+            if (step === 0 && showImageUploader) {
+                setShowImageUploader(false)
+                setUploadedImages([]) // Clear uploaded images
+                return
+            }
             if (draftId) {
                 const formattedData = formatDataForApi(formData)
                 await apiService.products.updateDraft(draftId, formattedData)
