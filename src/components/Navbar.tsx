@@ -172,6 +172,7 @@ export function Navbar() {
     setSearchQuery(suggestion);
     setShowSuggestions(false);
     setHighlightedIndex(-1);
+    // Use router.push with replace to prevent adding to history stack
     router.push(`/search?q=${encodeSearchQuery(suggestion)}`);
   };
 
@@ -189,7 +190,7 @@ export function Navbar() {
     if (searchQuery.trim()) {
       setShowSuggestions(false);
       setHighlightedIndex(-1);
-      router.push(`/search?q=${encodeSearchQuery(searchQuery)}`);
+      router.push(`/search?q=${encodeSearchQuery(searchQuery)}`, { replace: true });
     }
   };
 
@@ -327,6 +328,7 @@ export function Navbar() {
                                   : 'hover:bg-gray-50'
                               }`}
                               onClick={() => handleSuggestionClick(suggestion.text)}
+                              onMouseDown={() => handleSuggestionClick(suggestion.text)}
                               onMouseEnter={() => setHighlightedIndex(index)}
                             >
                               <Search className="h-4 w-4 mr-2 text-gray-400" />
