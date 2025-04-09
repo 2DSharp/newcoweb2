@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import ProductInfoForm from '@/components/product-configuration/product-info-form'
 import SearchabilityDetailsForm from '@/components/product-configuration/searchability'
 import ProductVariationsForm from '@/components/product-configuration/product-variations-form'
+import AIGenerator from '@/components/product-configuration/AIGenerator'
 import apiService from '@/services/api'
 import { Card } from "@/components/ui/card"
 import ImageUploader from '@/components/ImageUploader'
@@ -275,7 +276,7 @@ export default function ProductCreationWizard() {
                 setDraftId(response.data)
             }
             if (!isSubmitting) {
-                setStep(prev => prev + 1)
+            setStep(prev => prev + 1)
             }
         } catch (error) {
             console.error('Failed to save draft:', error)
@@ -337,6 +338,11 @@ export default function ProductCreationWizard() {
     
     const handleBack = async () => {
         try {
+            // if (step === 0 && showImageUploader) {
+            //     setShowImageUploader(false)
+            //     setUploadedImages([]) // Clear uploaded images
+            //     return
+            // }
             if (draftId) {
                 const formattedData = formatDataForApi(formData)
                 await apiService.products.updateDraft(draftId, formattedData)
@@ -442,45 +448,12 @@ export default function ProductCreationWizard() {
                                 </Card>
                             </div>
                         ) : (
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => setShowImageUploader(false)}
-                                        className="text-gray-500 hover:text-gray-700 transition-colors duration-300"
-                                    >
-                                        <ArrowLeftCircle className="mr-2 h-4 w-4" />
-                                        Back to options
-                                    </Button>
-                                </div>
-                                
-                                <div className="transition-all duration-300 ease-in-out">
-                                    <div className="space-y-4">
-                                        <ImageUploader
-                                            images={uploadedImages}
-                                            onChange={setUploadedImages}
-                                            maxImages={5}
-                                            variationIndex={0}
-                                        />
-                                        
-                                        <Button 
-                                            className="w-full relative overflow-hidden group" 
-                                            onClick={handleAIGeneration}
-                                            disabled={uploadedImages.length === 0 || isGenerating}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/20 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                            {isGenerating ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Generating...
-                                                </>
-                                            ) : (
-                                                'Generate Product'
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
+                            <AIGenerator
+                                uploadedImages={uploadedImages}
+                                setUploadedImages={setUploadedImages}
+                                isGenerating={isGenerating}
+                                onGenerate={handleAIGeneration}
+                            />
                         )}
                     </div>
                 )
@@ -499,11 +472,13 @@ export default function ProductCreationWizard() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl w-full mx-auto space-y-8">
-                <div className="space-y-1">
-                    <h1 className="text-xl md:text-2xl font-bold text-gray-900">New Product</h1>
-                    <p className="text-sm text-gray-500">Create a new product listing</p>
+                <div className="space-y-2">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                        Create New Product
+                    </h1>
+                    <p className="text-sm text-gray-500">Let's bring your product to life</p>
                 </div>
 
                 {/* Progress and Steps Indicator */}
@@ -514,47 +489,56 @@ export default function ProductCreationWizard() {
                                 key={index}
                                 type="button"
                                 onClick={() => index < step && setStep(index + 1)}
-                                className={`flex flex-col items-center ${
+                                className={`flex flex-col items-center group ${
                                     index <= step || isSubmitting ? 'text-indigo-600' : 'text-muted-foreground'
                                 }`}
                                 disabled={index > step || isSubmitting}
                             >
-                                <div className={`rounded-full p-2 ${
-                                    index <= step || isSubmitting ? 'bg-indigo-600 text-white' : 'bg-muted'
+                                <div className={`rounded-full p-3 transition-all duration-300 flex items-center justify-center ${
+                                    index <= step || isSubmitting 
+                                        ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-200' 
+                                        : 'bg-gray-100 group-hover:bg-gray-200'
                                 }`}>
                                     {index < step || isSubmitting ? (
-                                        <Check className="w-4 h-4" />
+                                        <Check className="w-5 h-5" />
                                     ) : (
-                                        stepItem.icon
+                                        <div className="w-5 h-5 flex items-center justify-center">{stepItem.icon}</div>
                                     )}
                                 </div>
                                 <span className="mt-2 text-sm font-medium">{stepItem.title}</span>
+                              
                             </button>
                         ))}
                     </div>
 
-                    <div>
-                        <Progress 
-                            value={isSubmitting ? 100 : (step) * (100 / steps.length)} 
-                            className="w-full bg-indigo-100" 
-                        />
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                            <div className="w-full border-t border-gray-200" />
+                        </div>
+                        <div className="relative flex justify-between">
+                            {steps.map((_, index) => (
+                                <div key={index} className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                                    index <= step || isSubmitting ? 'bg-indigo-500' : 'bg-gray-200'
+                                }`} />
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* Main content */}
-                <div className="bg-white rounded-lg">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     {renderStepContent()}
                 </div>
 
                 {/* Bottom buttons */}
                 {!isSubmitting && (
-                    <div className="bg-white rounded-lg p-4">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <div className="flex justify-between">
                             <Button
                                 variant="outline"
                                 onClick={handleBack}
-                                disabled={step === 0}
-                                className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                                disabled={step === 0 && !showImageUploader}
+                                className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-colors duration-200"
                             >
                                 <ArrowLeft className="h-4 w-4 mr-2" />
                                 Back
@@ -562,7 +546,7 @@ export default function ProductCreationWizard() {
 
                             <Button
                                 onClick={handleNextStep}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-200/50 transition-all duration-200"
                                 disabled={isSubmitting}
                             >
                                 {step === 3 ? 'Submit Product' : (

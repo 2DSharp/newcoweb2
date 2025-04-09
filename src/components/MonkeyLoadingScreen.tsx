@@ -164,7 +164,7 @@ export default function MonkeyLoadingScreen({ progress }: MonkeyLoadingScreenPro
                     </p>
 
                     <p className='text-black-500'>
-                       <b> Our AI monkeys are working hard to help you list your awesome new product! </b>   
+                       <b> Sit back and relax, AI monkeys are working hard to help you list your awesome new product! </b>   
                     </p>
                 </div>
 
