@@ -25,6 +25,7 @@ function CartPage() {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const searchParams = useSearchParams()
     const { toast } = useToast();
  
@@ -42,48 +43,63 @@ function CartPage() {
 
     // Separate loadCartItems into its own function
     const loadCartItems = async () => {
-        const authData = localStorage.getItem('buyer_data');
-        let items = [];
-        
-        if (authData) {
-            const { loginType } = JSON.parse(authData);
-            if (loginType === 'BUYER') {
-                // TODO: Implement API call to get cart items
+        try {
+            setLoading(true);
+            setError(null);
+            const authData = localStorage.getItem('buyer_data');
+            let items = [];
+            
+            if (authData) {
+                const { loginType } = JSON.parse(authData);
+                if (loginType === 'BUYER') {
+                    // TODO: Implement API call to get cart items
+                    return;
+                }
+            }
+            
+            items = JSON.parse(localStorage.getItem('cart') || '[]');
+            
+            if (items.length === 0) {
+                setCartItems([]);
+                setLoading(false);
                 return;
             }
-        }
-        
-        items = JSON.parse(localStorage.getItem('cart') || '[]');
-        // Load product details in parallel
-        const itemsWithDetails = await Promise.all(
-            items.map(async (item) => {
-                try {
-                    const product = (await apiService.products.getProduct(item.productId)).data;
-                    const variant = product.stock.variations.find(v => v.variantId === item.variantId);
-                    const pricing = variant.pricing;
-                    if (!pricing || pricing.pricingId !== item.pricingId) {
-                        toast({
-                            title: "Price Changed",
-                            description: `The price of ${product.name}${variant.name ? ` - ${variant.name}` : ''} has changed since you added it to the cart. Current price: ₹${pricing.finalPrice}`,
-                            variant: "destructive",
-                        });
+
+            // Load product details in parallel
+            const itemsWithDetails = await Promise.all(
+                items.map(async (item) => {
+                    try {
+                        const product = (await apiService.products.getProduct(item.productId)).data;
+                        const variant = product.stock.variations.find(v => v.variantId === item.variantId);
+                        const pricing = variant.pricing;
+                        if (!pricing || pricing.pricingId !== item.pricingId) {
+                            toast({
+                                title: "Price Changed",
+                                description: `The price of ${product.name}${variant.name ? ` - ${variant.name}` : ''} has changed since you added it to the cart. Current price: ₹${pricing.finalPrice}`,
+                                variant: "destructive",
+                            });
+                        }
+                        return {
+                            ...item,
+                            product,
+                            variant,
+                            pricing,
+                            priceChanged: !pricing || pricing.pricingId !== item.pricingId
+                        };
+                    } catch (error) {
+                        console.error('Error loading product:', error);
+                        return null;
                     }
-                    return {
-                        ...item,
-                        product,
-                        variant,
-                        pricing,
-                        priceChanged: !pricing || pricing.pricingId !== item.pricingId
-                    };
-                } catch (error) {
-                    console.error('Error loading product:', error);
-                    return null;
-                }
-            })
-        );
-        
-        setCartItems(itemsWithDetails.filter(item => item !== null));
-        setLoading(false);
+                })
+            );
+            
+            setCartItems(itemsWithDetails.filter(item => item !== null));
+        } catch (error) {
+            console.error('Error loading cart:', error);
+            setError('Failed to load cart items. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Initial load
@@ -96,7 +112,7 @@ function CartPage() {
                 description: "Item has been added to your cart",
             });
         }
-    }, [added]); // Add 'added' to dependency array
+    }, [added]);
 
     const updateQuantity = async (item, newQuantity) => {
         const authData = localStorage.getItem('buyer_data');
@@ -153,16 +169,46 @@ function CartPage() {
     };
 
     if (loading) {
-        return <div className="p-8">Loading...</div>;
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <p className="text-sm text-red-700">{error}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     if (cartItems.length === 0) {
         return (
-            <div className="p-8 text-center">
-                <h2 className="text-xl font-semibold mb-4">Your cart is empty</h2>
-                <Link href="/">
-                    <Button>Continue Shopping</Button>
-                </Link>
+            <div className="container mx-auto px-4 py-8">
+                <div className="text-center space-y-6">
+                    <h2 className="text-xl font-semibold text-gray-900">Your cart is empty</h2>
+                    <p className="text-gray-500">Looks like you haven't added any items to your cart yet.</p>
+                    <div className="pt-4">
+                        <Link href="/">
+                            <Button>Continue Shopping</Button>
+                        </Link>
+                    </div>
+                </div>
             </div>
         );
     }
