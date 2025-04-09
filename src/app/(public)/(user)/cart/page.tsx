@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import apiService from '@/services/api';
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, Trash2, Loader2 } from 'lucide-react';
@@ -21,11 +21,22 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { parseCurrency } from '@/lib/utils';
 import { PriceDisplay } from '@/components/ProductInfo';
+
+// Debounce function
+const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func(...args), delay);
+    };
+};
+
 function CartPage() {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [error, setError] = useState<string | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
     const searchParams = useSearchParams()
     const { toast } = useToast();
  
@@ -52,12 +63,38 @@ function CartPage() {
             if (authData) {
                 const { loginType } = JSON.parse(authData);
                 if (loginType === 'BUYER') {
-                    // TODO: Implement API call to get cart items
-                    return;
+                    const response = await apiService.cart.getItems();
+                    if (response.successful) {
+                        items = response.data.map(item => ({
+                            productId: item.productId,
+                            variantId: item.variantId,
+                            pricingId: item.pricingId,
+                            quantity: item.quantity,
+                            product: {
+                                id: item.productId,
+                                name: item.productName,
+                                stock: {
+                                    variations: [{
+                                        variantId: item.variantId,
+                                        name: item.variantName,
+                                        pricing: {
+                                            pricingId: item.pricingId,
+                                            originalPrice: item.originalPrice,
+                                            finalPrice: item.discountedPrice,
+                                            priceChanged: item.pricingChanged
+                                        }
+                                    }]
+                                }
+                            }
+                        }));
+                    }
                 }
             }
             
-            items = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (items.length === 0) {
+                // Fallback to local storage if no items from API
+                items = JSON.parse(localStorage.getItem('cart') || '[]');
+            }
             
             if (items.length === 0) {
                 setCartItems([]);
@@ -114,34 +151,55 @@ function CartPage() {
         }
     }, [added]);
 
-    const updateQuantity = async (item, newQuantity) => {
-        const authData = localStorage.getItem('buyer_data');
-        if (authData) {
-            const { loginType } = JSON.parse(authData);
-            if (loginType === 'BUYER') {
-                await apiService.cart.updateQuantity(item.variantId, newQuantity);
-                // Refresh cart items
-                // TODO: Implement API call to get updated cart items
-                return;
-            }
-        }
+    // Debounced update quantity function
+    const debouncedUpdateQuantity = useCallback(
+        debounce(async (item, newQuantity) => {
+            try {
+                setIsUpdating(true);
+                const authData = localStorage.getItem('buyer_data');
+                if (authData) {
+                    const { loginType } = JSON.parse(authData);
+                    if (loginType === 'BUYER') {
+                        await apiService.cart.updateQuantity(item.variantId, newQuantity);
+                        // Reload cart data after successful update
+                        await loadCartItems();
+                        return;
+                    }
+                }
 
-        // Update local storage
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const cartItem = cart.find(i => i.variantId === item.variantId);
-        if (cartItem) {
-            cartItem.quantity = newQuantity;
-            localStorage.setItem('cart', JSON.stringify(cart));
-            
-            // Update state
-            setCartItems(prevItems => 
-                prevItems.map(i => 
-                    i.variantId === item.variantId 
-                        ? { ...i, quantity: newQuantity }
-                        : i
-                )
-            );
-        }
+                // Update local storage
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const cartItem = cart.find(i => i.variantId === item.variantId);
+                if (cartItem) {
+                    cartItem.quantity = newQuantity;
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    
+                    // Update state
+                    setCartItems(prevItems => 
+                        prevItems.map(i => 
+                            i.variantId === item.variantId 
+                                ? { ...i, quantity: newQuantity }
+                                : i
+                        )
+                    );
+                }
+            } catch (error) {
+                console.error('Error updating quantity:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to update quantity. Please try again.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsUpdating(false);
+            }
+        }, 500),
+        []
+    );
+
+    const updateQuantity = (item, newQuantity) => {
+        if (newQuantity < 1) return;
+        debouncedUpdateQuantity(item, newQuantity);
     };
 
     const handleDeleteItem = async () => {
@@ -257,6 +315,7 @@ function CartPage() {
                                                 updateQuantity(item, item.quantity - 1);
                                             }
                                         }}
+                                        disabled={isUpdating}
                                     >
                                         {item.quantity === 1 ? (
                                             <Trash2 className="h-4 w-4 text-red-500" />
@@ -269,6 +328,7 @@ function CartPage() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() => updateQuantity(item, item.quantity + 1)}
+                                        disabled={isUpdating}
                                     >
                                         <Plus className="h-4 w-4" />
                                     </Button>

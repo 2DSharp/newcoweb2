@@ -34,7 +34,7 @@ export function CartOverlay({ isOpen, onClose, items }: CartOverlayProps) {
   );
 
   const updateQuantity = async (item, newQuantity) => {
-    const authData = localStorage.getItem('auth_data');
+    const authData = localStorage.getItem('buyer_data');
     if (authData) {
       const { loginType } = JSON.parse(authData);
       if (loginType === 'BUYER') {

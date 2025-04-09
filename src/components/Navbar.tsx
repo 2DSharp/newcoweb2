@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -51,6 +51,16 @@ export function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [profile, setProfile] = useState<{
+    firstName: string | null;
+    lastName: string | null;
+    defaultAddress: {
+      name: string;
+      city: string;
+      pincode: string;
+    } | null;
+    cartItemCount: number;
+  } | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const suggestionsRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
@@ -69,12 +79,20 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
-    const updateCartCount = () => {
+    const updateCartCount = async () => {
       const authData = localStorage.getItem('buyer_data');
       if (authData) {
         const { loginType } = JSON.parse(authData);
         if (loginType === 'BUYER') {
-          // TODO: Implement API call to get cart count
+          try {
+            const response = await apiService.accounts.getProfile();
+            if (response.successful) {
+              setProfile(response.data);
+              setCartCount(response.data.cartItemCount);
+            }
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+          }
           return;
         }
       }
@@ -272,6 +290,14 @@ export function Navbar() {
                               className="mx-auto"
                             />
                 </Link>
+
+                {/* Delivery Address */}
+                {profile?.defaultAddress && (
+                  <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 border-l pl-4">
+                    <MapPin className="h-4 w-4" />
+                    <span>Delivering to {profile.defaultAddress.name}, {profile.defaultAddress.city}, {profile.defaultAddress.pincode}</span>
+                  </div>
+                )}
               </div>
 
               {/* Search and Actions container */}
@@ -355,7 +381,7 @@ export function Navbar() {
 
                       <User size={28} />
                       <span className="hidden md:inline-block text-sm text-gray-600">
-                        Account
+                        {profile?.firstName || 'Account'}
                       </span>
                     </button>
                   </Link>

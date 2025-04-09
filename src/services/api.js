@@ -412,6 +412,11 @@ export const apiService = {
           const response = await authenticatedApiClient.post('/accounts/addresses', addressData);
           return response.data;
         },
+
+        getProfile: async () => {
+          const response = await authenticatedApiClient.get('/accounts/profile');
+          return response.data;
+        },
       },
     
       orders: {
@@ -444,6 +449,30 @@ export const apiService = {
             });
             return response.data;
         },
+    },
+
+    // Cart endpoints
+    cart: {
+        addItem: async (itemData) => {
+            const response = await authenticatedApiClient.post('/buy/cart/item', itemData);
+            return response.data;
+        },
+        addItems: async (items) => {
+            const response = await authenticatedApiClient.post('/buy/cart', items);
+            return response.data;
+        },
+        updateQuantity: async (variantId, quantity) => {
+            const response = await authenticatedApiClient.patch(`/buy/cart/item/${variantId}/quantity/${quantity}`, { });
+            return response.data;
+        },
+        getItems: async () => {
+            const response = await authenticatedApiClient.get('/buy/cart');
+            return response.data;
+        },
+        clearCart: async () => {
+            const response = await authenticatedApiClient.delete('/cart/items');
+            return response.data;
+        }
     },
 };
 
