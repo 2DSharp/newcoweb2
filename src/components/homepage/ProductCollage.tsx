@@ -43,7 +43,7 @@ export default function ProductCollage({heading}: {heading: string}) {
 
   return (
     <section>
-      <h2 className="text-3xl font-bold mb-8">{heading}</h2>
+      <h2 className="text-3xl font-bold mb-8 font-playfair">{heading}</h2>
       
       {/* Mobile Layout (2 columns) */}
       <div className="grid grid-cols-2 gap-4 lg:hidden">

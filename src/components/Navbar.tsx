@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, KeyboardEvent, useMemo } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, MapPin, Plus, X } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, MapPin, Plus, X, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,7 +19,23 @@ import { AddressForm } from '@/components/address/AddressForm';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
-const MENU_ITEMS = [
+export interface Category {
+  id: number;
+  name: string;
+  path: string;
+  children?: Category[];
+}
+
+// Define the MenuItem type for better type safety
+type MenuItem = {
+  name: string;
+  href: string;
+  icon?: React.ReactNode;
+};
+
+// Update the MENU_ITEMS type
+const MENU_ITEMS: MenuItem[] = [
+  { name: "All Categories", href: "/categories", icon: <Menu className="h-4 w-4 mr-2" /> },
   { name: "Explore", href: "/explore" },
   { name: "Gift Ideas", href: "/gifts" },
   { name: "Season Must Haves", href: "/seasonal" },
@@ -30,7 +46,7 @@ const MENU_ITEMS = [
   { name: "Near me", href: "/nearby" },
   { name: "Live sessions", href: "/live" },
   { name: "Sell", href: "/seller" }
-] as const;
+];
 
 // Define types for search suggestions
 type Suggestion = {
@@ -94,6 +110,12 @@ export function Navbar() {
     } | null;
     cartItemCount: number;
   } | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+  const [showCategorySidebar, setShowCategorySidebar] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const suggestionsRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
@@ -391,6 +413,183 @@ export function Navbar() {
     setSavedAddressDetails(addressDetails);
   };
 
+  // Fetch and cache categories
+  const fetchCategories = useCallback(async () => {
+    // Check if categories are already in sessionStorage
+    const cachedCategories = sessionStorage.getItem('categories');
+    if (cachedCategories) {
+      setCategories(JSON.parse(cachedCategories));
+      return;
+    }
+
+    setIsLoadingCategories(true);
+    try {
+      const response = await apiService.cms.getCategories(3);
+      if (response) {
+        setCategories(response);
+        // Cache categories in sessionStorage
+        sessionStorage.setItem('categories', JSON.stringify(response));
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  }, []);
+
+  // Load categories when component mounts
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Filter categories based on search term
+  const filteredCategories = useMemo(() => {
+    if (!categorySearchTerm.trim()) return categories;
+    
+    const searchLower = categorySearchTerm.toLowerCase();
+    
+    const filterCategoriesRecursive = (categories: Category[]): Category[] => {
+      const result: Category[] = [];
+      
+      for (const category of categories) {
+        // Check if current category matches search
+        if (category.name.toLowerCase().includes(searchLower)) {
+          result.push(category);
+          continue;
+        }
+        
+        // If category has children, check them recursively
+        if (category.children && category.children.length > 0) {
+          const matchingChildren = filterCategoriesRecursive(category.children);
+          
+          if (matchingChildren.length > 0) {
+            // Create a shallow copy with just the matching children
+            result.push({
+              ...category,
+              children: matchingChildren,
+            });
+          }
+        }
+      }
+      
+      return result;
+    };
+    
+    return filterCategoriesRecursive(categories);
+  }, [categories, categorySearchTerm]);
+
+  // When search term changes, expand all categories that have matching children
+  useEffect(() => {
+    if (categorySearchTerm.trim()) {
+      // Function to find all category IDs that should be expanded
+      const findCategoryIdsToExpand = (categories: Category[]): number[] => {
+        let ids: number[] = [];
+        
+        for (const category of categories) {
+          if (category.children && category.children.length > 0) {
+            // If this category contains children, add its ID to be expanded
+            ids.push(category.id);
+            // Also check its children recursively
+            ids = [...ids, ...findCategoryIdsToExpand(category.children)];
+          }
+        }
+        
+        return ids;
+      };
+      
+      // Get all IDs to expand and update the expanded categories set
+      const idsToExpand = findCategoryIdsToExpand(filteredCategories);
+      setExpandedCategories(new Set(idsToExpand));
+    }
+  }, [filteredCategories, categorySearchTerm]);
+
+  // Reset category search when sidebar closes
+  useEffect(() => {
+    if (!showCategorySidebar) {
+      setCategorySearchTerm('');
+    }
+  }, [showCategorySidebar]);
+
+  // Handle category click in sidebar
+  const handleCategoryClick = (category: Category) => {
+    setSelectedCategory(category);
+
+    if (category.children && category.children.length > 0) {
+      setExpandedCategories(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(category.id)) {
+          newSet.delete(category.id);
+        } else {
+          newSet.add(category.id);
+        }
+        return newSet;
+      });
+    } else {
+      // Navigate to category page
+      setShowCategorySidebar(false);
+      router.push(`/category/${category.path}`);
+    }
+  };
+
+  // Reset selected category when sidebar closes
+  useEffect(() => {
+    if (!showCategorySidebar) {
+      setSelectedCategory(null);
+    }
+  }, [showCategorySidebar]);
+
+  // Render category item
+  const renderCategoryItem = (category: Category, level: number) => {
+    const hasChildren = category.children && category.children.length > 0;
+    const isExpanded = expandedCategories.has(category.id);
+    const isSelected = selectedCategory?.id === category.id;
+    
+    return (
+      <div key={category.id} className="category-item">
+        <div 
+          className={`
+            flex items-center justify-between py-3 px-4 
+            hover:bg-gray-50 cursor-pointer 
+            ${level > 0 ? 'pl-' + (level * 4 + 4) + 'px' : ''} 
+            ${isSelected ? 'bg-gray-50' : ''}
+            ${level === 0 ? 'border-b border-gray-100' : ''}
+          `}
+          onClick={() => handleCategoryClick(category)}
+        >
+          <span className={`
+            ${level === 0 ? 'text-[15px] font-semibold' : 'text-sm'} 
+            ${isSelected ? 'font-bold text-primary' : ''}
+            ${hasChildren && level > 0 ? 'font-medium' : ''}
+            ${level === 0 && !isSelected ? 'text-gray-800' : ''}
+            transition-colors
+          `}>
+            {category.name}
+            {hasChildren && (
+              <span className="text-xs text-gray-400 ml-1">
+                ({category.children?.length})
+              </span>
+            )}
+          </span>
+          {hasChildren && (
+            <ChevronRight className={`h-4 w-4 text-gray-500 transition-transform duration-200 ease-in-out ${isExpanded ? 'rotate-90' : ''}`} />
+          )}
+        </div>
+        {hasChildren && (
+          <div 
+            className={`category-children overflow-hidden transition-all duration-200 ease-in-out ${isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}
+          >
+            {category.children.map(child => renderCategoryItem(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render category items
+  const renderCategoryItems = (categories: Category[], level = 0) => {
+    return categories.map(category => renderCategoryItem(category, level));
+  };
+
   if (!mounted) return null;
 
   return (
@@ -428,13 +627,27 @@ export function Navbar() {
                       <div className="flex-1 overflow-y-auto">
                         <div className="py-2">
                           {MENU_ITEMS.map((item) => (
-                            <Link 
-                              key={item.name} 
-                              href={item.href}
-                              className="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                            >
-                              {item.name}
-                            </Link>
+                            item.name === "All Categories" ? (
+                              <button 
+                                key={item.name}
+                                className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                onClick={() => {
+                                  setShowCategorySidebar(true);
+                                }}
+                              >
+                                {item.icon}
+                                {item.name}
+                              </button>
+                            ) : (
+                              <Link 
+                                key={item.name} 
+                                href={item.href}
+                                className="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                              >
+                                {item.icon}
+                                {item.name}
+                              </Link>
+                            )
                           ))}
                         </div>
                       </div>
@@ -652,15 +865,96 @@ export function Navbar() {
         <div className="hidden lg:block border-t">
           <div className="max-w-[1536px] mx-auto px-4">
             <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-4">
-              {MENU_ITEMS.map((item) => (
-                <Link 
-                  key={item.name} 
-                  href={item.href}
-                  className="text-sm font-medium text-gray-600 whitespace-nowrap hover:text-gray-900 transition-colors"
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {MENU_ITEMS.map((item) => {
+                // Special case for All Categories
+                if (item.name === "All Categories") {
+                  return (
+                    <Sheet key={item.name} open={showCategorySidebar} onOpenChange={setShowCategorySidebar}>
+                      <SheetTrigger asChild>
+                        <button 
+                          className="flex items-center text-sm font-medium text-gray-600 whitespace-nowrap hover:text-gray-900 transition-colors"
+                        >
+                          <Menu className="h-4 w-4 mr-2" />
+                          {item.name}
+                        </button>
+                      </SheetTrigger>
+                      <SheetContent side="left" className="w-[350px] p-0">
+                        <div className="flex flex-col h-full">
+                          <div className="p-4 border-b flex justify-between items-center">
+                            <h2 className="font-medium text-lg">All Categories</h2>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setShowCategorySidebar(false)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="p-4 border-b">
+                            <div className="relative">
+                              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                              <Input
+                                type="text"
+                                placeholder="Search categories..."
+                                value={categorySearchTerm}
+                                onChange={(e) => setCategorySearchTerm(e.target.value)}
+                                className="pl-8 w-full"
+                                autoComplete="off"
+                              />
+                              {categorySearchTerm && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-1 top-1 h-8 w-8"
+                                  onClick={() => setCategorySearchTerm('')}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1 overflow-y-auto relative">
+                            {isLoadingCategories ? (
+                              <div className="p-4 text-center">
+                                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2"></div>
+                                <p className="text-gray-500">Loading categories...</p>
+                              </div>
+                            ) : categories.length > 0 ? (
+                              <div className="py-1">
+                                {categorySearchTerm ? (
+                                  renderCategoryItems(filteredCategories)
+                                ) : (
+                                  renderCategoryItems(categories)
+                                )}
+                              </div>
+                            ) : (
+                              <div className="p-4 text-center text-gray-500">
+                                {categories.length > 0 ? 'No matching categories found' : 'No categories found'}
+                              </div>
+                            )}
+                            
+                            {/* Scroll indicator */}
+                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                          </div>
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  );
+                }
+                
+                return (
+                  <Link 
+                    key={item.name} 
+                    href={item.href}
+                    className="text-sm font-medium text-gray-600 whitespace-nowrap hover:text-gray-900 transition-colors"
+                  >
+                    {item.icon}
+                    {item.name}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

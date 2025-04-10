@@ -23,7 +23,7 @@ export function TrendingItem({ image, title, searches, href = "#" }: TrendingIte
           />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold">{title}</h3>
+          <h3 className="font-semibold font-playfair">{title}</h3>
           <div className="flex items-center text-sm text-gray-600">
             <TrendingUp className="w-4 h-4 mr-1" />
             <span>{searches} searches</span>

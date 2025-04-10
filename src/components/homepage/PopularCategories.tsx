@@ -14,7 +14,7 @@ const categories = [
 export default function PopularCategories({heading}: {heading: string}) {
   return (
     <section>
-      <h2 className="text-3xl font-bold mb-8">{heading}</h2>
+      <h2 className="text-3xl font-bold mb-8 font-playfair">{heading}</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         
         {categories.map((category, index) => (
@@ -26,7 +26,7 @@ export default function PopularCategories({heading}: {heading: string}) {
               className="object-cover"
             />
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-              <h3 className="text-white text-xl font-semibold">{category.name}</h3>
+              <h3 className="text-white text-xl font-semibold font-playfair">{category.name}</h3>
             </div>
           </div>
         ))}

@@ -14,7 +14,7 @@ const products = [
 export default function ProductGrid() {
   return (
     <section>
-      <h2 className="text-3xl font-bold mb-8">Discover More</h2>
+      <h2 className="text-3xl font-bold mb-8 font-playfair">Discover More</h2>
       <div className="masonry-grid">
         {products.map((product) => (
           <ProductCard 

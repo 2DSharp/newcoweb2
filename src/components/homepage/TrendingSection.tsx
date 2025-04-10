@@ -24,7 +24,7 @@ const trendingItems = [
 export default function TrendingSection({heading}: {heading: string}) {
   return (
     <section>
-      <h2 className="text-3xl font-bold mb-8">{heading}</h2>
+      <h2 className="text-3xl font-bold mb-8 font-playfair">{heading}</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {trendingItems.map((item) => (
           <TrendingItem key={item.title} {...item} />
