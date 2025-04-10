@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { apiService } from '@/services/api';
 import {
   Dialog,
@@ -98,6 +98,12 @@ export function Navbar() {
   const suggestionsRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync search query with URL parameter
   useEffect(() => {
@@ -107,66 +113,59 @@ export function Navbar() {
     }
   }, [searchParams]);
 
+  // This effect handles loading user profile, cart data, and address information
+  // It will run on initial mount and whenever the URL (pathname or searchParams) changes
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const updateCartCount = async () => {
-      const authData = localStorage.getItem('buyer_data');
-      if (authData) {
-        const { loginType } = JSON.parse(authData);
-        if (loginType === 'BUYER') {
-          try {
+    // Function to load cart and profile data
+    const loadUserData = async () => {
+      try {
+        const authData = localStorage.getItem('buyer_data');
+        if (authData) {
+          const { loginType } = JSON.parse(authData);
+          if (loginType === 'BUYER') {
+            // Authenticated user - get profile from API
             const response = await apiService.accounts.getProfile();
             if (response.successful) {
               setProfile(response.data);
               setCartCount(response.data.cartItemCount);
             }
-          } catch (error) {
-            console.error('Error fetching profile:', error);
+          } else {
+            // Non-buyer user - get cart from localStorage
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            setCartCount(cart.length);
           }
-          return;
+        } else {
+          // Unauthenticated user - get cart from localStorage
+          const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+          setCartCount(cart.length);
         }
-      }
-      
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      setCartCount(cart.length);
-    };
-    
-    updateCartCount();
-    window.addEventListener('cartUpdated', updateCartCount);
-    return () => window.removeEventListener('cartUpdated', updateCartCount);
-  }, []);
 
-  // Load selected address
-  useEffect(() => {
-    const savedAddressDetailsStr = localStorage.getItem('selectedAddressDetails');
-    
-    if (savedAddressDetailsStr) {
-      try {
-        const details = JSON.parse(savedAddressDetailsStr);
-        setSavedAddressDetails(details);
+        // Load selected address details from localStorage
+        const savedAddressDetailsStr = localStorage.getItem('selectedAddressDetails');
+        if (savedAddressDetailsStr) {
+          try {
+            const details = JSON.parse(savedAddressDetailsStr);
+            setSavedAddressDetails(details);
+          } catch (error) {
+            console.error('Error parsing saved address details:', error);
+          }
+        }
       } catch (error) {
-        console.error('Error parsing saved address details:', error);
+        console.error('Error loading user data:', error);
       }
-    }
-  }, []);
-
-  // Save address details to localStorage
-  const saveAddressToLocalStorage = (address: any) => {
-    if (!address) return;
-    
-    const addressDetails = {
-      id: address.id,
-      name: formatName(address.name),
-      city: address.city,
-      pinCode: getPincode(address)
     };
+
+    // Load data on mount and URL changes
+    loadUserData();
+
+    // Also listen for cart update events
+    const handleCartUpdate = () => loadUserData();
+    window.addEventListener('cartUpdated', handleCartUpdate);
     
-    localStorage.setItem('selectedAddressDetails', JSON.stringify(addressDetails));
-    setSavedAddressDetails(addressDetails);
-  };
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
+  }, [pathname, searchParams]); // Re-run when URL changes
 
   // Load addresses when modal opens
   const loadAddresses = async () => {
@@ -376,6 +375,21 @@ export function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Save address details to localStorage
+  const saveAddressToLocalStorage = (address: any) => {
+    if (!address) return;
+    
+    const addressDetails = {
+      id: address.id,
+      name: formatName(address.name),
+      city: address.city,
+      pinCode: getPincode(address)
+    };
+    
+    localStorage.setItem('selectedAddressDetails', JSON.stringify(addressDetails));
+    setSavedAddressDetails(addressDetails);
+  };
 
   if (!mounted) return null;
 

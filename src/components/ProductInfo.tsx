@@ -13,6 +13,7 @@ import Link from 'next/link';
 
 interface ProductInfoProps {
     product: any;
+    initialVariantId?: string;
 }
 
 function RatingSummary() {
@@ -76,8 +77,13 @@ export function PriceDisplay({ selectedVariant, displayStyle }: { selectedVarian
   );
 }
 
-export function ProductInfo({ product }: ProductInfoProps) {
-    const [selectedVariant, setSelectedVariant] = useState(product.stock.variations[0]);
+export function ProductInfo({ product, initialVariantId }: ProductInfoProps) {
+    // Find the specified variant or default to the first one
+    const initialVariant = initialVariantId 
+        ? product.stock.variations.find((v: any) => v.id === initialVariantId) || product.stock.variations[0]
+        : product.stock.variations[0];
+        
+    const [selectedVariant, setSelectedVariant] = useState(initialVariant);
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">

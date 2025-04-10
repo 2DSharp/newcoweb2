@@ -43,3 +43,18 @@ export async function getPincodeDetails(pincode: string) {
         return null;
     }
 }
+
+export function formatProductUrl(name: string, productId: string, variantId?: string | null): string {
+  // Convert to lowercase and replace special characters with spaces
+  const formattedName = name.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    // Replace spaces with hyphens
+    .replace(/\s+/g, '-')
+    // Remove multiple consecutive hyphens
+    .replace(/-+/g, '-');
+  
+  return variantId 
+    ? `/products/${formattedName}/${productId}?v=${variantId}`
+    : `/products/${formattedName}/${productId}`;
+}

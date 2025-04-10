@@ -30,6 +30,7 @@ export function ProductActions({ productId, variant }: ProductActionsProps) {
                         pricingVariantId: variant.pricing.pricingId
                     });
                     router.push('/cart?added=true&productId=' + productId);
+                    return;
                 }
             }
             

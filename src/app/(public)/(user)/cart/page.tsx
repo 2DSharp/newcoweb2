@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { parseCurrency } from '@/lib/utils';
+import { formatProductUrl, parseCurrency } from '@/lib/utils';
 import { PriceDisplay } from '@/components/ProductInfo';
 
 // Debounce function
@@ -80,7 +80,7 @@ function CartPage() {
                                         pricing: {
                                             pricingId: item.pricingId,
                                             originalPrice: item.originalPrice,
-                                            finalPrice: item.discountedPrice,
+                                            finalPrice: item.finalPrice,
                                             priceChanged: item.pricingChanged
                                         }
                                     }]
@@ -283,7 +283,7 @@ function CartPage() {
                     <div key={item.variantId} className="border rounded-lg p-4">
                         <div className="flex gap-4">
                             <div className="w-24 h-24 relative">
-                              <Link href={`/products/${item.product.id}`}>
+                              <Link href={formatProductUrl(item.product.name, item.product.id, item.variantId)}>
                                 <Image
                                     src={item.variant.images[0].variations.thumbnail}
                                     alt={item.product.name}
@@ -294,8 +294,8 @@ function CartPage() {
                             </div>
 
                             <div className="flex-1">
-                              <Link href={`/products/${item.product.id}`}>
-                                <h3 className="font-semibold">{item.product.name}</h3>
+                            <Link href={formatProductUrl(item.product.name, item.product.id, item.variantId)}>
+                            <h3 className="font-semibold">{item.product.name}</h3>
                                 {item.variant.name && (
                                     <p className="text-sm text-gray-500">{item.variant.name}</p>
                                 )}
@@ -358,7 +358,7 @@ function CartPage() {
               ).toFixed(2)}</span>
             </div>
             <Button asChild className="w-full mt-6">
-              <Link href="/checkout">Proceed to Checkout</Link>
+              <Link href="/checkout?fromCart=true">Proceed to Checkout</Link>
             </Button>
           </div>
         </div>
