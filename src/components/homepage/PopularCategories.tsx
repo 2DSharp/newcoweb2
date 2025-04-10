@@ -1,17 +1,28 @@
 import Image from 'next/image'
 
-const categories = [
-  { name: 'Electronics', image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZWxlY3Ryb25pY3N8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60' },
-  { name: 'Fashion', image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmFzaGlvbnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60' },
-  { name: 'Home & Garden', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG9tZSUyMGFuZCUyMGdhcmRlbnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60' },
-  { name: 'Beauty', image: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmVhdXR5fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60' },
-  { name: 'Sports', image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c3BvcnRzfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60' },
-  { name: 'Books', image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Ym9va3N8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60' },
-  { name: 'Toys', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dG95c3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60' },
-  { name: 'Automotive', image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXV0b21vdGl2ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60' },
-]
+interface Category {
+  name: string;
+  image: string;
+}
 
-export default function PopularCategories({heading}: {heading: string}) {
+interface PopularCategoriesProps {
+  heading: string;
+  categories: Category[];
+}
+
+export default function PopularCategories({
+  heading,
+  categories = [
+    { name: "Electronics", image: "https://images.unsplash.com/photo-1498049794561-7780e7231661" },
+    { name: "Fashion", image: "https://images.unsplash.com/photo-1445205170230-053b83016050" },
+    { name: "Home & Garden", image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b" },
+    { name: "Beauty", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348" },
+    { name: "Sports", image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211" },
+    { name: "Books", image: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d" },
+    { name: "Toys", image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4" },
+    { name: "Automotive", image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7" }
+  ]
+}: PopularCategoriesProps) {
   return (
     <section>
       <h2 className="text-3xl font-bold mb-8 font-playfair">{heading}</h2>

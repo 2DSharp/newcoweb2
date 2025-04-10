@@ -143,6 +143,16 @@ export const apiService = {
             const response = await unauthenticatedApiClient.get(`/public/cms/categories?level=${level}`);
             return response.data;
         },
+
+        getHomepage: async () => {
+            try {
+                const response = await unauthenticatedApiClient.get('/public/cms/home');
+                return response.data;
+            } catch (error) {
+                console.error('Error fetching homepage data:', error);
+                throw error;
+            }
+        },
     },
     search: {
         query: async (searchTerm) => {

@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, ChevronRight as ChevronRightArrow } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { formatProductUrl } from '@/lib/utils';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: string;
   image: string;
@@ -99,7 +100,7 @@ export default function FeaturedProducts({ heading, products }: FeaturedProducts
 
 function ProductCard({ product }: { product: Product }) {
   return (
-    <Link href={`/products/${product.id}`} className="group">
+    <Link href={formatProductUrl(product.name, product.id)} className="group">
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="relative h-48 md:h-56">
           <Image
@@ -113,7 +114,7 @@ function ProductCard({ product }: { product: Product }) {
           <span className="text-sm text-blue-600 mb-1 block">{product.category}</span>
           <h3 className="font-semibold text-lg mb-2 truncate font-playfair">{product.name}</h3>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold">{product.price}</span>
+            <span className="text-lg font-bold">₹{product.price}</span>
           </div>
         </div>
       </div>
