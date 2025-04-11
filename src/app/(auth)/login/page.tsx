@@ -11,7 +11,9 @@ import apiService from "@/services/api";
 function LoginPage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [fullName, setFullName] = useState("");
   const [verificationId, setVerificationId] = useState<string | null>(null);
+  const [isNewAccount, setIsNewAccount] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -42,8 +44,16 @@ function LoginPage() {
       setLoading(true);
       const response = await apiService.identity.requestOtp(phone);
       if (response.successful) {
-        setVerificationId(response.data);
-        setSuccess("OTP sent successfully! Please check your phone.");
+        // Check if this is a new account creation flow
+        if (response.data.type === "ACCOUNT_CREATION") {
+          setIsNewAccount(true);
+          setVerificationId(response.data.id);
+          setSuccess("Seems like you're logging in for the first time! Let's create your account.");
+        } else {
+          setIsNewAccount(false);
+          setVerificationId(response.data.id || response.data); // Handle both new and old response formats
+          setSuccess("OTP sent successfully! Please check your phone.");
+        }
         otpRefs[0].current?.focus();
       } else {
         setError(response.message || "Failed to send OTP");
@@ -127,9 +137,19 @@ function LoginPage() {
       return;
     }
 
+    if (isNewAccount && (!fullName || fullName.trim() === '')) {
+      setError("Please enter your full name");
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await apiService.identity.verifyOtp(verificationId!, otpValue);
+      const verifyParams = isNewAccount 
+        ? { verificationId: verificationId!, nonce: otpValue, fullName } 
+        : { verificationId: verificationId!, nonce: otpValue };
+      
+      const response = await apiService.identity.verifyOtp(verificationId!, otpValue, isNewAccount ? fullName : undefined);
+      
       if (response.successful) {
         localStorage.setItem("buyer_data", JSON.stringify({
           userId: response.data.userId,
@@ -165,11 +185,13 @@ function LoginPage() {
             className="mx-auto"
           />
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Welcome back
+            {isNewAccount ? "Create Account" : "Welcome back"}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             {verificationId 
-              ? "Enter the OTP sent to your phone"
+              ? isNewAccount 
+                ? "Enter your full name and the OTP sent to your phone"
+                : "Enter the OTP sent to your phone"
               : "Sign in to your account with phone number"
             }
           </p>
@@ -224,6 +246,23 @@ function LoginPage() {
           </form>
         ) : (
           <form className="mt-8 space-y-6" onSubmit={handleOtpSubmit}>
+            {isNewAccount && (
+              <div>
+                <Label htmlFor="fullName">Full Name</Label>
+                <div className="mt-1">
+                  <Input
+                    id="fullName"
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            )}
+            
             <div>
               <Label htmlFor="otp">One-Time Password</Label>
               <div className="mt-1 flex gap-2">
@@ -258,6 +297,8 @@ function LoginPage() {
                 onClick={() => {
                   setVerificationId(null);
                   setOtp(["", "", "", "", "", ""]);
+                  setFullName("");
+                  setIsNewAccount(false);
                   setError(null);
                   setSuccess(null);
                 }}
@@ -278,12 +319,12 @@ function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading || otp.some(digit => !digit)}
+              disabled={loading || otp.some(digit => !digit) || (isNewAccount && !fullName.trim())}
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Verify & Login
+              {isNewAccount ? "Create Account" : "Verify & Login"}
             </Button>
 
             {error && (

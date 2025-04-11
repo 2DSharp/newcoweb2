@@ -183,7 +183,7 @@ export function Navbar() {
     // Also listen for cart update events
     const handleCartUpdate = () => loadUserData();
     window.addEventListener('cartUpdated', handleCartUpdate);
-    
+
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
     };
@@ -196,12 +196,12 @@ export function Navbar() {
       if (response.successful) {
         console.log("Loaded addresses:", response.data);
         setAddresses(response.data);
-        
+
         // If no address is selected yet, use default or first one
         if (!savedAddressDetails && response.data.length > 0) {
           const defaultAddress = response.data.find(addr => addr.isDefault || (addr as any).default);
           const addressToSelect = defaultAddress || response.data[0];
-          
+
           if (addressToSelect) {
             const addressDetails = {
               id: addressToSelect.id,
@@ -209,7 +209,7 @@ export function Navbar() {
               city: addressToSelect.city,
               pinCode: addressToSelect.pinCode || addressToSelect.pincode
             };
-            
+
             localStorage.setItem('selectedAddressDetails', JSON.stringify(addressDetails));
             setSavedAddressDetails(addressDetails);
           }
@@ -246,11 +246,11 @@ export function Navbar() {
       } else {
         response = await apiService.accounts.addAddress(addressData);
       }
-      
+
       if (response.successful) {
         await loadAddresses();
         setShowAddressForm(false);
-        
+
         // If this is a new address and it should be selected
         if (!editingAddress) {
           saveAddressToLocalStorage(response.data);
@@ -263,7 +263,7 @@ export function Navbar() {
 
   // Get selected address details
   const selectedAddress = addresses.find(addr => addr.id === savedAddressDetails?.id);
-  
+
   // Format name to get first word only
   const formatName = (name: string) => {
     return name?.split(' ')[0] || '';
@@ -315,7 +315,7 @@ export function Navbar() {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev < suggestions.length - 1 ? prev + 1 : prev
         );
         break;
@@ -401,14 +401,14 @@ export function Navbar() {
   // Save address details to localStorage
   const saveAddressToLocalStorage = (address: any) => {
     if (!address) return;
-    
+
     const addressDetails = {
       id: address.id,
       name: formatName(address.name),
       city: address.city,
       pinCode: getPincode(address)
     };
-    
+
     localStorage.setItem('selectedAddressDetails', JSON.stringify(addressDetails));
     setSavedAddressDetails(addressDetails);
   };
@@ -445,23 +445,23 @@ export function Navbar() {
   // Filter categories based on search term
   const filteredCategories = useMemo(() => {
     if (!categorySearchTerm.trim()) return categories;
-    
+
     const searchLower = categorySearchTerm.toLowerCase();
-    
+
     const filterCategoriesRecursive = (categories: Category[]): Category[] => {
       const result: Category[] = [];
-      
+
       for (const category of categories) {
         // Check if current category matches search
         if (category.name.toLowerCase().includes(searchLower)) {
           result.push(category);
           continue;
         }
-        
+
         // If category has children, check them recursively
         if (category.children && category.children.length > 0) {
           const matchingChildren = filterCategoriesRecursive(category.children);
-          
+
           if (matchingChildren.length > 0) {
             // Create a shallow copy with just the matching children
             result.push({
@@ -471,10 +471,10 @@ export function Navbar() {
           }
         }
       }
-      
+
       return result;
     };
-    
+
     return filterCategoriesRecursive(categories);
   }, [categories, categorySearchTerm]);
 
@@ -484,7 +484,7 @@ export function Navbar() {
       // Function to find all category IDs that should be expanded
       const findCategoryIdsToExpand = (categories: Category[]): number[] => {
         let ids: number[] = [];
-        
+
         for (const category of categories) {
           if (category.children && category.children.length > 0) {
             // If this category contains children, add its ID to be expanded
@@ -493,10 +493,10 @@ export function Navbar() {
             ids = [...ids, ...findCategoryIdsToExpand(category.children)];
           }
         }
-        
+
         return ids;
       };
-      
+
       // Get all IDs to expand and update the expanded categories set
       const idsToExpand = findCategoryIdsToExpand(filteredCategories);
       setExpandedCategories(new Set(idsToExpand));
@@ -543,10 +543,10 @@ export function Navbar() {
     const hasChildren = category.children && category.children.length > 0;
     const isExpanded = expandedCategories.has(category.id);
     const isSelected = selectedCategory?.id === category.id;
-    
+
     return (
       <div key={category.id} className="category-item">
-        <div 
+        <div
           className={`
             flex items-center justify-between py-3 px-4 
             hover:bg-gray-50 cursor-pointer 
@@ -575,7 +575,7 @@ export function Navbar() {
           )}
         </div>
         {hasChildren && (
-          <div 
+          <div
             className={`category-children overflow-hidden transition-all duration-200 ease-in-out ${isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}
           >
             {category.children.map(child => renderCategoryItem(child, level + 1))}
@@ -613,22 +613,22 @@ export function Navbar() {
                       {/* Logo in Mobile Menu */}
                       <div className="p-4 border-b">
                         <Link href="/" className="flex-shrink-0">
-                        <Image
-                              src="/faveron.svg"
-                              alt="Logo"
-                              width={100}
-                              height={50}
-                              className="mx-auto"
-                            />
+                          <Image
+                            src="/faveron.svg"
+                            alt="Logo"
+                            width={100}
+                            height={50}
+                            className="mx-auto"
+                          />
                         </Link>
                       </div>
-                      
+
                       {/* Menu Items */}
                       <div className="flex-1 overflow-y-auto">
                         <div className="py-2">
                           {MENU_ITEMS.map((item) => (
                             item.name === "All Categories" ? (
-                              <button 
+                              <button
                                 key={item.name}
                                 className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                 onClick={() => {
@@ -639,8 +639,8 @@ export function Navbar() {
                                 {item.name}
                               </button>
                             ) : (
-                              <Link 
-                                key={item.name} 
+                              <Link
+                                key={item.name}
                                 href={item.href}
                                 className="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                               >
@@ -657,18 +657,18 @@ export function Navbar() {
 
                 {/* Logo */}
                 <Link href="/" className="flex-shrink-0">
-                <Image
-                              src="/faveron.svg"
-                              alt="Logo"
-                              width={180}
-                              height={50}
-                              className="mx-auto"
-                            />
+                  <Image
+                    src="/faveron.svg"
+                    alt="Logo"
+                    width={180}
+                    height={50}
+                    className="mx-auto"
+                  />
                 </Link>
 
                 {/* Delivery Address Button */}
                 {(selectedAddress || savedAddressDetails || profile?.defaultAddress) && (
-                  <button 
+                  <button
                     onClick={handleOpenAddressModal}
                     className="hidden md:flex items-start gap-3 text-sm border-l pl-4 pr-4 py-1 max-w-[240px] hover:bg-gray-50 rounded group"
                   >
@@ -677,21 +677,21 @@ export function Navbar() {
                       <div className="flex items-center text-xs">
                         <span className="text-gray-500">Deliver to: </span>
                         <span className="font-medium text-gray-800 ml-1 max-w-[120px] truncate">
-                          {selectedAddress 
+                          {selectedAddress
                             ? formatName(selectedAddress.name)
                             : savedAddressDetails
                               ? savedAddressDetails.name
-                              : profile?.defaultAddress 
+                              : profile?.defaultAddress
                                 ? formatName(profile.defaultAddress.name)
                                 : ''}
                         </span>
                       </div>
                       <div className="text-xs text-gray-600">
-                        {selectedAddress 
+                        {selectedAddress
                           ? `${selectedAddress.city}, ${getPincode(selectedAddress)}`
                           : savedAddressDetails
                             ? `${savedAddressDetails.city}, ${savedAddressDetails.pinCode}`
-                            : profile?.defaultAddress 
+                            : profile?.defaultAddress
                               ? `${profile.defaultAddress.city}, ${profile.defaultAddress.pinCode || ''}`
                               : ''}
                       </div>
@@ -703,12 +703,12 @@ export function Navbar() {
               {/* Search and Actions container */}
               <div className="flex flex-1 items-center gap-4">
                 {/* Search - Desktop */}
-                <div 
-                  className="hidden md:flex flex-1 max-w-4xl relative ml-4" 
+                <div
+                  className="hidden md:flex flex-1 max-w-4xl relative ml-4"
                   ref={searchRef}
                 >
-                  <form 
-                    className="w-full" 
+                  <form
+                    className="w-full"
                     onSubmit={handleSearch}
                   >
                     <div className="relative w-full flex">
@@ -722,19 +722,19 @@ export function Navbar() {
                         onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                         style={{ WebkitAppearance: 'none' }}
                       />
-                      <Button 
+                      <Button
                         type="submit"
-                        variant="ghost" 
+                        variant="ghost"
                         className="absolute right-0 rounded-full h-full hover:bg-primary hover:text-white transition-colors"
                       >
                         <Search className="h-6 w-6" />
                       </Button>
                     </div>
                   </form>
-                  
+
                   {/* Search Suggestions Dropdown */}
                   {showSuggestions && (
-                    <div 
+                    <div
                       className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 z-50 max-h-80 overflow-y-auto"
                       onMouseDown={(e) => {
                         // Prevent the blur event from hiding suggestions
@@ -746,13 +746,12 @@ export function Navbar() {
                       ) : suggestions.length > 0 ? (
                         <ul ref={suggestionsRef}>
                           {suggestions.map((suggestion, index) => (
-                            <li 
+                            <li
                               key={index}
-                              className={`px-4 py-2 cursor-pointer flex items-center ${
-                                index === highlightedIndex 
-                                  ? 'bg-primary/10 text-primary' 
+                              className={`px-4 py-2 cursor-pointer flex items-center ${index === highlightedIndex
+                                  ? 'bg-primary/10 text-primary'
                                   : 'hover:bg-gray-50'
-                              }`}
+                                }`}
                               onClick={() => handleSuggestionClick(suggestion.text)}
                               onMouseDown={() => handleSuggestionClick(suggestion.text)}
                               onMouseEnter={() => setHighlightedIndex(index)}
@@ -777,7 +776,7 @@ export function Navbar() {
                 {/* Actions */}
                 <div className="flex items-center gap-1">
                   <Link href="/account">
-                  <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
+                    <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
 
                       <User size={28} />
                       <span className="hidden md:inline-block text-sm text-gray-600">
@@ -786,9 +785,9 @@ export function Navbar() {
                     </button>
                   </Link>
                   <Link href="/cart">
-                  <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
+                    <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
                       <ShoppingCart size={28} />
-                
+
                       <span className="absolute -top-1 -right-1 h-5 w-5 text-xs font-medium text-white bg-primary rounded-full flex items-center justify-center">
                         {cartCount}
                       </span>
@@ -802,11 +801,11 @@ export function Navbar() {
             </div>
 
             {/* Search - Mobile */}
-            <div 
+            <div
               className="md:hidden relative"
               ref={searchRef}
             >
-              <form 
+              <form
                 onSubmit={handleSearch}
               >
                 <div className="relative w-full flex">
@@ -819,16 +818,16 @@ export function Navbar() {
                     onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                     style={{ WebkitAppearance: 'none' }}
                   />
-                  <Button 
+                  <Button
                     type="submit"
-                    variant="ghost" 
+                    variant="ghost"
                     className="absolute right-0 rounded-full h-full hover:bg-primary hover:text-white transition-colors"
                   >
                     <Search className="h-6 w-6" />
                   </Button>
                 </div>
               </form>
-              
+
               {/* Mobile Search Suggestions */}
               {showSuggestions && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 z-50 max-h-60 overflow-y-auto">
@@ -837,7 +836,7 @@ export function Navbar() {
                   ) : suggestions.length > 0 ? (
                     <ul>
                       {suggestions.map((suggestion, index) => (
-                        <li 
+                        <li
                           key={index}
                           className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center"
                           onClick={() => handleSuggestionClick(suggestion.text)}
@@ -871,7 +870,7 @@ export function Navbar() {
                   return (
                     <Sheet key={item.name} open={showCategorySidebar} onOpenChange={setShowCategorySidebar}>
                       <SheetTrigger asChild>
-                        <button 
+                        <button
                           className="flex items-center text-sm font-medium text-gray-600 whitespace-nowrap hover:text-gray-900 transition-colors"
                         >
                           <Menu className="h-4 w-4 mr-2" />
@@ -882,15 +881,15 @@ export function Navbar() {
                         <div className="flex flex-col h-full">
                           <div className="p-4 border-b flex justify-between items-center">
                             <h2 className="font-medium text-lg">All Categories</h2>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => setShowCategorySidebar(false)}
                             >
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
-                          
+
                           <div className="p-4 border-b">
                             <div className="relative">
                               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
@@ -914,7 +913,7 @@ export function Navbar() {
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="flex-1 overflow-y-auto relative">
                             {isLoadingCategories ? (
                               <div className="p-4 text-center">
@@ -934,7 +933,7 @@ export function Navbar() {
                                 {categories.length > 0 ? 'No matching categories found' : 'No categories found'}
                               </div>
                             )}
-                            
+
                             {/* Scroll indicator */}
                             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                           </div>
@@ -943,10 +942,10 @@ export function Navbar() {
                     </Sheet>
                   );
                 }
-                
+
                 return (
-                  <Link 
-                    key={item.name} 
+                  <Link
+                    key={item.name}
                     href={item.href}
                     className="text-sm font-medium text-gray-600 whitespace-nowrap hover:text-gray-900 transition-colors"
                   >
@@ -959,14 +958,14 @@ export function Navbar() {
           </div>
         </div>
       </header>
-      
+
       {/* Address Selection Modal */}
       <Dialog open={showAddressModal} onOpenChange={setShowAddressModal}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Select Delivery Address</DialogTitle>
           </DialogHeader>
-          
+
           {showAddressForm ? (
             <AddressForm
               initialData={editingAddress}
@@ -980,8 +979,8 @@ export function Navbar() {
                   {addresses.map((address) => {
                     const isSelected = address.id === savedAddressDetails?.id;
                     return (
-                      <Card 
-                        key={address.id} 
+                      <Card
+                        key={address.id}
                         className={`cursor-pointer hover:border-primary transition-colors ${isSelected ? 'border-primary bg-primary/5' : ''}`}
                         onClick={() => handleSelectAddress(address.id)}
                       >
@@ -1025,7 +1024,7 @@ export function Navbar() {
                   <p>No addresses found</p>
                 </div>
               )}
-              
+
               <Button onClick={handleAddNewAddress} className="w-full">
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Address

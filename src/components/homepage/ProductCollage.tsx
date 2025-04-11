@@ -81,17 +81,17 @@ function ProductCard({ product }: { product: Product }) {
   return (
     <div className="relative overflow-hidden rounded-lg group">
       <Link href={formatProductUrl(product.name, String(product.id))}>
-        <Image
-          src={product.image}
-          alt={product.name}
-          width={300}
-          height={product.orientation === 'portrait' ? 400 : 300}
-          className="w-full h-full object-cover"
-        />
+      <Image
+        src={product.image}
+        alt={product.name}
+        width={300}
+        height={product.orientation === 'portrait' ? 400 : 300}
+        className="w-full h-full object-cover"
+      />
       </Link>
       <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <Link href={formatProductUrl(product.name, String(product.id))}>
-          <h3 className="text-white font-semibold text-lg mb-2">{product.name}</h3>
+        <h3 className="text-white font-semibold text-lg mb-2">{product.name}</h3>
         </Link>
       </div>
     </div>

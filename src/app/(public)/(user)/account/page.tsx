@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2, Package, ShoppingCart, MapPin, CreditCard, Heart, Bell, Settings, LogOut } from "lucide-react";
+import apiService from "@/services/api";
 
 function AccountPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userData, setUserData] = useState<any>(null);
 
   useEffect(() => {
@@ -41,9 +43,47 @@ function AccountPage() {
     checkAuth();
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('buyer_data');
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      
+      // Call the logout API
+      await apiService.identity.logout();
+      
+      // Clear refresh token cookie through API
+      await fetch('/api/auth/set-refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken: '' }),
+      });
+      
+      // Clear all relevant localStorage items
+      localStorage.removeItem('buyer_data');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('auth_data');
+      localStorage.removeItem('selectedAddressDetails');
+      
+      // Clear any cart data
+      localStorage.removeItem('cart');
+      
+      // Navigate to home page after logout
+      router.push('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      
+      // Fallback: clear local storage manually if API fails
+      localStorage.removeItem('buyer_data');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('auth_data');
+      localStorage.removeItem('selectedAddressDetails');
+      localStorage.removeItem('cart');
+      
+      router.push('/');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   if (isLoading) {
@@ -107,9 +147,14 @@ function AccountPage() {
                   variant="ghost"
                   className="w-full justify-start text-red-500 hover:text-red-600"
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                  {isLoggingOut ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="mr-2 h-4 w-4" />
+                  )}
+                  {isLoggingOut ? "Logging out..." : "Logout"}
                 </Button>
               </nav>
             </CardContent>

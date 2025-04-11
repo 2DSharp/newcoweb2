@@ -227,75 +227,82 @@ export const apiService = {
     identity: {
         requestOtp: async (phone) => {
             console.log("Here")
-          try {
-            const response = await unauthenticatedApiClient.post('/identity/login/otp', {
-              phone
-            });
+            try {
+                const response = await unauthenticatedApiClient.post('/identity/login/otp', {
+                    phone
+                });
     
-            return response.data;
-          } catch (error) {
-            return {
-              status: 'FAIL',
-              message: error?.response?.data?.message || 'Failed to send OTP',
-              successful: false
-            };
-          }
+                return response.data;
+            } catch (error) {
+                return {
+                    status: 'FAIL',
+                    message: error?.response?.data?.message || 'Failed to send OTP',
+                    successful: false
+                };
+            }
         },
     
-        verifyOtp: async (verificationId, nonce) => {
-          try {
-            const response = await unauthenticatedApiClient.post('/identity/verify-contact', {
-              verificationId,
-              nonce
-            });
+        verifyOtp: async (verificationId, nonce, fullName) => {
+            try {
+                const requestBody = {
+                    verificationId,
+                    nonce
+                };
     
-            const data = response.data;
+                // Add fullName to the request body if provided
+                if (fullName) {
+                    requestBody.fullName = fullName;
+                }
     
-            if (data.successful) {
-              // Set the refresh token in HTTP-only cookie
-              await fetch('/api/auth/set-refresh-token', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refreshToken: data.data.refreshToken }),
-              });
+                const response = await unauthenticatedApiClient.post('/identity/verify-contact', requestBody);
     
-              // Store access token in memory or secure storage
-              localStorage.setItem('access_token', data.data.accessToken);
+                const data = response.data;
+    
+                if (data.successful) {
+                    // Set the refresh token in HTTP-only cookie
+                    await fetch('/api/auth/set-refresh-token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ refreshToken: data.data.refreshToken }),
+                    });
+    
+                    // Store access token in memory or secure storage
+                    localStorage.setItem('access_token', data.data.accessToken);
+                }
+    
+                return data;
+            } catch (error) {
+                return {
+                    status: 'FAIL',
+                    message: error?.response?.data?.message || 'Failed to verify OTP',
+                    successful: false
+                };
             }
-    
-            return data;
-          } catch (error) {
-            return {
-              status: 'FAIL',
-              message: error?.response?.data?.message || 'Failed to verify OTP',
-              successful: false
-            };
-          }
         },
     
         logout: async () => {
-          try {
-            // Clear HTTP-only cookie
-            await fetch('/api/auth/set-refresh-token', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ refreshToken: '' }),
-            });
+            try {
+                // Clear HTTP-only cookie
+                await fetch('/api/auth/set-refresh-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refreshToken: '' }),
+                });
     
-            // Clear local storage
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('auth_data');
-            localStorage.removeItem('buyer_data');
-          } catch (error) {
-            console.error('Error during logout:', error);
-          }
+                // Clear local storage
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('auth_data');
+                localStorage.removeItem('buyer_data');
+            } catch (error) {
+                console.error('Error during logout:', error);
+            }
         },
     
-      },
+    },
     
     // Store endpoints
     store: {

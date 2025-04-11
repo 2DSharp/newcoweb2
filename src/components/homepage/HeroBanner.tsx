@@ -95,17 +95,17 @@ export default function HeroBanner({
       <div className="relative bg-gray-900 text-white overflow-hidden">
         <div className={`banner-container ${animationClass}`}>
           <div className="current-banner">
-            <div className="absolute inset-0">
-              <Image
+      <div className="absolute inset-0">
+        <Image
                 src={allBanners[currentIndex].backgroundImage}
                 alt="Banner Image"
-                fill
-                priority
-                className="object-cover opacity-40"
-                sizes="100vw"
-                quality={90}
-              />
-            </div>
+          fill
+          priority
+          className="object-cover opacity-40"
+          sizes="100vw"
+          quality={90}
+        />
+      </div>
             <div className="relative max-w-7xl mx-auto px-12 sm:px-16 lg:px-24 py-10 md:py-16">
               <div className="max-w-3xl">
                 <h1 className="text-2xl md:text-4xl font-bold mb-2 font-playfair">
@@ -168,16 +168,16 @@ export default function HeroBanner({
               <div className="max-w-3xl">
                 <h1 className="text-2xl md:text-4xl font-bold mb-2 font-playfair">
                   {allBanners[currentIndex === 0 ? allBanners.length - 1 : currentIndex - 1].title}
-                </h1>
+        </h1>
                 <p className="text-sm md:text-lg text-gray-200">
                   {allBanners[currentIndex === 0 ? allBanners.length - 1 : currentIndex - 1].subtitle}
                 </p>
                 <Link href={allBanners[currentIndex === 0 ? allBanners.length - 1 : currentIndex - 1].ctaLink}>
                   <PrimaryButton className="mt-4 px-6 py-2 bg-white text-gray-900 hover:bg-gray-100 text-sm md:text-base">
                     {allBanners[currentIndex === 0 ? allBanners.length - 1 : currentIndex - 1].ctaText}
-                  </PrimaryButton>
-                </Link>
-              </div>
+          </PrimaryButton>
+        </Link>
+      </div>
             </div>
           </div>
         </div>
@@ -289,7 +289,7 @@ export default function HeroBanner({
             ))}
           </div>
         )}
-      </div>  
+    </div>  
     </div>
   )
 } 

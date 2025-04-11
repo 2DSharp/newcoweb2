@@ -11,6 +11,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import apiService from "@/services/api.js";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AddressForm } from "@/components/address/AddressForm";
 
 interface Address {
   id: string;
@@ -209,13 +210,12 @@ function CheckoutPage() {
     loadData();
   }, [router, searchParams]);
 
-  const handleAddAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddAddress = async (formData: any) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.accounts.addAddress(newAddress);
+      const response = await apiService.accounts.addAddress(formData);
       if (response.successful) {
         // Refresh addresses list
         const addressResponse = await apiService.accounts.getAddresses();
@@ -223,20 +223,6 @@ function CheckoutPage() {
           setAddresses(addressResponse.data);
           setSelectedAddress(response.data); // Select newly added address
           setShowAddressForm(false);
-          
-          // Clear the form
-          setNewAddress({
-            label: "",
-            name: "",
-            phone: "",
-            addressLine1: "",
-            addressLine2: "",
-            city: "",
-            state: "",
-            pinCode: "",
-            landmark: "",
-            isDefault: false,
-          });
         }
       }
     } catch (err: any) {
@@ -446,132 +432,11 @@ function CheckoutPage() {
             </div>
 
             {showAddressForm ? (
-              <form onSubmit={handleAddAddress} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      value={newAddress.name}
-                      onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                        +91
-                      </span>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        className="pl-12"
-                        value={newAddress.phone}
-                        onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                        pattern="[0-9]{10}"
-                        maxLength={10}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="addressLine1">Address Line 1</Label>
-                  <Input
-                    id="addressLine1"
-                    value={newAddress.addressLine1}
-                    onChange={(e) => setNewAddress({ ...newAddress, addressLine1: e.target.value })}
-                    placeholder="House No., Building Name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="addressLine2">Address Line 2</Label>
-                  <Input
-                    id="addressLine2"
-                    value={newAddress.addressLine2}
-                    onChange={(e) => setNewAddress({ ...newAddress, addressLine2: e.target.value })}
-                    placeholder="Street, Area"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={newAddress.city}
-                      onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={newAddress.state}
-                      onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="pinCode">PIN Code</Label>
-                    <Input
-                      id="pinCode"
-                      type="text"
-                      value={newAddress.pinCode}
-                      onChange={(e) => setNewAddress({ ...newAddress, pinCode: e.target.value })}
-                      pattern="[0-9]{6}"
-                      maxLength={6}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="landmark">Landmark (Optional)</Label>
-                    <Input
-                      id="landmark"
-                      value={newAddress.landmark}
-                      onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
-                      placeholder="Nearby landmark"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isDefault"
-                    checked={newAddress.isDefault}
-                    onCheckedChange={(checked) => 
-                      setNewAddress({ ...newAddress, isDefault: checked as boolean })
-                    }
-                  />
-                  <Label htmlFor="isDefault">Set as default address</Label>
-                </div>
-
-                <div className="flex justify-end space-x-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddressForm(false)}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Save Address
-                  </Button>
-                </div>
-              </form>
+              <AddressForm 
+                onSubmit={handleAddAddress}
+                onCancel={() => setShowAddressForm(false)}
+                initialData={null}
+              />
             ) : (
               <div>
                 {/* Currently Selected Address */}
