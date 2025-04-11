@@ -524,10 +524,6 @@ export function Navbar() {
         }
         return newSet;
       });
-    } else {
-      // Navigate to category page
-      setShowCategorySidebar(false);
-      router.push(`/category/${category.path}`);
     }
   };
 
@@ -544,6 +540,34 @@ export function Navbar() {
     const isExpanded = expandedCategories.has(category.id);
     const isSelected = selectedCategory?.id === category.id;
 
+    // For leaf nodes (categories without children), use Link
+    if (!hasChildren) {
+      return (
+        <div key={category.id} className="category-item">
+          <Link
+            href={`/c/${category.path}?category=${encodeURIComponent(category.name)}`}
+            className={`
+              flex items-center justify-between py-3 px-4 
+              hover:bg-gray-50 cursor-pointer 
+              ${level > 0 ? 'pl-' + (level * 4 + 4) + 'px' : ''} 
+              ${isSelected ? 'bg-gray-50' : ''}
+            `}
+            onClick={() => setShowCategorySidebar(false)}
+          >
+            <span className={`
+              ${level === 0 ? 'text-[15px] font-semibold' : 'text-sm'} 
+              ${isSelected ? 'font-bold text-primary' : ''}
+              ${level === 0 && !isSelected ? 'text-gray-800' : ''}
+              transition-colors
+            `}>
+              {category.name}
+            </span>
+          </Link>
+        </div>
+      );
+    }
+
+    // For parent categories (with children), use the expandable UI
     return (
       <div key={category.id} className="category-item">
         <div
@@ -552,7 +576,6 @@ export function Navbar() {
             hover:bg-gray-50 cursor-pointer 
             ${level > 0 ? 'pl-' + (level * 4 + 4) + 'px' : ''} 
             ${isSelected ? 'bg-gray-50' : ''}
-            ${level === 0 ? 'border-b border-gray-100' : ''}
           `}
           onClick={() => handleCategoryClick(category)}
         >

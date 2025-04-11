@@ -47,7 +47,11 @@ interface SearchResponse {
   results: SearchResult[];
 }
 
-export default function SearchResults() {
+interface SearchResultsProps {
+  initialCategory?: string;
+}
+
+export default function SearchResults({ initialCategory }: SearchResultsProps = {}) {
   const searchParams = useSearchParams();
   const [results, setResults] = useState<SearchResult[]>([]);
   const [sortedResults, setSortedResults] = useState<SearchResult[]>([]);
@@ -96,13 +100,18 @@ export default function SearchResults() {
       }
     });
     
+    // Add initialCategory if provided
+    if (initialCategory && !urlFilters.category) {
+      urlFilters.category = [initialCategory];
+    }
+    
     setSelectedFilters(urlFilters);
     
     // Set price range if both min and max are available
     if (urlPriceMin !== null && urlPriceMax !== null) {
       setPriceRange([urlPriceMin, urlPriceMax]);
     }
-  }, [searchParams]);
+  }, [searchParams, initialCategory]);
 
   // Prepare API query parameters based on selected filters
   const prepareQueryParams = useCallback(() => {
@@ -145,9 +154,32 @@ export default function SearchResults() {
     
     return params;
   }, [query, selectedFilters, priceRange, currentSort]);
+  
+  // Initial redirect to set URL if initialCategory is provided
+  useEffect(() => {
+    if (initialCategory && window.location.pathname.includes('/c/')) {
+      // Create a search params object with the initial category
+      const params = new URLSearchParams(window.location.search);
+      
+      // Only set category from initialCategory if it's not already in the URL
+      if (!params.has('category')) {
+        params.set('category', initialCategory);
+      }
+      
+      // Keep other existing params
+      searchParams.forEach((value, key) => {
+        if (!params.has(key)) {
+          params.set(key, value);
+        }
+      });
+      
+      // Update URL without redirecting to keep the SEO friendly URL
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
+  }, [initialCategory, searchParams]);
 
   const fetchResults = useCallback(async () => {
-    if (!query) return;
+    if (!query && !selectedFilters.category?.length) return;
     
     setLoading(true);
     try {
@@ -179,17 +211,18 @@ export default function SearchResults() {
     } finally {
       setLoading(false);
     }
-  }, [query, prepareQueryParams]);
+  }, [query, selectedFilters.category, prepareQueryParams]);
 
   useEffect(() => {
-    if (query) {
+    // Fetch results if we have a search query or a category filter
+    if (query || selectedFilters.category?.length) {
       fetchResults();
     } else {
       setResults([]);
       setFilters({});
       setLoading(false);
     }
-  }, [query, fetchResults]);
+  }, [query, selectedFilters.category, fetchResults]);
 
   // Apply client-side sorting to results
   useEffect(() => {
@@ -290,7 +323,13 @@ export default function SearchResults() {
       params.set('sort', sort.value);
     }
     
-    router.push(`/search?${params.toString()}`);
+    // If we came from a category page, maintain the current URL structure
+    if (initialCategory && window.location.pathname.includes('/c/')) {
+      // Just update the search params portion without changing the path
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    } else {
+      router.push(`/search?${params.toString()}`);
+    }
   };
 
   // Add this console log to verify state updates
@@ -301,7 +340,8 @@ export default function SearchResults() {
     filters, 
     selectedFilters,
     priceRange,
-    currentSort
+    currentSort,
+    initialCategory
   });
 
   return (
@@ -311,7 +351,7 @@ export default function SearchResults() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <p className="text-sm font-bold text-gray-900">
             <span className="text-gray-500">
-              {loading ? 'Searching...' : `Found ${results.length} items for "${query}"`}
+              {loading ? 'Searching...' : `Found ${results.length} items${initialCategory ? ` in ${initialCategory}` : query ? ` for "${query}"` : ''}`}
             </span>
           </p>
           <div className="flex items-center gap-4">
@@ -364,16 +404,20 @@ export default function SearchResults() {
                 onClearPriceRange={() => handlePriceRangeChange(null as any)}
               />
               
-              {/* Add a fallback rendering for debugging */}
+              {/* Show loading or results */}
               {!loading && sortedResults.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500">No results found for "{query}"</p>
+                  <p className="text-gray-500">
+                    {initialCategory 
+                      ? `No products found in "${initialCategory}"` 
+                      : query 
+                        ? `No results found for "${query}"` 
+                        : 'No results found'}
+                  </p>
                 </div>
               ) : (
                 <ProductGrid results={sortedResults.length ? sortedResults : results} loading={loading} />
               )}
-              
-
             </div>
           </div>
         </div>
