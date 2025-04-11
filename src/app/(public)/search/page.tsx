@@ -3,7 +3,7 @@
 import { Filter } from 'lucide-react';
 import ProductGrid from '@/components/search/ProductGrid';
 import FilterSidebar from '@/components/search/FilterSidebar';
-import SortDropdown from '@/components/search/SortDropdown';
+import SortDropdown, { SortOption, sortOptions } from '@/components/search/SortDropdown';
 import ActiveFilters from '@/components/search/ActiveFilters';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -36,9 +36,9 @@ interface SearchResult {
   rating: number;
   rating_count: number;
   stock: string;
-  tags: string;
+  tags: string | string[];
   title: string;
-  url: string;
+  url: string | null;
   variant_id: string | null;
 }
 
@@ -50,11 +50,13 @@ interface SearchResponse {
 export default function SearchResults() {
   const searchParams = useSearchParams();
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [sortedResults, setSortedResults] = useState<SearchResult[]>([]);
   const [filters, setFilters] = useState<FiltersData>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<{[key: string]: string[]}>({});
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const [currentSort, setCurrentSort] = useState<SortOption>(sortOptions[0]);
   const router = useRouter();
   const query = searchParams.get('q') || '';
 
@@ -65,6 +67,15 @@ export default function SearchResults() {
     const urlFilters: {[key: string]: string[]} = {};
     let urlPriceMin: number | null = null;
     let urlPriceMax: number | null = null;
+    
+    // Initialize sort from URL
+    const sortParam = searchParams.get('sort');
+    if (sortParam) {
+      const sortOption = sortOptions.find(opt => opt.value === sortParam);
+      if (sortOption) {
+        setCurrentSort(sortOption);
+      }
+    }
     
     searchParams.forEach((value, key) => {
       if (key === 'price_min') {
@@ -120,6 +131,11 @@ export default function SearchResults() {
       params.price_range = `${priceRange[0]}-${priceRange[1]}`;
     }
     
+    // Add sort parameter
+    if (currentSort && currentSort.value !== 'relevance') {
+      params.sort = currentSort.value;
+    }
+    
     // Add other filters as needed
     Object.entries(selectedFilters).forEach(([key, values]) => {
       if (key !== 'category' && key !== 'rating' && values.length > 0) {
@@ -128,7 +144,7 @@ export default function SearchResults() {
     });
     
     return params;
-  }, [query, selectedFilters, priceRange]);
+  }, [query, selectedFilters, priceRange, currentSort]);
 
   const fetchResults = useCallback(async () => {
     if (!query) return;
@@ -142,13 +158,6 @@ export default function SearchResults() {
       // Make sure we're passing the parameters correctly
       const response = await apiService.search.query(queryParams);
       console.log('Search API response:', response);
-      
-      // Debug: Print the exact structure of the response
-      console.log('Response type:', typeof response);
-      console.log('Response has results property:', response && 'results' in response);
-      console.log('Response results type:', response?.results ? typeof response.results : 'undefined');
-      console.log('Response results length:', response?.results?.length);
-      console.log('First result item:', response?.results?.[0]);
       
       // Extract both results and filters from the response
       if (response) {
@@ -182,6 +191,37 @@ export default function SearchResults() {
     }
   }, [query, fetchResults]);
 
+  // Apply client-side sorting to results
+  useEffect(() => {
+    if (!results.length) {
+      setSortedResults([]);
+      return;
+    }
+
+    let sorted = [...results];
+    
+    switch (currentSort.value) {
+      case 'price-low':
+        sorted = sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        sorted = sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+        // Since we don't have a date field, we're assuming product_id might contain timestamp info
+        // This is a placeholder - adjust based on actual data
+        sorted = sorted.sort((a, b) => b.product_id.localeCompare(a.product_id));
+        break;
+      case 'rating':
+        sorted = sorted.sort((a, b) => b.rating - a.rating);
+        break;
+      default: // 'relevance' - don't sort, use API's default order
+        break;
+    }
+    
+    setSortedResults(sorted);
+  }, [results, currentSort]);
+
   // Handle filter changes
   const handleFilterChange = (filterType: string, value: string, checked: boolean) => {
     const newFilters = { ...selectedFilters };
@@ -207,17 +247,27 @@ export default function SearchResults() {
     setSelectedFilters(newFilters);
     
     // Update URL with selected filters
-    updateUrlWithFilters(newFilters, priceRange);
+    updateUrlWithFilters(newFilters, priceRange, currentSort);
   };
 
   // Handle price range changes
   const handlePriceRangeChange = (range: [number, number]) => {
     setPriceRange(range);
-    updateUrlWithFilters(selectedFilters, range);
+    updateUrlWithFilters(selectedFilters, range, currentSort);
+  };
+  
+  // Handle sort changes
+  const handleSortChange = (sortOption: SortOption) => {
+    setCurrentSort(sortOption);
+    updateUrlWithFilters(selectedFilters, priceRange, sortOption);
   };
   
   // Update URL with all filters and price range
-  const updateUrlWithFilters = (filters: {[key: string]: string[]}, range: [number, number] | null) => {
+  const updateUrlWithFilters = (
+    filters: {[key: string]: string[]}, 
+    range: [number, number] | null,
+    sort: SortOption
+  ) => {
     const params = new URLSearchParams();
     params.set('q', query);
     
@@ -235,10 +285,9 @@ export default function SearchResults() {
       params.set('price_range', `${range[0]}-${range[1]}`);
     }
     
-    // Keep sort parameter if exists
-    const sortParam = searchParams.get('sort');
-    if (sortParam) {
-      params.set('sort', sortParam);
+    // Add sort parameter if it's not the default (relevance)
+    if (sort && sort.value !== 'relevance') {
+      params.set('sort', sort.value);
     }
     
     router.push(`/search?${params.toString()}`);
@@ -248,9 +297,11 @@ export default function SearchResults() {
   console.log('Current state:', { 
     loading, 
     resultsCount: results.length, 
+    sortedResultsCount: sortedResults.length,
     filters, 
     selectedFilters,
-    priceRange 
+    priceRange,
+    currentSort
   });
 
   return (
@@ -284,7 +335,7 @@ export default function SearchResults() {
                 </div>
               </SheetContent>
             </Sheet>
-            <SortDropdown />
+            <SortDropdown onSortChange={handleSortChange} />
           </div>
         </div>
 
@@ -314,12 +365,12 @@ export default function SearchResults() {
               />
               
               {/* Add a fallback rendering for debugging */}
-              {!loading && results.length === 0 ? (
+              {!loading && sortedResults.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500">No results found for "{query}"</p>
                 </div>
               ) : (
-                <ProductGrid results={results} loading={loading} />
+                <ProductGrid results={sortedResults.length ? sortedResults : results} loading={loading} />
               )}
               
 
