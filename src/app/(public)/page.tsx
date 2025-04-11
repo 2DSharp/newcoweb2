@@ -23,6 +23,7 @@ interface HomepageData {
     backgroundImage: string;
     ctaText: string;
     ctaLink: string;
+    description?: string;
   }[];
   categoryFilter?: {
     title: string;
@@ -131,10 +132,11 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Hero Banner - now with internal slider */}
-      {homepageData?.hero && homepageData.hero.length > 0 && (
+      {/* Hero Banner */}
+      {homepageData?.hero && (
         <HeroBanner banners={homepageData.hero} />
       )}
+
 
       {/* Featured Products section */}
       {homepageData?.featuredProducts && (

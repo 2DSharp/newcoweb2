@@ -595,10 +595,10 @@ export function Navbar() {
   return (
     <div className="sticky top-0 z-50 bg-white">
       <header className="border-b">
-        <nav className="max-w-[1536px] mx-auto px-4">
+        <nav className="max-w-[1280px] mx-auto px-4">
           <div className="flex flex-col py-4 gap-4">
             {/* Top Row */}
-            <div className="flex items-center w-full">
+            <div className="flex items-center justify-between w-full">
               {/* Left section with hamburger and logo */}
               <div className="flex items-center gap-4">
                 {/* Mobile Menu */}
@@ -701,10 +701,10 @@ export function Navbar() {
               </div>
 
               {/* Search and Actions container */}
-              <div className="flex flex-1 items-center gap-4">
+              <div className="flex flex-1 items-center justify-center gap-4 mx-4">
                 {/* Search - Desktop */}
                 <div
-                  className="hidden md:flex flex-1 max-w-4xl relative ml-4"
+                  className="hidden md:flex flex-1 relative"
                   ref={searchRef}
                 >
                   <form
@@ -772,31 +772,29 @@ export function Navbar() {
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-1">
-                  <Link href="/account">
-                    <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
-
-                      <User size={28} />
-                      <span className="hidden md:inline-block text-sm text-gray-600">
-                        {profile?.firstName || 'Account'}
-                      </span>
-                    </button>
-                  </Link>
-                  <Link href="/cart">
-                    <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
-                      <ShoppingCart size={28} />
-
-                      <span className="absolute -top-1 -right-1 h-5 w-5 text-xs font-medium text-white bg-primary rounded-full flex items-center justify-center">
-                        {cartCount}
-                      </span>
-                      <span className="hidden md:inline-block text-sm text-gray-600">
-                        Cart
-                      </span>
-                    </button>
-                  </Link>
-                </div>
+              {/* Actions */}
+              <div className="flex items-center gap-1">
+                <Link href="/account">
+                  <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
+                    <User size={28} />
+                    <span className="hidden md:inline-block text-sm text-gray-600">
+                      {profile?.firstName || 'Account'}
+                    </span>
+                  </button>
+                </Link>
+                <Link href="/cart">
+                  <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
+                    <ShoppingCart size={28} />
+                    <span className="absolute -top-1 -right-1 h-5 w-5 text-xs font-medium text-white bg-primary rounded-full flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                    <span className="hidden md:inline-block text-sm text-gray-600">
+                      Cart
+                    </span>
+                  </button>
+                </Link>
               </div>
             </div>
 
