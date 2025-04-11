@@ -1,62 +1,64 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, RefreshCw } from 'lucide-react';
 import { PriceRangeSlider } from './PriceRangeSlider';
+import { useSearchParams } from 'next/navigation';
 
-const filters = {
-  price: {
-    name: 'Price',
-    options: [
-      { value: '0-50', label: '$0 - $50', count: 120 },
-      { value: '50-100', label: '$50 - $100', count: 75 },
-      { value: '100-200', label: '$100 - $200', count: 40 },
-      { value: '200+', label: '$200+', count: 10 },
-    ],
-  },
-  category: {
-    name: 'Category',
-    options: [
-      { value: 'fashion', label: 'Fashion', count: 85 },
-      { value: 'electronics', label: 'Electronics', count: 42 },
-      { value: 'home', label: 'Home & Living', count: 63 },
-      { value: 'sports', label: 'Sports', count: 35 },
-      { value: 'beauty', label: 'Beauty', count: 20 },
-    ],
-  },
-  brand: {
-    name: 'Brand',
-    options: [
-      { value: 'nike', label: 'Nike', count: 25 },
-      { value: 'adidas', label: 'Adidas', count: 18 },
-      { value: 'samsung', label: 'Samsung', count: 15 },
-      { value: 'apple', label: 'Apple', count: 12 },
-      { value: 'sony', label: 'Sony', count: 10 },
-    ],
-  },
-  rating: {
-    name: 'Rating',
-    options: [
-      { value: '4+', label: '4 Stars & Up', count: 150 },
-      { value: '3+', label: '3 Stars & Up', count: 85 },
-      { value: '2+', label: '2 Stars & Up', count: 35 },
-      { value: '1+', label: '1 Star & Up', count: 10 },
-    ],
-  },
-  color: {
-    name: 'Color',
-    options: [
-      { value: 'black', label: 'Black', count: 45 },
-      { value: 'white', label: 'White', count: 32 },
-      { value: 'blue', label: 'Blue', count: 28 },
-      { value: 'red', label: 'Red', count: 20 },
-      { value: 'green', label: 'Green', count: 15 },
-    ],
-  },
-};
+interface FilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
 
-export default function FilterSidebar() {
-  const [expanded, setExpanded] = useState<string[]>(Object.keys(filters));
+interface FilterSection {
+  name: string;
+  options: FilterOption[];
+  order?: number;
+}
+
+interface FiltersData {
+  [key: string]: FilterSection;
+}
+
+interface FilterSidebarProps {
+  filters?: FiltersData;
+  onFilterChange?: (filterType: string, value: string, checked: boolean) => void;
+  selectedFilters?: {[key: string]: string[]};
+  priceRange?: [number, number] | null;
+  onPriceRangeChange?: (range: [number, number]) => void;
+}
+
+// Predefined price ranges
+const PRICE_RANGES = [
+  { min: 0, max: 500, label: '₹0 - ₹500' },
+  { min: 500, max: 1000, label: '₹500 - ₹1000' },
+  { min: 1000, max: 2000, label: '₹1000 - ₹2000' },
+  { min: 2000, max: 5000, label: '₹2000 - ₹5000' },
+  { min: 5000, max: 10000, label: '₹5000+' }
+];
+
+export default function FilterSidebar({ 
+  filters = {}, 
+  onFilterChange, 
+  selectedFilters = {},
+  priceRange = null,
+  onPriceRangeChange
+}: FilterSidebarProps) {
+  const [expanded, setExpanded] = useState<string[]>([]);
+  const searchParams = useSearchParams();
+  
+  // Default price range values
+  const DEFAULT_MIN_PRICE = 0;
+  const DEFAULT_MAX_PRICE = 10000;
+  const DEFAULT_STEP = 100;
+
+  useEffect(() => {
+    // Initialize expanded sections with all filter keys
+    if (Object.keys(filters).length > 0 && expanded.length === 0) {
+      setExpanded(Object.keys(filters));
+    }
+  }, [filters, expanded.length]);
 
   const toggleSection = (section: string) => {
     setExpanded(prev =>
@@ -66,54 +68,176 @@ export default function FilterSidebar() {
     );
   };
 
+  const handleCheckboxChange = (filterType: string, value: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    if (onFilterChange) {
+      onFilterChange(filterType, value, event.target.checked);
+    }
+  };
+
+  // Check if a filter is currently selected
+  const isFilterSelected = (filterType: string, value: string) => {
+    return selectedFilters[filterType]?.includes(value) || false;
+  };
+
+  // Handle price range changes
+  const handlePriceRangeChange = (range: [number, number]) => {
+    if (onPriceRangeChange) {
+      onPriceRangeChange(range);
+    }
+  };
+
+  // Handle price range link click
+  const handlePriceRangeClick = (min: number, max: number) => {
+    if (onPriceRangeChange) {
+      onPriceRangeChange([min, max]);
+    }
+  };
+
+  // Reset price range to default
+  const resetPriceRange = () => {
+    if (onPriceRangeChange) {
+      onPriceRangeChange(null as any);
+    }
+  };
+
+  // Check if a price range is currently selected
+  const isPriceRangeSelected = (min: number, max: number) => {
+    if (!priceRange) return false;
+    // Special case for "5000+" range
+    if (max === 10000 && min === 5000) {
+      return priceRange[0] >= 5000;
+    }
+    return priceRange[0] === min && priceRange[1] === max;
+  };
+
+  // Check if any price filter is active
+  const isPriceFilterActive = priceRange !== null;
+
+  // Sort filters by order field (if present)
+  const sortedFilterEntries = Object.entries(filters).sort((a, b) => {
+    const orderA = a[1].order !== undefined ? a[1].order : Number.MAX_SAFE_INTEGER;
+    const orderB = b[1].order !== undefined ? b[1].order : Number.MAX_SAFE_INTEGER;
+    return orderA - orderB;
+  });
+
+  // Find the min and max prices for the price filter if available
+  const priceFilter = filters.price;
+  const priceOptions = priceFilter?.options || [];
+  
+  // Get min and max price from filter options or use defaults
+  let minPrice = DEFAULT_MIN_PRICE;
+  let maxPrice = DEFAULT_MAX_PRICE;
+  
+  if (priceOptions.length > 0) {
+    // Try to extract min/max from price ranges like "100-500"
+    const ranges = priceOptions.map(option => {
+      const match = option.value.match(/(\d+)-(\d+)/);
+      if (match) {
+        return [parseInt(match[1]), parseInt(match[2])];
+      }
+      return null;
+    }).filter(range => range !== null) as number[][];
+    
+    if (ranges.length > 0) {
+      minPrice = Math.min(...ranges.map(range => range[0]));
+      maxPrice = Math.max(...ranges.map(range => range[1]));
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Price Range Filter */}
       <div>
-        <h3 className="text-sm font-medium text-gray-900 mb-4">Price Range</h3>
-        <PriceRangeSlider 
-          min={0}
-          max={10000}
-          step={100}
-          onRangeChange={(range) => {
-            console.log('Price range changed:', range);
-            // Handle price range change
-          }}
-        />
-      </div>
-
-      {/* Other filters */}
-      {Object.entries(filters).map(([key, section]) => (
-        <div key={key} className="border-b pb-6">
-          <button
-            className="flex items-center justify-between w-full text-left"
-            onClick={() => toggleSection(key)}
-          >
-            <h3 className="text-sm font-semibold text-gray-900">{section.name}</h3>
-            <ChevronDown
-              className={`w-5 h-5 text-gray-500 transition-transform ${
-                expanded.includes(key) ? 'transform rotate-180' : ''
-              }`}
-            />
-          </button>
-          {expanded.includes(key) && (
-            <div className="mt-4 space-y-3">
-              {section.options.map((option) => (
-                <label key={option.value} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="ml-3 text-sm text-gray-600">
-                    {option.label}
-                    <span className="ml-1 text-gray-400">({option.count})</span>
-                  </span>
-                </label>
-              ))}
-            </div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium text-gray-900">Price Range</h3>
+          {isPriceFilterActive && (
+            <button 
+              onClick={resetPriceRange}
+              className="inline-flex items-center text-xs text-primary hover:text-primary/90"
+            >
+              <RefreshCw className="mr-1 h-3 w-3" />
+              Reset
+            </button>
           )}
         </div>
+        
+        {/* Price Range Slider */}
+        <div className="mb-4">
+          <PriceRangeSlider 
+            min={minPrice}
+            max={maxPrice}
+            step={DEFAULT_STEP}
+            initialValue={priceRange || [minPrice, maxPrice]}
+            onRangeChange={handlePriceRangeChange}
+          />
+        </div>
+        
+        {/* Price Range Links */}
+        <div className="mt-6 border-t pt-3">
+          <div className="space-y-1">
+            {PRICE_RANGES.map((range, index) => (
+              <button
+                key={`price-range-${index}`}
+                className={`w-full text-left py-1 px-2 text-sm rounded hover:bg-gray-50 transition-colors ${
+                  isPriceRangeSelected(range.min, range.max) 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-gray-700'
+                }`}
+                onClick={() => handlePriceRangeClick(range.min, range.max)}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Dynamic filters from API response */}
+      {sortedFilterEntries.map(([key, section]) => (
+        // Skip price filter as we're using the price slider for it
+        key !== 'price' && (
+          <div key={key} className="border-b pb-6">
+            <button
+              className="flex items-center justify-between w-full text-left"
+              onClick={() => toggleSection(key)}
+            >
+              <h3 className="text-sm font-semibold text-gray-900">{section.name}</h3>
+              <ChevronDown
+                className={`w-5 h-5 text-gray-500 transition-transform ${
+                  expanded.includes(key) ? 'transform rotate-180' : ''
+                }`}
+              />
+            </button>
+            {expanded.includes(key) && (
+              <div className="mt-4 space-y-3">
+                {section.options.map((option) => (
+                  <label key={option.value} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={isFilterSelected(key, option.value)}
+                      onChange={(e) => handleCheckboxChange(key, option.value, e)}
+                    />
+                    <span className="ml-3 text-sm text-gray-600">
+                      {option.label}
+                      <span className="ml-1 text-gray-400">({option.count})</span>
+                    </span>
+                  </label>
+                ))}
+                {section.options.length === 0 && (
+                  <p className="text-sm text-gray-500">No options available</p>
+                )}
+              </div>
+            )}
+          </div>
+        )
       ))}
+      
+      {Object.keys(filters).length === 0 && (
+        <div className="text-sm text-gray-500 py-4">
+          No filters available for this search
+        </div>
+      )}
     </div>
   );
 }

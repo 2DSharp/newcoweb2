@@ -155,9 +155,53 @@ export const apiService = {
         },
     },
     search: {
-        query: async (searchTerm) => {
-            const response = await unauthenticatedSearchClient.get(`/search/?q=${encodeURIComponent(searchTerm)}`);
-            return response.data;
+        query: async (searchParams) => {
+            try {
+                // If searchParams is an object with multiple parameters
+                let url = '/search/';
+                let queryString = '';
+                
+                if (typeof searchParams === 'object' && searchParams !== null && !(searchParams instanceof String)) {
+                    queryString = Object.entries(searchParams)
+                        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+                        .join('&');
+                    url = `/search/?${queryString}`;
+                } else {
+                    // Backward compatibility for simple string queries
+                    const searchTerm = typeof searchParams === 'string' ? searchParams : searchParams?.q || '';
+                    url = `/search/?q=${encodeURIComponent(searchTerm)}`;
+                }
+                
+                console.log('Sending search request to URL:', url);
+                const response = await unauthenticatedSearchClient.get(url);
+                console.log('Raw search API response:', response);
+                
+                // Handle different response formats
+                const data = response.data;
+                console.log('Response data structure:', {
+                    isArray: Array.isArray(data),
+                    hasResults: data && 'results' in data,
+                    hasFilters: data && 'filters' in data
+                });
+                
+                // Return a properly formatted response
+                if (Array.isArray(data)) {
+                    // If the API returns an array of results directly
+                    return {
+                        results: data,
+                        filters: {}
+                    };
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error in search query:', error);
+                // Return empty results on error
+                return {
+                    results: [],
+                    filters: {}
+                };
+            }
         },
         getSuggestions: async (searchTerm) => {
             const response = await unauthenticatedSearchClient.get(`/search/suggest?q=${encodeURIComponent(searchTerm)}`);

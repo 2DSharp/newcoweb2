@@ -758,11 +758,7 @@ export function Navbar() {
                             >
                               <Search className="h-4 w-4 mr-2 text-gray-400" />
                               <span>{suggestion.text}</span>
-                              {suggestion.type && (
-                                <span className="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                  {suggestion.type}
-                                </span>
-                              )}
+                        
                             </li>
                           ))}
                         </ul>
