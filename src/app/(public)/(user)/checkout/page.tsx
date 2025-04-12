@@ -320,7 +320,7 @@ function CheckoutPage() {
           {/* Product Summary */}
           {!isFromCart && product && (
             <div className="mb-8 border rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+              <h3 className="text-xl font-semibold mb-4">Order Items</h3>
               <div className="flex gap-4">
                 <div className="w-24 h-24 relative flex-shrink-0">
                   <Image
@@ -353,7 +353,7 @@ function CheckoutPage() {
           {/* Cart Items Summary */}
           {isFromCart && processedCartItems.length > 0 && (
             <div className="mb-8 border rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+              <h3 className="text-xl font-semibold mb-4">Order Items</h3>
               <div className="space-y-4">
                 {processedCartItems.map((item) => (
                   <div key={item.variantId} className="flex gap-4 border-b last:border-b-0 pb-4 last:pb-0">
@@ -372,7 +372,7 @@ function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <h3 className="font-semibold">{item.productName}</h3>
+                      <h4 className="font-semibold">{item.productName}</h4>
                       {item.variantName && (
                         <p className="text-sm text-gray-500">{item.variantName}</p>
                       )}
@@ -395,7 +395,7 @@ function CheckoutPage() {
 
           {/* Payment Section - Moved to left column */}
           <div className="border rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+            <h3 className="text-xl font-semibold mb-4">Payment Method</h3>
             <RadioGroup
               value={paymentMethod}
               onValueChange={setPaymentMethod}
@@ -419,7 +419,7 @@ function CheckoutPage() {
           {/* Delivery Address Section */}
           <div className="mb-6 border rounded-lg p-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Delivery Address</h2>
+              <h3 className="text-xl font-semibold">Delivery Address</h3>
               {!showAddressForm && selectedAddress && (
                 <Button
                   variant="outline"
@@ -528,7 +528,7 @@ function CheckoutPage() {
 
           {/* Order Summary - Moved below address section */}
           <div className="border rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+            <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
