@@ -1,6 +1,6 @@
 'use client';
 
-import { Order } from '@/app/seller/(workspace)/orders/page';
+import { Order, OrderStatus, OrderItemStatus } from '@/types/order';
 import { formatCurrency } from '@/lib/utils';
 
 interface OrdersListProps {
@@ -22,6 +22,63 @@ export default function OrdersList({
     });
   };
 
+  const getStatusBadgeClass = (status: OrderStatus) => {
+    switch (status) {
+      case 'NEW':
+      case 'ACTIVE':
+        return 'bg-blue-100 text-blue-800';
+      case 'PROCESSING':
+        return 'bg-purple-100 text-purple-800';
+      case 'READY_TO_SHIP':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'SHIPPED':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'DELIVERED':
+        return 'bg-green-100 text-green-800';
+      case 'PARTIALLY_RETURNED':
+      case 'RETURNED':
+        return 'bg-orange-100 text-orange-800';
+      case 'PARTIALLY_CANCELLED':
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800';
+      case 'CLOSED':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const humanizeStatus = (status: OrderStatus | OrderItemStatus): string => {
+    switch (status) {
+      case 'NEW':
+        return 'New';
+      case 'ACTIVE':
+        return 'Active';
+      case 'PROCESSING':
+        return 'Processing';
+      case 'READY_TO_SHIP':
+        return 'Ready to Ship';
+      case 'SHIPPED':
+        return 'Shipped';
+      case 'DELIVERED':
+        return 'Delivered';
+      case 'PARTIALLY_RETURNED':
+        return 'Partially Returned';
+      case 'RETURNED':
+        return 'Returned';
+      case 'PARTIALLY_CANCELLED':
+        return 'Partially Cancelled';
+      case 'CANCELLED':
+        return 'Cancelled';
+      case 'CLOSED':
+        return 'Closed';
+      default:
+        return status.toString().replace(/_/g, ' ').replace(/\w\S*/g, (txt) => 
+          txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        );
+    }
+  };
+
   return (
     <div className="space-y-4">
       {orders.map((order) => (
@@ -36,7 +93,12 @@ export default function OrdersList({
         >
           <div className="flex justify-between items-start mb-2">
             <div>
-              <h3 className="font-medium text-gray-900">Order #{order.id}</h3>
+              <div className="flex items-center space-x-2">
+                <b className="text-sm text-gray-900">Order #{order.id}</b>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(order.status)}`}>
+                  {humanizeStatus(order.status)}
+                </span>
+              </div>
               <p className="text-sm text-gray-500">
                 {order.items.length} item{order.items.length !== 1 ? 's' : ''}
               </p>

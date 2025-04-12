@@ -1,4 +1,30 @@
-export type OrderStatus = 'NEW' | 'ACTIVE' | 'IN_TRANSIT' | 'COMPLETED' | 'FAILED';
+// Filter statuses used for API calls
+export type FilterStatus = 'ACTIVE' | 'IN_TRANSIT' | 'COMPLETED' | 'FAILED';
+
+// Detailed order statuses used for displaying orders
+export type OrderStatus = 
+  | 'NEW' 
+  | 'ACTIVE'
+  | 'PROCESSING' 
+  | 'READY_TO_SHIP'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'PARTIALLY_RETURNED'
+  | 'RETURNED'
+  | 'PARTIALLY_CANCELLED'
+  | 'CANCELLED'
+  | 'CLOSED';
+
+export type OrderItemStatus = 
+  | 'CREATED'
+  | 'ACCEPTED'
+  | 'PROCESSING'
+  | 'PROCESSED'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'RETURN_REQUESTED'
+  | 'RETURNED'
+  | 'CANCELLED';
 
 export interface OrderItem {
   id: number;
@@ -11,7 +37,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   discountApplied: number | null;
-  status: string;
+  status: OrderItemStatus;
   orderId: string;
   createdAt: string;
   totalPrice: string;

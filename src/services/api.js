@@ -504,6 +504,22 @@ export const apiService = {
           });
           return response.data;
         },
+        updateOrderStatus: async (subOrderId, status) => {
+          const response = await authenticatedApiClient.put('/seller/orders/fulfill', {
+            subOrderId,
+            status
+          });
+          return response.data;
+        },
+        processOrderItem: async (orderItemId, subOrderId, quantity, customizationVerified) => {
+          const response = await authenticatedApiClient.post('/seller/orders/process-item', {
+            orderItemId,
+            subOrderId,
+            quantity,
+            customizationVerified
+          });
+          return response.data;
+        },
       },
     
     files: {
