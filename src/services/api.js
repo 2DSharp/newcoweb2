@@ -457,11 +457,11 @@ export const apiService = {
             return response.data;
         },
         update: async (storeId, storeData) => {
-            const response = await authenticatedApiClient.put(`/stores/${storeId}`, storeData);
+            const response = await authenticatedApiClient.put(`/seller/store/`, storeData);
             return response.data;
         },
-        getDetails: async (storeId) => {
-            const response = await authenticatedApiClient.get(`/stores/${storeId}`);
+        getDetails: async () => {
+            const response = await authenticatedApiClient.get(`/seller/store/`);
             return response.data;
         },
     },
