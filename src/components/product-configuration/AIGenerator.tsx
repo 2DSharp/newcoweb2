@@ -49,6 +49,8 @@ export default function AIGenerator({ uploadedImages, setUploadedImages, isGener
                         onChange={handleImageChange}
                         maxImages={5}
                         variationIndex={0}
+                        showThumbnailSelector={false}
+                        action="delete"
                     />
                     
                     <Button 

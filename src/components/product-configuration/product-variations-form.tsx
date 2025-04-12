@@ -528,6 +528,8 @@ export default function ProductVariationsForm({ formData, updateFormData, isMana
                                     onChange={(newImages) => handleVariationChange(index, 'images', newImages)}
                                     maxImages={5}
                                     variationIndex={index}
+                                    showThumbnailSelector={true}
+                                    action="delete"
                                 />
                                
                             </div>

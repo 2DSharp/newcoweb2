@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
-import { X, ImageIcon, Plus, Loader2, Trash2, Camera, Upload } from 'lucide-react'
+import { X, ImageIcon, Plus, Loader2, Trash2, Camera, Upload, Expand, Edit } from 'lucide-react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Cropper from 'react-easy-crop'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -30,6 +30,8 @@ interface ImageUploaderProps {
     onChange: (images: Image[]) => void
     maxImages?: number
     variationIndex: number
+    showThumbnailSelector?: boolean
+    action?: 'edit' | 'delete'
 }
 
 const UPLOAD_MESSAGES = [
@@ -40,7 +42,14 @@ const UPLOAD_MESSAGES = [
     "Almost done..."
 ]
 
-export default function ImageUploader({ images = [], onChange, maxImages = 4, variationIndex }: ImageUploaderProps) {
+export default function ImageUploader({ 
+    images = [], 
+    onChange, 
+    maxImages = 4, 
+    variationIndex,
+    showThumbnailSelector = true,
+    action = 'delete'
+}: ImageUploaderProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [crop, setCrop] = useState({ x: 0, y: 0 })
     const [zoom, setZoom] = useState(1)
@@ -53,8 +62,27 @@ export default function ImageUploader({ images = [], onChange, maxImages = 4, va
     const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null)
     const [uploadingImages, setUploadingImages] = useState<{ [key: string]: number }>({})
     const [error, setError] = useState<string | null>(null)
+    const [previewImage, setPreviewImage] = useState<Image | null>(null)
+    const [imageToReplace, setImageToReplace] = useState<string | null>(null)
 
     const fileInputId = `file-upload-${variationIndex}`
+
+    const handleImageAction = (image: Image, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent opening preview
+        
+        if (action === 'delete') {
+            const updatedImages = images.filter(img => img.imgId !== image.imgId);
+            if (image.thumbnail && updatedImages.length > 0) {
+                updatedImages[0].thumbnail = true;
+            }
+            onChange(updatedImages);
+        } else if (action === 'edit') {
+            // Open the upload dialog for replacing this image
+            document.getElementById(fileInputId)?.click();
+            // Store the image ID to be replaced
+            setImageToReplace(image.imgId);
+        }
+    };
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -135,16 +163,36 @@ export default function ImageUploader({ images = [], onChange, maxImages = 4, va
 
             const data: ImageResponse = await response.json()
 
-            // Create a temporary image object with the server URL
-            const newImage: Image = {
-                imgId: data.id,
-                thumbnail: images.length === 0,
-                url: data.url
-            }
+            // If we're replacing an image, use the same thumbnail status and remove the old one
+            if (imageToReplace) {
+                const replacedImage = images.find(img => img.imgId === imageToReplace);
+                const isThumbnail = replacedImage?.thumbnail || images.length === 0;
+                
+                // Filter out the image being replaced
+                const filteredImages = images.filter(img => img.imgId !== imageToReplace);
+                
+                // Add the new image
+                const newImage: Image = {
+                    imgId: data.id,
+                    thumbnail: isThumbnail,
+                    url: data.url
+                };
+                
+                // Update images array
+                onChange([...filteredImages, newImage]);
+                setImageToReplace(null);
+            } else {
+                // Create a temporary image object with the server URL
+                const newImage: Image = {
+                    imgId: data.id,
+                    thumbnail: images.length === 0,
+                    url: data.url
+                }
 
-            // Update the images array with the new image
-            const updatedImages = [...images, newImage]
-            onChange(updatedImages)
+                // Update the images array with the new image
+                const updatedImages = [...images, newImage]
+                onChange(updatedImages)
+            }
 
         } catch (error) {
             console.error('Upload failed:', error)
@@ -221,53 +269,72 @@ export default function ImageUploader({ images = [], onChange, maxImages = 4, va
         }
     }, [videoStream])
 
+    const openImagePreview = (image: Image) => {
+        setPreviewImage(image)
+    }
+
     return (
         <div className="space-y-6">
          
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {images.map((image) => (
-                    <div key={image.imgId} className="group relative aspect-square">
-                        <div className="absolute inset-0 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group-hover:shadow-xl">
-                            <img
-                                src={image.url}
-                                alt="Product"
-                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            
-                            <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="flex items-center justify-between">
+                    <div key={image.imgId} className="flex flex-col gap-2">
+                        <div className="group relative aspect-square">
+                            <div 
+                                className="absolute inset-0 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group-hover:shadow-xl cursor-pointer"
+                                onClick={() => openImagePreview(image)}
+                            >
+                                <img
+                                    src={image.url}
+                                    alt="Product"
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="bg-white/90 hover:bg-white text-gray-900 hover:text-red-500"
-                                        onClick={() => {
-                                            const updatedImages = images.filter(img => img.imgId !== image.imgId)
-                                            if (image.thumbnail && updatedImages.length > 0) {
-                                                updatedImages[0].thumbnail = true
-                                            }
-                                            onChange(updatedImages)
-                                        }}
+                                        className="bg-white/90 hover:bg-white text-gray-900 hover:text-red-500 h-8 w-8 p-0 rounded-full"
+                                        onClick={(e) => handleImageAction(image, e)}
                                     >
-                                        <Trash2 className="h-4 w-4" />
+                                        {action === 'delete' ? (
+                                            <Trash2 className="h-4 w-4" />
+                                        ) : (
+                                            <Edit className="h-4 w-4" />
+                                        )}
                                     </Button>
-                                    <RadioGroup
-                                        value={images.find(img => img.thumbnail)?.imgId || ''}
-                                        onValueChange={handleThumbnailChange}
-                                        className="flex items-center space-x-2"
+                                </div>
+                                
+                                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="bg-white/90 hover:bg-white text-gray-900 h-8 w-8 p-0 rounded-full"
                                     >
-                                        <div className="flex items-center space-x-2 bg-white/90 px-3 py-1 rounded-full">
-                                            <RadioGroupItem
-                                                value={image.imgId}
-                                                id={`thumbnail-${image.imgId}`}
-                                                className="h-4 w-4 border-gray-400"
-                                            />
-                                            <Label htmlFor={`thumbnail-${image.imgId}`} className="text-sm text-gray-900">Thumbnail</Label>
-                                        </div>
-                                    </RadioGroup>
+                                        <Expand className="h-4 w-4" />
+                                    </Button>
                                 </div>
                             </div>
                         </div>
+                        {showThumbnailSelector && (
+                            <div className="flex justify-center mt-1">
+                                <RadioGroup
+                                    value={images.find(img => img.thumbnail)?.imgId || ''}
+                                    onValueChange={handleThumbnailChange}
+                                    className="flex items-center"
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem
+                                            value={image.imgId}
+                                            id={`thumbnail-${image.imgId}`}
+                                            className="h-4 w-4 border-gray-400"
+                                        />
+                                        <Label htmlFor={`thumbnail-${image.imgId}`} className="text-sm text-gray-700">Set as thumbnail</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+                        )}
                     </div>
                 ))}
                 
@@ -440,6 +507,33 @@ export default function ImageUploader({ images = [], onChange, maxImages = 4, va
                                 ) : (
                                     'Upload'
                                 )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <Dialog open={previewImage !== null} onOpenChange={(open) => !open && setPreviewImage(null)}>
+                    <DialogContent className="max-w-4xl p-0 overflow-hidden">
+                        <DialogHeader className="p-6">
+                            <DialogTitle className="text-xl font-semibold">Image Preview</DialogTitle>
+                        </DialogHeader>
+                        <div className="relative flex items-center justify-center bg-gray-50 p-4">
+                            <img 
+                                src={previewImage.url} 
+                                alt="Preview" 
+                                className="max-h-[70vh] max-w-full object-contain"
+                            />
+                        </div>
+                        <DialogFooter className="px-6 py-4 border-t bg-gray-50">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setPreviewImage(null)}
+                                className="border-gray-300 hover:bg-gray-100"
+                            >
+                                Close
                             </Button>
                         </DialogFooter>
                     </DialogContent>
