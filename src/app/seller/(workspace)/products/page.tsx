@@ -438,7 +438,7 @@ export default function ProductsListPage() {
                                             <div className="w-10 h-10 bg-gray-100 rounded-md" />
                                         )}
                                         <div className="flex-1 text-left">
-                                            <h3 className="font-medium">{item.name}</h3>
+                                            <h4 className="font-medium">{item.name}</h4>
                                         </div>
                                     </div>
                                 </AccordionTrigger>
