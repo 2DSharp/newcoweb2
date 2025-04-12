@@ -87,7 +87,7 @@ export function Sidebar() {
           <X className="h-5 w-5" />
         </Button>
       </div>
-      <nav className="flex-1 space-y-4 p-6">
+      <nav className="flex-1 space-y-2 p-6">
         {routes.map((route) => (
           <Link
             key={route.href}

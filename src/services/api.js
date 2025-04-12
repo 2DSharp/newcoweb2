@@ -464,6 +464,10 @@ export const apiService = {
             const response = await authenticatedApiClient.get(`/seller/store/`);
             return response.data;
         },
+        getPublicDetails: async (storeId) => {
+            const response = await unauthenticatedApiClient.get(`/public/stores/${storeId}`);
+            return response.data;
+        }
     },
 
     // User profile endpoints

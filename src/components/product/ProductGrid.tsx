@@ -27,9 +27,9 @@ export default function ProductGrid({ products, showAll = false }: ProductGridPr
             </button>
           </div>
           <div className="p-4">
-            <h3 className="font-semibold truncate">{product.name}</h3>
+            <h4 className="font-semibold truncate">{product.name}</h4>
             <div className="flex items-center justify-between mt-2">
-              <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+              <span className="text-lg font-bold">₹{product.price.toFixed(2)}</span>
               <div className="flex items-center">
                 <Star className="w-4 h-4 fill-current text-yellow-400" />
                 <span className="ml-1 text-sm text-gray-600">{product.rating}</span>

@@ -15,10 +15,10 @@ export default function ProductSection({ title, icon, products }: ProductSection
   return (
     <section className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold flex items-center">
+        <h4 className="text-xl font-semibold flex items-center">
           {icon && <span className="mr-2">{icon}</span>}
           {title}
-        </h2>
+        </h4>
         <button className="text-blue-600 hover:text-blue-700 flex items-center">
           View all <ChevronRight className="w-4 h-4 ml-1" />
         </button>
