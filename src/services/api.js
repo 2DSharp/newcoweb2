@@ -11,7 +11,110 @@ const API_CONFIG = {
     },
 };
 
+// Create a function to get authenticated client with explicit context
+const getContextualApiClient = (isSellerContext = false) => {
+  const client = axios.create(API_CONFIG);
+  
+  // Request interceptor with context-based token selection
+  client.interceptors.request.use(
+    (config) => {
+      // Select auth data based on the provided context parameter
+      const authDataKey = isSellerContext ? 'seller_data' : 'buyer_data';
+      const authData = localStorage.getItem(authDataKey);
+      
+      if (authData) {
+        const data = JSON.parse(authData);
+        config.headers.Authorization = `Bearer ${data.accessToken}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+  
+  // Response interceptor with token refresh
+  client.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
 
+      // Check if error is 401 and we haven't tried refreshing yet
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          // Use the context-specific auth data
+          const authDataKey = isSellerContext ? 'seller_data' : 'buyer_data';
+          const authData = localStorage.getItem(authDataKey);
+
+          if (!authData) {
+            throw new Error('No auth data found');
+          }
+
+          const { userId, loginType } = JSON.parse(authData);
+
+          // Get refresh token from HTTP-only cookie via Next.js API
+          const refreshTokenResponse = await fetch('/api/auth/get-refresh-token');
+          const { refreshToken } = await refreshTokenResponse.json();
+
+          if (!refreshToken) {
+            throw new Error('No refresh token found');
+          }
+
+          // Call backend refresh token endpoint
+          const response = await unauthenticatedApiClient.post('/identity/refresh-token', {
+            userId,
+            loginType,
+            token: refreshToken
+          });
+
+          const { accessToken, userId: newUserId, loginType: newLoginType } = response.data.data;
+          const newRefreshToken = response.data.data.refreshToken;
+
+          // Store new refresh token in HTTP-only cookie
+          await fetch('/api/auth/set-refresh-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken: newRefreshToken }),
+          });
+
+          // Update localStorage with new access token and user info
+          localStorage.setItem(authDataKey, JSON.stringify({
+            accessToken,
+            userId: newUserId,
+            loginType: newLoginType
+          }));
+
+          // Update the authorization header
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+          // Retry the original request
+          return client(originalRequest);
+        } catch (refreshError) {
+          // Clear auth data and redirect to login
+          localStorage.removeItem(authDataKey);
+          // Clear refresh token cookie
+          await fetch('/api/auth/set-refresh-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken: null }),
+          });
+          window.location.href = '/';
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+  
+  return client;
+};
 
 // Create Axios instance
 const authenticatedApiClient = axios.create(API_CONFIG);
@@ -463,28 +566,40 @@ export const apiService = {
         },
     },
     accounts: {
-        getAddresses: async () => {
-          const response = await authenticatedApiClient.get('/accounts/addresses/');
+        getAddresses: async (isSellerContext = false) => {
+          // Get the client with the correct context
+          const client = getContextualApiClient(isSellerContext);
+          // Use the endpoint - no need to modify the path as we're using the correct token
+          const response = await client.get('/accounts/addresses/');
           return response.data;
         },
     
-        addAddress: async (addressData) => {
-          const response = await authenticatedApiClient.post('/accounts/addresses', addressData);
+        addAddress: async (addressData, isSellerContext = false) => {
+          // Get the client with the correct context
+          const client = getContextualApiClient(isSellerContext);
+          // Use the endpoint - no need to modify the path as we're using the correct token
+          const response = await client.post('/accounts/addresses', addressData);
           return response.data;
         },
 
-        updateAddress: async (addressId, addressData) => {
-            const response = await authenticatedApiClient.put(`/accounts/addresses/${addressId}`, addressData);
+        updateAddress: async (addressId, addressData, isSellerContext = false) => {
+            // Get the client with the correct context
+            const client = getContextualApiClient(isSellerContext);
+            // Use the endpoint - no need to modify the path as we're using the correct token
+            const response = await client.put(`/accounts/addresses/${addressId}`, addressData);
             return response.data;
-          },
+        },
 
-        getProfile: async () => {
-          const response = await authenticatedApiClient.get('/accounts/profile');
+        getProfile: async (isSellerContext = false) => {
+          // Get the client with the correct context
+          const client = getContextualApiClient(isSellerContext);
+          // Use the endpoint - no need to modify the path as we're using the correct token
+          const response = await client.get('/accounts/profile');
           return response.data;
         },
-      },
+    },
     
-      orders: {
+    orders: {
         create: async (orderData) => {
           const response = await authenticatedApiClient.post('/buy/order', orderData);
           return response.data;
@@ -519,7 +634,7 @@ export const apiService = {
           });
           return response.data;
         },
-      },
+    },
     
     files: {
         upload: async (formData) => {

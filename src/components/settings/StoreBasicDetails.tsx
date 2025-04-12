@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Store, Mail, Globe } from 'lucide-react';
+import { Store, Mail, Globe, Building } from 'lucide-react';
 
 export default function StoreBasicDetails() {
   const [formData, setFormData] = useState({
@@ -68,7 +68,19 @@ export default function StoreBasicDetails() {
             />
           </div>
         </div>
-
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Business Registration Number</label>
+          <div className="relative">
+            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              value={formData.businessRegistration}
+              onChange={(e) => setFormData({ ...formData, businessRegistration: e.target.value })}
+              className="form-input-with-icon"
+              placeholder="Enter business registration number"
+            />
+          </div>
+        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea
