@@ -1,6 +1,6 @@
 export interface Seller {
   name: string;
-  logo: string;
+  image: string;
   description: string;
   rating: number;
   reviews: number;

@@ -48,7 +48,7 @@ export function ImageGallery({ images, variant }: ImageGalleryProps) {
               className={cn(
                 "flex-shrink-0 w-28 aspect-square overflow-hidden rounded-lg cursor-pointer transition-all bg-gray-100",
                 selectedImage?.imgId === image.imgId 
-                  ? "ring-2 ring-black" 
+                  ? "border-2 border-gray-400" 
                   : "hover:opacity-75"
               )}
               onClick={() => setSelectedImage(image)}

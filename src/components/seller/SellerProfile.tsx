@@ -15,7 +15,7 @@ export default function SellerProfile({ seller, isFollowing, onToggleFollow }: S
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center space-x-4">
         <img 
-          src={seller.logo} 
+          src={seller.image} 
           alt={seller.name}
           className="w-20 h-20 rounded-full object-cover"
         />
