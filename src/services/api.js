@@ -313,7 +313,6 @@ export const apiService = {
                     });
     
                     // Store access token in memory or secure storage
-                    localStorage.setItem('access_token', data.data.accessToken);
                 }
     
                 return data;

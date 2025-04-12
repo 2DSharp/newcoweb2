@@ -40,11 +40,6 @@ const routes = [
     href: "/seller/discounts",
   },
   {
-    label: "Store",
-    icon: Store,
-    href: "/seller/store",
-  },
-  {
     label: "Settings",
     icon: Settings,
     href: "/seller/settings",
