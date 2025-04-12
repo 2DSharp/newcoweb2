@@ -21,6 +21,7 @@ import PriceEditOverlay from './PriceEditModal';
 import ActivationModal from './ActivationModal';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageIcon } from "lucide-react"
+import { formatProductUrl } from '@/lib/utils';
 
 // Add this helper component for empty state
 const EmptyState = ({ showDrafts, activeTab }) => (
@@ -275,7 +276,7 @@ export default function ProductsListPage() {
                                     }
                                     </TableCell>
                                     <TableCell>
-                                        <Link href={`/products/${item.id}`} className="hover:text-indigo-600 transition-colors">
+                                        <Link href={formatProductUrl(item.name, item.id)} className="hover:text-indigo-600 transition-colors">
                                             <div className="font-medium max-w-[280px] truncate" title={item.name}>{item.name}</div>
                                             {item.variants?.length > 1 && (
                                                 <div className="text-xs text-gray-500 mt-0.5">

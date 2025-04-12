@@ -1,5 +1,6 @@
 'use client';
 
+import { formatProductUrl } from '@/lib/utils';
 import { Heart, ShoppingCart, Star, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -60,7 +61,7 @@ export default function ProductGrid({ results, loading }: ProductGridProps) {
         const productKey = product?.product_id || `product-${index}`;
         
         // Generate a URL (use fallback if missing)
-        const productUrl = product?.url || `/product/${product?.product_id || index}`;
+        const productUrl = product?.url || formatProductUrl(product?.title, product?.product_id, product?.variant_id);
         
         return (
           <Link
