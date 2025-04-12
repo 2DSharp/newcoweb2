@@ -70,7 +70,7 @@ export default function Page() {
 
   // Map API products to the Product interface expected by components
   const mappedProducts: Product[] = storeData?.recentProducts?.map(apiProduct => ({
-    id: Number(apiProduct.id) || 0,
+    id: apiProduct.id,
     name: apiProduct.name,
     price: apiProduct.numericPrice,
     image: apiProduct.thumbnail,
@@ -87,7 +87,7 @@ export default function Page() {
       
       // Map to the expected Product interface
       productsByCategory[apiProduct.category].push({
-        id: Number(apiProduct.id) || 0,
+        id: apiProduct.id ,
         name: apiProduct.name,
         price: apiProduct.numericPrice,
         image: apiProduct.thumbnail,

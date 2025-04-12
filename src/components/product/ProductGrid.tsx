@@ -3,7 +3,8 @@
 import React from 'react';
 import { Heart, Star } from 'lucide-react';
 import { Product } from '@/types/product';
-
+import Link from 'next/link';
+import { formatProductUrl } from '@/lib/utils';
 interface ProductGridProps {
   products: Product[];
   showAll?: boolean;
@@ -17,15 +18,18 @@ export default function ProductGrid({ products, showAll = false }: ProductGridPr
       {displayProducts.map(product => (
         <div key={product.id} className="bg-white rounded-xl shadow-sm overflow-hidden group">
           <div className="relative h-48">
+          <Link href={formatProductUrl(product.name, product.id)}>
             <img 
               src={product.image} 
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
+            </Link>
             <button className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-100">
               <Heart className="w-4 h-4" />
             </button>
           </div>
+          <Link href={formatProductUrl(product.name, product.id)}>
           <div className="p-4">
             <h4 className="font-semibold truncate">{product.name}</h4>
             <div className="flex items-center justify-between mt-2">
@@ -36,6 +40,7 @@ export default function ProductGrid({ products, showAll = false }: ProductGridPr
               </div>
             </div>
           </div>
+          </Link>
         </div>
       ))}
     </div>
