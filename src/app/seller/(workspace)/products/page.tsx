@@ -20,6 +20,7 @@ import { ProductManagementOverlay } from '@/components/product-management/Produc
 import PriceEditOverlay from './PriceEditModal';
 import ActivationModal from './ActivationModal';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImageIcon } from "lucide-react"
 
 // Add this helper component for empty state
 const EmptyState = ({ showDrafts, activeTab }) => (
@@ -190,43 +191,43 @@ export default function ProductsListPage() {
             {(showDrafts ? drafts : products).length === 0 ? (
                 <EmptyState showDrafts={showDrafts} activeTab={activeTab} />
             ) : (
-                <Table>
+                <Table className="border-collapse">
                     <TableHeader>
-                        <TableRow className="border-b border-gray-200 bg-gray-50/50">
-                            <TableHead className="text-gray-600">Image</TableHead>
-                            <TableHead className="text-gray-600">Name</TableHead>
-                            <TableHead className="text-gray-600">Status</TableHead>
-                            <TableHead className="text-gray-600">
-                                <div className="flex items-center gap-2">
+                        <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold py-4"></TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Name</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Status</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                                <div className="flex items-center gap-1.5">
                                     Price
-                                    <IndianRupee className="h-4 w-4" />
+                                    <IndianRupee className="h-3.5 w-3.5" />
                                 </div>
                             </TableHead>
-                            <TableHead className="text-gray-600">
-                                <div className="flex items-center gap-2">
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                                <div className="flex items-center gap-1.5">
                                     Discount
-                                    <TicketPercent className="h-4 w-4 text-green-600" />
+                                    <TicketPercent className="h-3.5 w-3.5 text-green-600" />
                                 </div>
                             </TableHead>
-                            <TableHead className="text-gray-600">
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
                                 <div className="flex items-center">
                                     <span>Inventory</span>
                                     <TooltipProvider delayDuration={0}>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <button 
-                                                    className="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                    className="ml-1.5 p-1 rounded-full hover:bg-gray-200 focus:outline-none"
                                                     onClick={(e) => {
                                                         e.preventDefault()
                                                         e.stopPropagation()
                                                     }}
                                                 >
-                                                    <Info className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                                                    <Info className="h-3.5 w-3.5 text-gray-400 hover:text-gray-600" />
                                                 </button>
                                             </TooltipTrigger>
                                             <TooltipContent 
                                                 side="top" 
-                                                className="p-3 max-w-xs"
+                                                className="p-3 max-w-xs bg-white shadow-lg border border-gray-100"
                                             >
                                                 <div className="space-y-2">
                                                     <p className="font-medium">Stock Calculation</p>
@@ -243,9 +244,9 @@ export default function ProductsListPage() {
                                     </TooltipProvider>
                                 </div>
                             </TableHead>
-                            <TableHead className="text-gray-600">Category</TableHead>
-                            <TableHead className="text-gray-600">Date Created</TableHead>
-                            <TableHead className="text-gray-600">Actions</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Category</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Date Created</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-gray-500 font-semibold"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -258,31 +259,37 @@ export default function ProductsListPage() {
                                     key={item.id}
                                     className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
                                 >
-                                    <TableCell>{item.thumbnail ?
-                                        <Image
-                                            src={item.thumbnail}
-                                            alt={item.name}
-                                            width={50}
-                                            height={50}
-                                            className="rounded-md"
-                                        />
-                                        : <div className="w-10 h-10 bg-gray-100 rounded-md"></div>
+                                    <TableCell className="py-3 px-4 w-[70px]">{item.thumbnail ?
+                                        <div className="w-12 h-12 relative rounded-lg shadow-sm overflow-hidden">
+                                            <Image
+                                                src={item.thumbnail}
+                                                alt={item.name}
+                                                fill
+                                                sizes="3rem"
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                        : <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                            <ImageIcon className="h-5 w-5 text-gray-400" />
+                                        </div>
                                     }
                                     </TableCell>
                                     <TableCell>
-                                        <Link href={`/products/${item.id}`}>
-                                        <span className=" font-medium">{item.name}</span>
-                                        {item.variants?.length > 1 && (
-                                            <div className="text-sm text-gray-500">
-                                                + {item.variants.length - 1} variants
-                                            </div>
-                                        )}
+                                        <Link href={`/products/${item.id}`} className="hover:text-indigo-600 transition-colors">
+                                            <div className="font-medium max-w-[280px] truncate" title={item.name}>{item.name}</div>
+                                            {item.variants?.length > 1 && (
+                                                <div className="text-xs text-gray-500 mt-0.5">
+                                                    + {item.variants.length - 1} variants
+                                                </div>
+                                            )}
                                         </Link>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-1">
-                                            <span className={`px-2 py-1 rounded-full text-sm ${
-                                                item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                item.active 
+                                                    ? 'bg-green-50 text-green-700 border border-green-200' 
+                                                    : 'bg-gray-50 text-gray-600 border border-gray-200'
                                             }`}>
                                                 {item.active ? 'Active' : 'Inactive'}
                                             </span>
@@ -291,44 +298,46 @@ export default function ProductsListPage() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setEditActivation(item)}
-                                                    className="h-7 w-7 p-0"
+                                                    className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
                                                 >
-                                                    <Edit2 className="h-4 w-4" />
+                                                    <Edit2 className="h-3.5 w-3.5 text-gray-500" />
                                                 </Button>
                                             )}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1.5">
                                             {(baseVariant?.activePricing) ? (
-                                                <div>
-                                                    <div className="font-medium">₹{baseVariant.activePricing.price.toFixed(2)}</div>
-                                                   
-                                                </div>
-                                            ) : 'Not set'}
+                                                <div className="font-medium">₹{baseVariant.activePricing.price.toFixed(2)}</div>
+                                            ) : <span className="text-gray-500 text-sm">Not set</span>}
                                             {!showDrafts && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setEditPrice(item)}
-                                                    className="h-7 w-7 p-0"
+                                                    className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
                                                 >
-                                                    <Edit2 className="h-4 w-4" />
+                                                    <Edit2 className="h-3.5 w-3.5 text-gray-500" />
                                                 </Button>
                                             )}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="text-sm text-green-600">
-                                            {baseVariant?.activePricing?.discount && baseVariant.activePricing.discount.active ? 
-                                                baseVariant.activePricing.discount.name 
-                                            : 'None'
-                                            }
-                                        </div>
+                                        {baseVariant?.activePricing?.discount && baseVariant.activePricing.discount.active ? 
+                                            <span className="text-sm font-medium text-green-600">
+                                                {baseVariant.activePricing.discount.name}
+                                            </span>
+                                        : <span className="text-sm text-gray-500">None</span>
+                                        }
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-1">
-                                            <span className={`px-2 py-1 rounded ${stockInfo.className}`}>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                                                stockInfo.className === 'bg-red-100' ? 'bg-red-50 text-red-700 border border-red-200' :
+                                                stockInfo.className === 'bg-orange-100' ? 'bg-orange-50 text-orange-700 border border-orange-200' :
+                                                stockInfo.className === 'bg-green-100' ? 'bg-green-50 text-green-700 border border-green-200' :
+                                                'bg-gray-50 text-gray-600 border border-gray-200'
+                                            }`}>
                                                 {stockInfo.text}
                                             </span>
                                             {!showDrafts && hasFixedVariants(item.variants) && (
@@ -336,41 +345,48 @@ export default function ProductsListPage() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setEditStock(item)}
-                                                    className="h-7 w-7 p-0"
+                                                    className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
                                                 >
-                                                    <Edit2 className="h-4 w-4" />
+                                                    <Edit2 className="h-3.5 w-3.5 text-gray-500" />
                                                 </Button>
                                             )}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <b className="font-medium">
-                                        {item.category} &gt; {item.subCategory}
-                                        {item.finalCategory && ` > ${item.finalCategory}`}
-                                        </b>
+                                        <div className="text-sm max-w-[300px] truncate" title={`${item.category} › ${item.subCategory}${item.finalCategory ? ` › ${item.finalCategory}` : ''}`}>
+                                            <span className="text-gray-900">{item.category}</span>
+                                            <span className="text-gray-500"> › {item.subCategory}</span>
+                                            {item.finalCategory && <span className="text-gray-500"> › {item.finalCategory}</span>}
+                                        </div>
                                     </TableCell>
                                     <TableCell>
-                                        {item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : item.lastUpdatedAt ? format(new Date(item.lastUpdatedAt), 'MMM d, yyyy') : ''}
+                                        <div className="text-sm text-gray-600">
+                                            {item.createdAt 
+                                                ? format(new Date(item.createdAt), 'MMM d, yyyy') 
+                                                : item.lastUpdatedAt 
+                                                    ? format(new Date(item.lastUpdatedAt), 'MMM d, yyyy') 
+                                                    : ''}
+                                        </div>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            
+                                    <TableCell className="text-right pr-6">
+                                        <div className="flex items-center justify-end gap-1">
                                             {showDrafts ? (
                                               <>
                                                  <Button
-                                                 size="sm"
-                                                 variant="ghost"
-                                                 onClick={() => {
-                                                  router.push(`/seller/products/new/${item.id}/1`)
-                                                 }}
-                                             >
-                                                 <Pencil className="h-4 w-4" />
-                                             </Button>
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        router.push(`/seller/products/new/${item.id}/1`)
+                                                    }}
+                                                    className="h-8 w-8 p-0 rounded-full hover:bg-indigo-50"
+                                                >
+                                                    <Pencil className="h-4 w-4 text-indigo-600" />
+                                                </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleDeleteClick(item)}
-                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    className="h-8 w-8 p-0 rounded-full hover:bg-red-50 text-red-600"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -378,7 +394,7 @@ export default function ProductsListPage() {
                                             ):
                                             <Button
                                                 size="sm"
-                                                className="bg-gray-100 text-black hover:bg-black hover:text-white"
+                                                className="bg-gray-900 text-white hover:bg-black rounded-md font-medium shadow-sm"
                                                 onClick={() => handleManageClick(item.id)}
                                             >
                                                 Manage
