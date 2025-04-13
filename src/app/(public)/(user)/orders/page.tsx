@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
+import { Loader2 } from 'lucide-react';
 import apiService from '@/services/api';
 
 interface Order {
@@ -18,7 +19,7 @@ interface Order {
   }[];
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +140,16 @@ export default function OrdersPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>}>
+      <OrdersPageContent />
+    </Suspense>
   );
 }
 

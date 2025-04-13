@@ -290,21 +290,12 @@ export default function ProductCreationWizard() {
         setCurrentLoadingMessage(0)
         try {
             // Call AI metadata generation endpoint
-            const response = await fetch('http://localhost:5000/ai/generate-metadata', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    image_ids: uploadedImages.map(img => img.imgId)
-                })
-            })
+            // Call AI metadata generation using the API service
+            const response = await apiService.ai.generateMetadata(
+                uploadedImages.map(img => img.imgId)
+            )
             
-            if (!response.ok) {
-                throw new Error('Failed to generate metadata')
-            }
-            
-            const data = await response.json()
+            const data = response
             setLoadingProgress(100)
             
             // Create draft with generated metadata and preserve image order
