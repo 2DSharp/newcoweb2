@@ -639,8 +639,8 @@ export function Navbar() {
                           <Image
                             src="/faveron.svg"
                             alt="Logo"
-                            width={100}
-                            height={50}
+                            width={140}
+                            height={70}
                             className="mx-auto"
                           />
                         </Link>
@@ -658,8 +658,8 @@ export function Navbar() {
                                   setShowCategorySidebar(true);
                                 }}
                               >
-                                {item.icon}
                                 {item.name}
+                                <ChevronRight className="ml-auto h-4 w-4" />
                               </button>
                             ) : (
                               <Link
@@ -896,12 +896,20 @@ export function Navbar() {
                       </SheetTrigger>
                       <SheetContent side="left" className="w-[350px] p-0">
                         <div className="flex flex-col h-full">
-                          <div className="p-4 border-b flex justify-between items-center">
-                            <h2 className="font-medium text-lg">All Categories</h2>
+                          <div className="p-4 border-b flex items-center">
+                            <button 
+                              onClick={() => setShowCategorySidebar(false)} 
+                              className="flex items-center text-gray-700 mr-auto"
+                            >
+                              <ChevronRight className="h-4 w-4 rotate-180 mr-2" />
+                              <span>Back</span>
+                            </button>
+                            <h2 className="font-medium text-lg absolute left-1/2 -translate-x-1/2">All Categories</h2>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => setShowCategorySidebar(false)}
+                              className="ml-auto"
                             >
                               <X className="h-4 w-4" />
                             </Button>
