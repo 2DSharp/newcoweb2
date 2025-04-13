@@ -611,7 +611,7 @@ export function Navbar() {
               `}
               onClick={() => setShowCategorySidebar(false)}
             >
-              <span className="text-sm font-medium text-gray-600">
+              <span className="text-sm transition-colors">
                 All {category.name}
               </span>
             </Link>
