@@ -152,16 +152,7 @@ export default function ImageUploader({
             const formData = new FormData()
             formData.append('file', blob, currentFile.name)
 
-            const response = await fetch('http://localhost:5000/files/upload', {
-                method: 'POST',
-                body: formData,
-            })
-
-            if (!response.ok) {
-                throw new Error('Failed to upload image. Please try again.')
-            }
-
-            const data: ImageResponse = await response.json()
+            const data = await apiService.files.upload(formData)
 
             // If we're replacing an image, use the same thumbnail status and remove the old one
             if (imageToReplace) {

@@ -671,6 +671,16 @@ export const apiService = {
         },
     },
 
+    // AI endpoints
+    ai: {
+        generateMetadata: async (imageIds) => {
+            const response = await authenticatedFileUploadClient.post('/ai/generate-metadata', {
+                image_ids: imageIds
+            });
+            return response.data;
+        }
+    },
+
     // Cart endpoints
     cart: {
         addItem: async (itemData) => {

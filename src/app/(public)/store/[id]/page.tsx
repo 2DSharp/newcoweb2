@@ -10,6 +10,7 @@ import ProductSection from '@/components/product/ProductSection';
 import { mockData } from '@/data/mockData';
 import { useParams } from 'next/navigation';
 import { Product } from '@/types/product';
+import apiService from '@/services/api';
 
 // Define API response types
 interface ApiProduct {
@@ -41,11 +42,10 @@ export default function Page() {
     const fetchStoreData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8080/public/stores/${storeId}`);
-        const data = await response.json();
+        const response = await apiService.store.getPublicDetails(storeId);
         
-        if (data.successful) {
-          setStoreData(data.data);
+        if (response.successful) {
+          setStoreData(response.data);
         }
       } catch (error) {
         console.error('Error fetching store data:', error);
@@ -61,12 +61,26 @@ export default function Page() {
 
   // Use mock data for stories, lists, and categories while showing real store data
   const sellerData = storeData ? {
-    ...mockData.seller,
-    id: storeData.id,
     name: storeData.name,
     description: storeData.description,
     image: storeData.image,
-  } : mockData.seller;
+    rating: mockData.seller.rating,
+    reviews: mockData.seller.reviews,
+    followers: mockData.seller.followers,
+    categories: mockData.seller.categories,
+    stories: mockData.seller.stories,
+    lists: mockData.seller.lists
+  } : {
+    name: mockData.seller.name,
+    description: mockData.seller.description,
+    image: mockData.seller.logo,
+    rating: mockData.seller.rating,
+    reviews: mockData.seller.reviews,
+    followers: mockData.seller.followers,
+    categories: mockData.seller.categories,
+    stories: mockData.seller.stories,
+    lists: mockData.seller.lists
+  };
 
   // Map API products to the Product interface expected by components
   const mappedProducts: Product[] = storeData?.recentProducts?.map(apiProduct => ({
