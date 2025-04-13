@@ -27,12 +27,19 @@ function AccountPage() {
       try {
         // Just set basic user data from local storage
         const parsedData = JSON.parse(authData);
-        setUserData({ 
-          userId: parsedData.userId,
-          // Add placeholder data
-          name: "User",
-          email: "user@example.com"
-        });
+        // Get user profile from API
+        const response = await apiService.accounts.getProfile();
+        if (response.successful) {
+          setUserData({ 
+            userId: parsedData.userId,
+            name: response.data.firstName + ' ' + response.data.lastName
+          });
+        } else {
+          setUserData({ 
+            userId: parsedData.userId,
+            name: "User"
+          });
+        }
       } catch (error) {
         console.error('Error checking auth:', error);
       } finally {
@@ -123,7 +130,6 @@ function AccountPage() {
                 </Avatar>
                 <div className="text-center">
                   <h3 className="font-semibold">{userData.name}</h3>
-                  <p className="text-sm text-gray-500">{userData.email}</p>
                 </div>
               </div>
             </CardContent>
