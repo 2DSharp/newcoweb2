@@ -13,6 +13,9 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: 'Seller Onboarding',
   description: 'Join thousands of successful sellers on our platform',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
