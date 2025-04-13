@@ -601,6 +601,20 @@ export function Navbar() {
           <div
             className={`category-children overflow-hidden transition-all duration-200 ease-in-out ${isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}
           >
+            {/* Add "All {Category}" as first item */}
+            <Link
+              href={`/c/${category.path}?category2=${encodeURIComponent(category.name)}`}
+              className={`
+                flex items-center py-3 px-4 
+                hover:bg-gray-50 cursor-pointer 
+                pl-${(level + 1) * 4 + 4}px
+              `}
+              onClick={() => setShowCategorySidebar(false)}
+            >
+              <span className="text-sm font-medium text-gray-600">
+                All {category.name}
+              </span>
+            </Link>
             {category.children.map(child => renderCategoryItem(child, level + 1))}
           </div>
         )}

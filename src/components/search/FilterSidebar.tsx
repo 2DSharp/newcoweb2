@@ -48,6 +48,11 @@ export default function FilterSidebar({
   const [expanded, setExpanded] = useState<string[]>([]);
   const searchParams = useSearchParams();
   
+  // Debug log - Check received filters
+  useEffect(() => {
+    console.log('FilterSidebar received filters:', JSON.stringify(filters));
+  }, [filters]);
+  
   // Default price range values
   const DEFAULT_MIN_PRICE = 0;
   const DEFAULT_MAX_PRICE = 10000;
@@ -56,6 +61,7 @@ export default function FilterSidebar({
   useEffect(() => {
     // Initialize expanded sections with all filter keys
     if (Object.keys(filters).length > 0 && expanded.length === 0) {
+      console.log('Expanding filter sections:', Object.keys(filters));
       setExpanded(Object.keys(filters));
     }
   }, [filters, expanded.length]);
@@ -115,10 +121,17 @@ export default function FilterSidebar({
 
   // Sort filters by order field (if present)
   const sortedFilterEntries = Object.entries(filters).sort((a, b) => {
-    const orderA = a[1].order !== undefined ? a[1].order : Number.MAX_SAFE_INTEGER;
-    const orderB = b[1].order !== undefined ? b[1].order : Number.MAX_SAFE_INTEGER;
+    const orderA = a[1]?.order !== undefined ? a[1].order : Number.MAX_SAFE_INTEGER;
+    const orderB = b[1]?.order !== undefined ? b[1].order : Number.MAX_SAFE_INTEGER;
     return orderA - orderB;
   });
+
+  // Debug log - Check sorted filters
+  useEffect(() => {
+    if (sortedFilterEntries.length > 0) {
+      console.log('Sorted filter entries:', sortedFilterEntries.map(([key]) => key).join(', '));
+    }
+  }, [sortedFilterEntries]);
 
   // Find the min and max prices for the price filter if available
   const priceFilter = filters.price;
@@ -193,15 +206,23 @@ export default function FilterSidebar({
       </div>
 
       {/* Dynamic filters from API response */}
-      {sortedFilterEntries.map(([key, section]) => (
+      {sortedFilterEntries.map(([key, section]) => {
+        // Skip rendering if section is undefined or not properly formed
+        if (!section || key === undefined) return null;
+        
         // Skip price filter as we're using the price slider for it
-        key !== 'price' && (
+        if (key.toLowerCase() === 'price') return null;
+        
+        // Skip sections with no options
+        if (!section.options || section.options.length === 0) return null;
+        
+        return (
           <div key={key} className="border-b pb-6">
             <button
               className="flex items-center justify-between w-full text-left"
               onClick={() => toggleSection(key)}
             >
-              <h3 className="text-sm font-semibold text-gray-900">{section.name}</h3>
+              <h3 className="text-sm font-semibold text-gray-900">{section.name || key}</h3>
               <ChevronDown
                 className={`w-5 h-5 text-gray-500 transition-transform ${
                   expanded.includes(key) ? 'transform rotate-180' : ''
@@ -220,18 +241,17 @@ export default function FilterSidebar({
                     />
                     <span className="ml-3 text-sm text-gray-600">
                       {option.label}
-                      <span className="ml-1 text-gray-400">({option.count})</span>
+                      {option.count > 0 && (
+                        <span className="ml-1 text-gray-400">({option.count})</span>
+                      )}
                     </span>
                   </label>
                 ))}
-                {section.options.length === 0 && (
-                  <p className="text-sm text-gray-500">No options available</p>
-                )}
               </div>
             )}
           </div>
-        )
-      ))}
+        );
+      })}
       
       {Object.keys(filters).length === 0 && (
         <div className="text-sm text-gray-500 py-4">

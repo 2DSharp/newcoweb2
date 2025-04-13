@@ -262,12 +262,16 @@ export const apiService = {
             try {
                 // If searchParams is an object with multiple parameters
                 let url = '/search/';
-                let queryString = '';
                 
                 if (typeof searchParams === 'object' && searchParams !== null && !(searchParams instanceof String)) {
-                    queryString = Object.entries(searchParams)
-                        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-                        .join('&');
+                    const queryParams = new URLSearchParams();
+                    
+                    // Properly encode each parameter
+                    Object.entries(searchParams).forEach(([key, value]) => {
+                        queryParams.append(encodeURIComponent(key), encodeURIComponent(value));
+                    });
+                    
+                    const queryString = queryParams.toString();
                     url = `/search/?${queryString}`;
                 } else {
                     // Backward compatibility for simple string queries
@@ -307,8 +311,24 @@ export const apiService = {
             }
         },
         getSuggestions: async (searchTerm) => {
-            const response = await unauthenticatedSearchClient.get(`/search/suggest?q=${encodeURIComponent(searchTerm)}`);
+            const encodedTerm = encodeURIComponent(searchTerm);
+            const response = await unauthenticatedSearchClient.get(`/search/suggest?q=${encodedTerm}`);
             return response.data;
+        },
+        getFilters: async (parentCategory) => {
+            try {
+                const encodedCategory = encodeURIComponent(parentCategory);
+                const url = `/search/filter?parentCategory=${encodedCategory}`;
+                console.log('Sending filter request to URL:', url);
+                
+                const response = await unauthenticatedSearchClient.get(url);
+                return response.data;
+            } catch (error) {
+                console.error('Error fetching filters:', error);
+                return {
+                    filters: []
+                };
+            }
         },
     },
     // Auth endpoints
