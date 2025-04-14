@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
-import { X, ImageIcon, Plus, Loader2, Trash2, Camera, Upload, Expand, Edit } from 'lucide-react'
+import { X, ImageIcon, Plus, Loader2, Trash2, Camera, Upload, Expand, Edit, Check, RotateCw, SwitchCamera } from 'lucide-react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Cropper from 'react-easy-crop'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -64,6 +64,7 @@ export default function ImageUploader({
     const [error, setError] = useState<string | null>(null)
     const [previewImage, setPreviewImage] = useState<Image | null>(null)
     const [imageToReplace, setImageToReplace] = useState<string | null>(null)
+    const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
 
     const fileInputId = `file-upload-${variationIndex}`
 
@@ -210,13 +211,36 @@ export default function ImageUploader({
 
     const handleCameraCapture = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: facingMode 
+                } 
+            })
             setVideoStream(stream)
             setIsCameraSource(true)
             setIsOpen(true)
         } catch (error) {
             console.error('Error accessing camera:', error)
         }
+    }
+
+    const toggleCameraFacing = async () => {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop())
+            setVideoStream(null)
+            setVideoRef(null)
+        }
+        setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')
+        await handleCameraCapture()
+    }
+
+    const retakePhoto = async () => {
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl)
+            setPreviewUrl(null)
+            setCurrentFile(null)
+        }
+        await handleCameraCapture()
     }
 
     const capturePhoto = () => {
@@ -428,7 +452,13 @@ export default function ImageUploader({
                                         autoPlay
                                         playsInline
                                     />
-                                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+                                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-4">
+                                        <Button
+                                            className="h-12 w-12 rounded-full bg-white/90 hover:bg-white text-black shadow-lg"
+                                            onClick={toggleCameraFacing}
+                                        >
+                                            <SwitchCamera className="h-6 w-6" />
+                                        </Button>
                                         <Button
                                             className="h-12 w-12 rounded-full bg-white/90 hover:bg-white text-black shadow-lg"
                                             onClick={capturePhoto}
@@ -471,7 +501,7 @@ export default function ImageUploader({
                                 />
                             </div>
                         )}
-                        <DialogFooter className="px-6 py-4 border-t bg-gray-50">
+                        <DialogFooter className="px-6 py-4 border-t bg-gray-50 flex justify-between">
                             <Button 
                                 variant="outline" 
                                 onClick={() => {
@@ -480,25 +510,44 @@ export default function ImageUploader({
                                         setVideoStream(null)
                                         setVideoRef(null)
                                     }
+                                    if (previewUrl) {
+                                        URL.revokeObjectURL(previewUrl)
+                                        setPreviewUrl(null)
+                                    }
                                     setIsOpen(false)
                                 }}
                                 className="border-gray-300 hover:bg-gray-100"
                             >
+                                <X className="h-4 w-4 mr-2" />
                                 Cancel
                             </Button>
-                            <Button 
-                                onClick={isCameraSource ? capturePhoto : handleCropSubmit}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                            >
-                                {isCameraSource ? (
-                                    <>
+                            {isCameraSource ? (
+                                <Button 
+                                    onClick={capturePhoto}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                >
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    Capture
+                                </Button>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <Button 
+                                        onClick={retakePhoto}
+                                        variant="outline"
+                                        className="border-gray-300 hover:bg-gray-100"
+                                    >
                                         <Camera className="mr-2 h-4 w-4" />
-                                        Capture
-                                    </>
-                                ) : (
-                                    'Upload'
-                                )}
-                            </Button>
+                                        Retake
+                                    </Button>
+                                    <Button 
+                                        onClick={handleCropSubmit}
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    >
+                                        <Check className="mr-2 h-4 w-4" />
+                                        Accept
+                                    </Button>
+                                </div>
+                            )}
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
