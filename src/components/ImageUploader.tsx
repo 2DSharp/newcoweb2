@@ -433,11 +433,11 @@ export default function ImageUploader({
                     }
                     setIsOpen(open)
                 }}>
-                    <DialogContent className="max-w-3xl p-0 overflow-hidden">
-                        <DialogHeader className="px-6 pt-6">
+                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0">
+                        <DialogHeader className="px-6 pt-6 sticky top-0 bg-white z-10">
                             <DialogTitle className="text-xl font-semibold">{isCameraSource ? 'Take Photo' : 'Crop Image'}</DialogTitle>
                         </DialogHeader>
-                        <div className="relative h-[500px] bg-gray-50">
+                        <div className="relative h-[400px] bg-gray-50 mt-4">
                             {isCameraSource && videoStream ? (
                                 <div className="relative h-full">
                                     <video
@@ -477,7 +477,7 @@ export default function ImageUploader({
                                     onZoomChange={setZoom}
                                     onCropComplete={onCropComplete}
                                     classes={{
-                                        containerClassName: "relative h-[500px]",
+                                        containerClassName: "relative h-[400px]",
                                         mediaClassName: "max-h-full"
                                     }}
                                     showGrid={!isCameraSource}
@@ -486,7 +486,7 @@ export default function ImageUploader({
                             ) : null}
                         </div>
                         {!isCameraSource && (
-                            <div className="px-6 py-2 border-t">
+                            <div className="px-6 py-1 border-t">
                                 <div className="flex items-center justify-between mb-1">
                                     <Label className="text-sm font-medium">Zoom</Label>
                                     <span className="text-sm text-gray-500">{Math.round(zoom * 100)}%</span>
@@ -501,7 +501,7 @@ export default function ImageUploader({
                                 />
                             </div>
                         )}
-                        <DialogFooter className="px-6 py-4 border-t bg-gray-50">
+                        <DialogFooter className="px-6 py-4 border-t bg-gray-50 sticky bottom-0 bg-white z-10">
                             <div className="flex items-center justify-center gap-2">
                                 <Button 
                                     variant="outline" 
