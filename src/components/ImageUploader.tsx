@@ -486,8 +486,8 @@ export default function ImageUploader({
                             ) : null}
                         </div>
                         {!isCameraSource && (
-                            <div className="px-6 py-4 border-t">
-                                <div className="flex items-center justify-between mb-2">
+                            <div className="px-6 py-2 border-t">
+                                <div className="flex items-center justify-between mb-1">
                                     <Label className="text-sm font-medium">Zoom</Label>
                                     <span className="text-sm text-gray-500">{Math.round(zoom * 100)}%</span>
                                 </div>
@@ -497,57 +497,59 @@ export default function ImageUploader({
                                     max={3}
                                     step={0.1}
                                     onValueChange={([value]) => setZoom(value)}
-                                    className="w-full"
+                                    className="w-full [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:bg-white [&_[role=slider]]:border-2 [&_[role=slider]]:border-indigo-600 [&_[role=slider]]:shadow-lg [&_[role=slider]]:hover:scale-110 [&_[role=slider]]:transition-transform [&_[role=track]]:h-1"
                                 />
                             </div>
                         )}
-                        <DialogFooter className="px-6 py-4 border-t bg-gray-50 flex justify-between">
-                            <Button 
-                                variant="outline" 
-                                onClick={() => {
-                                    if (videoStream) {
-                                        videoStream.getTracks().forEach(track => track.stop())
-                                        setVideoStream(null)
-                                        setVideoRef(null)
-                                    }
-                                    if (previewUrl) {
-                                        URL.revokeObjectURL(previewUrl)
-                                        setPreviewUrl(null)
-                                    }
-                                    setIsOpen(false)
-                                }}
-                                className="border-gray-300 hover:bg-gray-100"
-                            >
-                                <X className="h-4 w-4 mr-2" />
-                                Cancel
-                            </Button>
-                            {isCameraSource ? (
+                        <DialogFooter className="px-6 py-4 border-t bg-gray-50">
+                            <div className="flex items-center justify-center gap-2">
                                 <Button 
-                                    onClick={capturePhoto}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    variant="outline" 
+                                    onClick={() => {
+                                        if (videoStream) {
+                                            videoStream.getTracks().forEach(track => track.stop())
+                                            setVideoStream(null)
+                                            setVideoRef(null)
+                                        }
+                                        if (previewUrl) {
+                                            URL.revokeObjectURL(previewUrl)
+                                            setPreviewUrl(null)
+                                        }
+                                        setIsOpen(false)
+                                    }}
+                                    className="border-gray-300 hover:bg-gray-100 h-9 px-2"
                                 >
-                                    <Camera className="mr-2 h-4 w-4" />
-                                    Capture
+                                    <X className="h-4 w-4 mr-1" />
+                                    Cancel
                                 </Button>
-                            ) : (
-                                <div className="flex gap-2">
+                                {isCameraSource ? (
                                     <Button 
-                                        onClick={retakePhoto}
-                                        variant="outline"
-                                        className="border-gray-300 hover:bg-gray-100"
+                                        onClick={capturePhoto}
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white h-9 px-2"
                                     >
-                                        <Camera className="mr-2 h-4 w-4" />
-                                        Retake
+                                        <Camera className="mr-1 h-4 w-4" />
+                                        Capture
                                     </Button>
-                                    <Button 
-                                        onClick={handleCropSubmit}
-                                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                                    >
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Accept
-                                    </Button>
-                                </div>
-                            )}
+                                ) : (
+                                    <>
+                                        <Button 
+                                            onClick={retakePhoto}
+                                            variant="outline"
+                                            className="border-gray-300 hover:bg-gray-100 h-9 px-2"
+                                        >
+                                            <Camera className="mr-1 h-4 w-4" />
+                                            Retake
+                                        </Button>
+                                        <Button 
+                                            onClick={handleCropSubmit}
+                                            className="bg-indigo-600 hover:bg-indigo-700 text-white h-9 px-2"
+                                        >
+                                            <Check className="mr-1 h-4 w-4" />
+                                            Accept
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
