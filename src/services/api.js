@@ -4,7 +4,7 @@ import {AuthService} from "@/services/authService";
 
 // API Configuration
 const API_CONFIG = {
-    baseURL: 'http://localhost:8080',
+    baseURL: process.env.BASE_API_BASEURL,
     timeout: parseInt(process.env.VITE_API_TIMEOUT || '60000'),
     headers: {
         'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ const getContextualApiClient = (isSellerContext = false) => {
 const authenticatedApiClient = axios.create(API_CONFIG);
 
 export const authenticatedFileUploadClient = axios.create({
-    baseURL: "http://localhost:5000"
+    baseURL: process.env.ADV_API_BASEURL
 });
 
 export const unauthenticatedApiClient = axios.create({
@@ -128,7 +128,7 @@ export const unauthenticatedApiClient = axios.create({
 });
 
 export const unauthenticatedSearchClient = axios.create({
-    baseURL: "http://localhost:5000"
+    baseURL: process.env.ADV_API_BASEURL
 });
 
 // Request Interceptor
