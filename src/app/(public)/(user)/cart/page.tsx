@@ -259,7 +259,7 @@ function CartPage() {
         return (
             <div className="container mx-auto px-4 py-8">
                 <div className="text-center space-y-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Your cart is empty</h2>
+                    <h3 className="text-xl font-semibold text-gray-900">Your cart is empty</h3>
                     <p className="text-gray-500">Looks like you haven't added any items to your cart yet.</p>
                     <div className="pt-4">
                         <Link href="/">
@@ -340,7 +340,7 @@ function CartPage() {
         </div>
         <div>
           <div className="bg-gray-100 p-6 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+            <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
             <div className="flex justify-between mb-2">
               <span>Subtotal</span>
               <span>₹{cartItems.reduce((sum, item) => sum + (parseCurrency(item.pricing.finalPrice) * item.quantity), 0).toFixed(2)}</span>

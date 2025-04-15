@@ -20,7 +20,7 @@ export default function StoreBankDetails() {
   return (
     <div className="bg-white rounded-xl shadow-sm">
       <div className="p-6 border-b border-gray-100">
-        <h2 className="text-xl font-semibold text-gray-900">Bank Account Details</h2>
+        <h3 className="text-xl font-semibold text-gray-900">Bank Account Details</h3>
         <p className="mt-1 text-sm text-gray-500">
           Update your payment information for receiving payouts
         </p>

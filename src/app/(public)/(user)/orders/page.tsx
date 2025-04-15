@@ -97,7 +97,7 @@ function OrdersPageContent() {
               className="rounded-lg"
             />
           </div>
-          <h2 className="text-xl font-medium text-gray-800 mb-2">No orders yet</h2>
+          <h3 className="text-xl font-medium text-gray-800 mb-2">No orders yet</h3>
           <p className="text-gray-600 mb-6">Looks like you haven't placed any orders yet.</p>
           <Button asChild className="px-8">
             <Link href="/">Start Shopping</Link>
@@ -115,7 +115,7 @@ function OrdersPageContent() {
           <div key={order.orderId} className="bg-white p-4 rounded-lg shadow">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <h2 className="text-base font-semibold">Order #{order.orderId}</h2>
+                <h4 className="text-base font-semibold">Order #{order.orderId}</h4>
                 <p className="text-sm text-gray-600">Placed on {formatDate(order.orderDate)}</p>
                 <div className="mt-1 space-y-1">
                   {order.subOrderList.map((subOrder) => (

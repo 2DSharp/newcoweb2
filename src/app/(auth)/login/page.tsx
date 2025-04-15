@@ -30,6 +30,15 @@ function LoginPage() {
 
   const redirectUrl = searchParams.get("redirectUrl") || "/";
 
+  const handleGoBack = () => {
+    const previousUrl = document.referrer;
+    if (previousUrl.includes('/account')) {
+      router.push(redirectUrl);
+    } else {
+      router.back();
+    }
+  };
+
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -174,7 +183,17 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleGoBack}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          ← Go Back
+        </Button>
+      </div>
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Image

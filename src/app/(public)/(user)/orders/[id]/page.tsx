@@ -151,7 +151,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-lg font-semibold">Order #{orderDetails.orderId}</h2>
+            <h3 className="text-lg font-semibold">Order #{orderDetails.orderId}</h3>
             <p className="text-gray-600">Placed on {formatDate(orderDetails.orderDate)}</p>
           </div>
           <div className="text-right">

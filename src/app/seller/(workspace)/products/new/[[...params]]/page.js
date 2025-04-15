@@ -369,7 +369,7 @@ export default function ProductCreationWizard() {
             return (
                 <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                    <h2 className="text-xl font-semibold text-gray-900">Listing your awesome product</h2>
+                    <h3 className="text-xl font-semibold text-gray-900">Listing your awesome product</h3>
                     <p className="text-gray-500">This may take a few moments...</p>
                 </div>
             )
@@ -466,9 +466,9 @@ export default function ProductCreationWizard() {
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl w-full mx-auto space-y-8">
                 <div className="space-y-2">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
                         Create New Product
-                    </h1>
+                    </h3>
                     <p className="text-sm text-gray-500">Let's bring your product to life</p>
                 </div>
 

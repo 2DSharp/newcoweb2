@@ -85,7 +85,7 @@ export function CartOverlay({ isOpen, onClose, items }: CartOverlayProps) {
             <div className="px-4 py-3 border-b flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5" />
-                <h2 className="font-semibold">Cart ({items.length})</h2>
+                <h3 className="font-semibold">Cart ({items.length})</h3>
               </div>
               <Button variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-5 w-5" />

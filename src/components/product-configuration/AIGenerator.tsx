@@ -27,7 +27,7 @@ export default function AIGenerator({ uploadedImages, setUploadedImages, isGener
             <div className="transition-all duration-300 ease-in-out">
                 <div className="space-y-4">
                     <div className="text-center space-y-2 mb-6">
-                        <h2 className="text-2xl font-semibold text-gray-900">Let AI Create Your Product Listing</h2>
+                        <h3 className="text-2xl font-semibold text-gray-900">Let AI Create Your Product Listing</h3>
                         <p className="text-gray-600">Upload photos of your handmade product and our AI will automatically generate a detailed description, saving you time and effort.</p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">

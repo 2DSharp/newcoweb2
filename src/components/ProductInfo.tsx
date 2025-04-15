@@ -213,7 +213,7 @@ export function ProductInfo({ product, initialVariantId }: ProductInfoProps) {
 
             {/* Reviews Section */}
             <div className="mt-12 border-t border-gray-200 pt-8">
-                <h2 className="text-xl font-semibold mb-6">Customer Reviews</h2>
+                <h3 className="text-xl font-semibold mb-6">Customer Reviews</h3>
                 <div className="space-y-8">
                     {/* Rating Summary */}
                     <div className="flex flex-col md:flex-row gap-8">

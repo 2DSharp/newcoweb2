@@ -139,7 +139,7 @@ export default function NewDiscountPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Basic Information</h2>
+            <h3 className="text-lg font-semibold">Basic Information</h3>
             
             <div>
               <Label>Discount Name</Label>
@@ -157,7 +157,7 @@ export default function NewDiscountPage() {
 
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Promotion Conditions</h2>
+            <h3 className="text-lg font-semibold">Promotion Conditions</h3>
             
             <div>
               <Label>Buyer purchases</Label>
@@ -254,7 +254,7 @@ export default function NewDiscountPage() {
 
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Discount Details</h2>
+            <h3 className="text-lg font-semibold">Discount Details</h3>
             
             <div>
               <Label>Discount Type</Label>
