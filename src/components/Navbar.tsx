@@ -113,6 +113,7 @@ export function Navbar() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [showCategorySidebar, setShowCategorySidebar] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -121,6 +122,14 @@ export function Navbar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+
+  // Close all sheets when URL changes
+  useEffect(() => {
+    setShowCategorySidebar(false);
+    setShowAddressModal(false);
+    setShowAddressForm(false);
+    setShowMobileMenu(false);
+  }, [pathname, searchParams]);
 
   // Set mounted state
   useEffect(() => {
@@ -639,7 +648,7 @@ export function Navbar() {
               {/* Left section with hamburger and logo */}
               <div className="flex items-center gap-4">
                 {/* Mobile Menu */}
-                <Sheet>
+                <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="lg:hidden">
                       <Menu className="h-8 w-8" />
