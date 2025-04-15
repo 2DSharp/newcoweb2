@@ -31,17 +31,17 @@ export function OnboardingForm({ initialStep }: Props) {
         // Initialize form data from localStorage if available
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('onboardingFormData');
-            return saved ? JSON.parse(saved) : {
-                firstName: '',
-                lastName: '',
-                password: '',
-                mobile: '',
-                otp: '',
-                storeName: '',
-                email: '',
-                state: '',
-                otpToken: ''
-            };
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                // Remove sensitive data from parsed object
+                delete parsed.otp;
+                delete parsed.otpToken;
+                if (parsed.password) {
+                    // Replace actual password with dummy characters
+                    parsed.password = '1'.repeat(parsed.password.length);
+                }
+                return parsed;
+            }
         }
         return {
             firstName: '',
@@ -56,13 +56,30 @@ export function OnboardingForm({ initialStep }: Props) {
         };
     });
 
-    // Save form data to localStorage whenever it changes
-    useEffect(() => {
-        localStorage.setItem('onboardingFormData', JSON.stringify(formData));
-    }, [formData]);
-
     const updateFormData = (data: Partial<FormData>) => {
         setFormData(prev => ({...prev, ...data}));
+    };
+
+    const saveFormDataToStorage = () => {
+        const dataToStore = { ...formData };
+        delete dataToStore.otp;
+        delete dataToStore.otpToken;
+        if (dataToStore.password) {
+            dataToStore.password = '1'.repeat(dataToStore.password.length);
+        }
+        localStorage.setItem('onboardingFormData', JSON.stringify(dataToStore));
+    };
+
+    const setOtpToken = (token: string) => {
+        sessionStorage.setItem('otpToken', token);
+    };
+
+    const getOtpToken = () => {
+        return sessionStorage.getItem('otpToken') || '';
+    };
+
+    const clearOtpToken = () => {
+        sessionStorage.removeItem('otpToken');
     };
 
     const router = useRouter();
@@ -76,6 +93,8 @@ export function OnboardingForm({ initialStep }: Props) {
                 router.push('/seller/onboarding/verify-otp');
                 break;
             case 3:
+                // Clear OTP token when moving to step 3
+                clearOtpToken();
                 router.push('/seller/onboarding/store-setup');
                 break;
         }
@@ -86,18 +105,17 @@ export function OnboardingForm({ initialStep }: Props) {
         const newStep = step - 1;
         switch (newStep) {
             case 1:
-                router.push('/onboarding/personal-info');
+                router.push('/seller/onboarding/personal-info');
                 break;
             case 2:
-                router.push('/onboarding/verify-otp');
+                router.push('/seller/onboarding/verify-otp');
                 break;
         }
     };
 
-// components/OnboardingForm.tsx
     useEffect(() => {
         setStep(initialStep);
-    }, [initialStep]); // Simplified useEffect
+    }, [initialStep]);
 
     const renderStep = () => {
         switch (step) {
@@ -107,6 +125,8 @@ export function OnboardingForm({ initialStep }: Props) {
                         formData={formData}
                         updateFormData={updateFormData}
                         onNext={nextStep}
+                        saveFormDataToStorage={saveFormDataToStorage}
+                        setOtpToken={setOtpToken}
                     />
                 );
             case 2:
@@ -125,6 +145,7 @@ export function OnboardingForm({ initialStep }: Props) {
                                 updateFormData={updateFormData}
                                 onNext={nextStep}
                                 onBack={goBack}
+                                getOtpToken={getOtpToken}
                             />
                         </motion.div>
                     </AnimatePresence>

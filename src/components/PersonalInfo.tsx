@@ -12,17 +12,50 @@ interface Props {
     formData: FormData;
     updateFormData: (data: Partial<FormData>) => void;
     onNext: () => any;
+    saveFormDataToStorage: () => void;
+    setOtpToken: (token: string) => void;
 }
 
-export function PersonalInfo({formData, updateFormData, onNext}: Props) {
+export function PersonalInfo({formData, updateFormData, onNext, saveFormDataToStorage, setOtpToken}: Props) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isPhoneChanged, setIsPhoneChanged] = useState(false);
+    const [originalPhone, setOriginalPhone] = useState(formData.mobile);
+
+    useEffect(() => {
+        if (formData.mobile == "") {
+            setIsPhoneChanged(true);
+        }
+        // Check if we have existing data in localStorage
+        const savedData = localStorage.getItem('onboardingFormData');
+        if (savedData) {
+            const parsed = JSON.parse(savedData);
+            if (parsed.mobile === formData.mobile) {
+                // If phone number matches, disable name and password fields
+                setIsPhoneChanged(false);
+                setOriginalPhone(parsed.mobile);
+            } else {
+                // If phone number is different, enable fields and clear OTP token
+                setIsPhoneChanged(true);
+                formData.password = "";
+                setOtpToken(''); // Clear OTP token when phone changes
+            }
+        }
+    }, [formData.mobile]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true)
+        setIsLoading(true);
         setError(null);
+
         try {
+            // If phone number hasn't changed and we have existing data, just proceed
+            if (!isPhoneChanged && sessionStorage.getItem('otpToken')) {
+                await onNext();
+                return;
+            }
+
+            // If phone number changed or no existing data, call register
             const response = await apiService.auth.register({
                 firstName: formData.firstName,
                 lastName: formData.lastName,
@@ -31,17 +64,25 @@ export function PersonalInfo({formData, updateFormData, onNext}: Props) {
             });
 
             if (response.successful) {
-                updateFormData({otpToken: response.data})
+                // Update OTP token in sessionStorage
+                setOtpToken(response.data);
+                saveFormDataToStorage();
                 await onNext();
             } else {
                 setError(response.data.message);
             }
         } catch (err) {
-            console.log(err)
-            setError(err.response.data.message);
+            console.log(err);
+            setError(err.response?.data?.message || "An error occurred");
         }
 
         setIsLoading(false);
+    };
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newPhone = e.target.value;
+        updateFormData({ mobile: newPhone });
+        setIsPhoneChanged(newPhone !== originalPhone);
     };
 
     return (
@@ -56,6 +97,7 @@ export function PersonalInfo({formData, updateFormData, onNext}: Props) {
                         onChange={(e) => updateFormData({firstName: e.target.value})}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="John"
+                        disabled={!isPhoneChanged}
                     />
                 </div>
                 <div>
@@ -67,10 +109,10 @@ export function PersonalInfo({formData, updateFormData, onNext}: Props) {
                         onChange={(e) => updateFormData({lastName: e.target.value})}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Doe"
+                        disabled={!isPhoneChanged}
                     />
                 </div>
             </div>
-
 
             <div>
                 <label className="block text-sm font-medium text-gray-700">Mobile Number</label>
@@ -79,7 +121,7 @@ export function PersonalInfo({formData, updateFormData, onNext}: Props) {
                         type="tel"
                         required
                         value={formData.mobile}
-                        onChange={(e) => updateFormData({mobile: e.target.value})}
+                        onChange={handlePhoneChange}
                         className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="+1 (555) 000-0000"
                         pattern="[0-9+\s()-]+"
@@ -95,11 +137,13 @@ export function PersonalInfo({formData, updateFormData, onNext}: Props) {
                     value={formData.password}
                     onChange={(e) => updateFormData({password: e.target.value})}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="••••••••"
+                    placeholder="Password"
                     minLength={8}
+                    disabled={!isPhoneChanged}
                 />
                 <p className="mt-1 text-sm text-gray-500">Minimum 8 characters</p>
             </div>
+
             {error && (
                 <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
                     <AlertCircle className="h-5 w-5 text-red-500"/>

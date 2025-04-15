@@ -23,7 +23,6 @@ export function OtpValidation({formData, updateFormData, onNext, onBack, classNa
     const [error, setError] = useState(null);
     const authService = AuthService.getInstance();
 
-
     useEffect(() => {
         if (timer > 0) {
             const interval = setInterval(() => setTimer(prev => prev - 1), 1000);
@@ -42,17 +41,22 @@ export function OtpValidation({formData, updateFormData, onNext, onBack, classNa
             setCanResend(false);
         } else {
             try {
+                const otpToken = sessionStorage.getItem('otpToken');
+                if (!otpToken) {
+                    setError("OTP token not found. Please try again.");
+                    return;
+                }
 
                 const response = await apiService.auth.verifyOtp({
-                    verificationId: formData.otpToken,
+                    verificationId: otpToken,
                     nonce: formData.otp
-                })
+                });
 
-                await authService.setAuthData(response.data)
+                await authService.setAuthData(response.data);
                 onNext();
             } catch (e) {
-                console.log(e)
-                setError(e.response.data.message);
+                console.log(e);
+                setError(e.response?.data?.message || "An error occurred");
             }
         }
     };
