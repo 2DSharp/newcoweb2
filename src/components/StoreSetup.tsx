@@ -4,6 +4,7 @@ import {Store} from 'lucide-react';
 import {FormData} from './OnboardingForm';
 import apiService from "@/services/api";
 import React, {useEffect, useState} from "react";
+import router from 'next/router';
 
 interface Props {
     formData: FormData;
@@ -27,18 +28,32 @@ async function fetchStates() {
 export function StoreSetup({formData, updateFormData, onNext}: Props) {
 
     const [states, setStates] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchStates().then(res => setStates(res));
     }, []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const res : any = await apiService.store.create({
-            "name": formData.storeName,
-            "state": formData.state,
-            "email": formData.email
-        })
-        window.location.href = "/seller/products/new"
+        setError(null);
+        try {
+            const res = await apiService.store.create({
+                "name": formData.storeName,
+                "state": formData.state,
+                "email": formData.email
+            });
+            
+            // Clear onboarding form data from localStorage when store setup is completed
+            localStorage.removeItem('onboardingFormData');    
+            window.location.href = "/seller/products/new";
+        } catch (error: any) {
+            if (error.response?.data?.message) {
+                setError(error.response.data.message);
+            } else {
+                setError("Failed to create store. Please try again.");
+            }
+        }
     };
 
     return (
@@ -105,6 +120,21 @@ export function StoreSetup({formData, updateFormData, onNext}: Props) {
                     ))}
                 </select>
             </div>
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <p className="text-sm text-red-700">{error}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <button
                 type="submit"
