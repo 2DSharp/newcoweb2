@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import apiService from "@/services/api";
 
 function AccountPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userData, setUserData] = useState<any>(null);
@@ -21,9 +20,7 @@ function AccountPage() {
     const checkAuth = async () => {
       const authData = localStorage.getItem('buyer_data');
       if (!authData) {
-        const referrer = searchParams.get('referrer');
-        const redirectUrl = referrer || '/account';
-        router.push(`/login?redirectUrl=${encodeURIComponent(redirectUrl)}`);
+        router.push('/login?redirectUrl=/account');
         return;
       }
 
@@ -51,7 +48,7 @@ function AccountPage() {
     };
 
     checkAuth();
-  }, [router, searchParams]);
+  }, [router]);
 
   const handleLogout = async () => {
     try {

@@ -809,11 +809,11 @@ export function Navbar() {
 
               {/* Actions */}
               <div className="flex items-center gap-1">
-                <Link href="/account">
+                <Link href={profile?.firstName ? `/account` : `/login?redirectUrl=${encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`}>
                   <button className="p-2 flex items-center gap-1 text-gray-600 hover:text-gray-800 relative">
                     <User size={28} />
                     <span className="hidden md:inline-block text-sm text-gray-600">
-                      {profile?.firstName || 'Account'}
+                      {profile?.firstName || 'Login'}
                     </span>
                   </button>
                 </Link>
@@ -918,7 +918,7 @@ export function Navbar() {
                               <ChevronRight className="h-4 w-4 rotate-180 mr-2" />
                               <span>Back</span>
                             </button>
-                            <h2 className="font-medium text-lg absolute left-1/2 -translate-x-1/2">All Categories</h2>
+                            <h3 className="font-medium text-lg absolute left-1/2 -translate-x-1/2">All Categories</h3>
                             <Button
                               variant="ghost"
                               size="icon"
