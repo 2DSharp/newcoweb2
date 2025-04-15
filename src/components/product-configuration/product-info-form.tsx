@@ -5,14 +5,16 @@ import { Label } from "@/components/ui/label"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import CategorySearch, { Category } from '@/components/CategorySearch'
 import apiService from '@/services/api'
-import RichTextEditor from "@/components/RichTextEditor";
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-  
+import { ForwardRefEditor } from '@/components/ForwardRefEditor'
+import { listsPlugin, toolbarPlugin, BoldItalicUnderlineToggles, ListsToggle, MDXEditorMethods } from '@mdxeditor/editor'
+import '@mdxeditor/editor/style.css'
+
 export default function ProductInfoForm({ formData, updateFormData, handleSubmit }) {
     const [categories, setCategories] = useState<Category[]>([])
     const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
-
+    const editorRef = React.useRef<MDXEditorMethods>(null)
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -43,6 +45,13 @@ export default function ProductInfoForm({ formData, updateFormData, handleSubmit
         }
     }, [formData, categories]);
 
+    // Add new useEffect to handle initial description
+    useEffect(() => {
+        if (formData?.description && editorRef.current) {
+            editorRef.current.setMarkdown(formData.description);
+        }
+    }, [formData?.description]);
+
     // Handle category selection
     const handleCategorySelect = (selected: Category[]) => {
         setSelectedCategories(selected)
@@ -59,6 +68,17 @@ export default function ProductInfoForm({ formData, updateFormData, handleSubmit
             updateFormData('finalCategory', '')
         }
     }
+
+    // Handle description change
+    const handleDescriptionChange = (markdown: string) => {
+        updateFormData('description', markdown);
+    };
+
+    // Convert HTML to Markdown when loading existing content
+    const getMarkdownContent = () => {
+        if (!formData.description) return '';
+        return formData.description;
+    };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 p-4 bg-white rounded-lg ">
@@ -119,14 +139,12 @@ export default function ProductInfoForm({ formData, updateFormData, handleSubmit
             <div className="space-y-2">
                
                <div className="flex items-center space-x-2">
-
                    <Switch
                        id="personalizationText"
                        checked={formData.personalizationText || false}
                        onCheckedChange={(checked) => updateFormData('personalizationText', checked)}
                    />
                     <Label htmlFor="personalizationText">Allow customers to add personalized messages</Label>
-
                </div>
                <p className="text-sm text-gray-500">
                    When enabled, customers can add custom text or messages during checkout
@@ -142,15 +160,48 @@ export default function ProductInfoForm({ formData, updateFormData, handleSubmit
                 <p className="text-sm text-gray-500 flex items-center">
                     Write a detailed description of your product to help customers understand what sets you apart
                 </p>
-                <RichTextEditor
-                    id="description"
-                    value={formData.description || ''}
-                    onChange={(value) => updateFormData('description', value)}
-                    placeholder="Describe your product's key features, benefits, and what makes it special"
-                    className="text-sm"
-                />
+                <div className="border rounded-md overflow-hidden">
+                    <ForwardRefEditor
+                        ref={editorRef}
+                        markdown={getMarkdownContent()}
+                        onChange={handleDescriptionChange}
+                        contentEditableClassName="prose max-w-none"
+                        plugins={[
+                            listsPlugin({
+                                taskListItems: false
+                            }),
+                            toolbarPlugin({
+                                toolbarContents: () => (
+                                    <>
+                                        <BoldItalicUnderlineToggles options={["Bold", "Italic"]} />
+                                        <ListsToggle options={["number", "bullet"]} />
+                                    </>
+                                )
+                            })
+                        ]}
+                    />
+                    <style jsx global>{`
+                        .mdxeditor {
+                            --mdxeditor-font-family: inherit;
+                            --mdxeditor-font-size: 14px;
+                            --mdxeditor-line-height: 1.5;
+                        }
+                        .mdxeditor ul {
+                            list-style-type: disc;
+                            padding-left: 1.5em;
+                            margin: 0.5em 0;
+                        }
+                        .mdxeditor ol {
+                            list-style-type: decimal;
+                            padding-left: 1.5em;
+                            margin: 0.5em 0;
+                        }
+                        .mdxeditor li {
+                            margin: 0.25em 0;
+                        }
+                    `}</style>
+                </div>
             </div>
-            
         </form>
     )
 }

@@ -225,9 +225,9 @@ export default function ProductCreationWizard() {
                     details: variation.details || {}, // Ensure details are preserved
                     processingTime: variation.processingTime,
                     dimensions: {
-                        l: variation.dimensions.l || 0,
-                        w: variation.dimensions.w || 0,
-                        h: variation.dimensions.h || 0
+                        l: variation.dimensions?.l || 0,
+                        w: variation.dimensions?.w || 0,
+                        h: variation.dimensions?.h || 0
                     },
                     weight: variation.weight || 0,
                     images: variation.images?.map(img => ({

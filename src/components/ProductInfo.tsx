@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Star, Truck, StarHalf } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import Link from 'next/link';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 
 interface ProductInfoProps {
@@ -183,10 +184,9 @@ export function ProductInfo({ product, initialVariantId }: ProductInfoProps) {
                         {/* Description */}
                         <div>
                             <h3 className="text-base font-medium text-gray-900 mb-2">Description</h3>
-                            <div 
-                                className="text-sm text-gray-600"
-                                dangerouslySetInnerHTML={{ __html: product.description }}
-                            />
+                            <div className="text-sm text-gray-600">
+                                <MarkdownRenderer content={product.description} />
+                            </div>
                         </div>
 
                         {/* Product Details - Now shown for both desktop and mobile */}

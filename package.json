@@ -9,6 +9,10 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
+    "@mdxeditor/editor": "^3.30.0",
+    "@next/mdx": "^15.3.0",
     "@next/swc-wasm-nodejs": "13.5.1",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -50,6 +54,7 @@
     "input-otp": "^1.2.4",
     "lucide-react": "^0.456.0",
     "next": "14.1.0",
+    "next-mdx-remote": "^5.0.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
