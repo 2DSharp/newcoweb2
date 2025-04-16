@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import apiService from '@/services/api';
-
+import { formatProductUrl } from '@/lib/utils';
+import Link from 'next/link';
 interface Address {
   id: string;
   type: string;
@@ -200,9 +201,11 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                 {subOrder.items.map((item) => (
                   <div key={item.variantId} className="flex items-center p-3 bg-gray-50 rounded">
                     <div className="ml-3 flex-1">
-                      <h4 className="font-medium text-sm">{item.productName}</h4>
-                      <p className="text-xs text-gray-600">{item.variantName}</p>
-                      <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
+                      <Link href={formatProductUrl(item.productName, item.productId, item.variantId)}>
+                        <h4 className="font-bold text-sm">{item.productName}</h4>
+                        <p className="text-xs text-gray-600">{item.variantName}</p>
+                        <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
+                      </Link>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-sm">{formatCurrency(item.price)}</p>

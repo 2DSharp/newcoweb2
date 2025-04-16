@@ -1,16 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ImageGallery } from '@/components/image-gallery';
 import { ProductActions } from '@/components/ProductActions';
 import { VariantSelector } from '@/components/VariantSelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Truck, StarHalf } from 'lucide-react';
+import { Star, Truck, StarHalf, Plus } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import Link from 'next/link';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import apiService from '@/services/api';
+import { Reviews } from './Reviews';
 
+interface Review {
+    id: number;
+    productId: string;
+    productName: string;
+    reviewerId: string;
+    reviewerName: string;
+    rating: number;
+    comment: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface ProductRating {
+    averageRating: number;
+    count: number;
+}
+
+interface ReviewsData {
+    reviews: Review[];
+    canAddReview: boolean;
+    productRating: ProductRating;
+}
 
 interface ProductInfoProps {
     product: any;
@@ -214,153 +239,7 @@ export function ProductInfo({ product, initialVariantId }: ProductInfoProps) {
             {/* Reviews Section */}
             <div className="mt-12 border-t border-gray-200 pt-8">
                 <h3 className="text-xl font-semibold mb-6">Customer Reviews</h3>
-                <div className="space-y-8">
-                    {/* Rating Summary */}
-                    <div className="flex flex-col md:flex-row gap-8">
-                        <div className="text-center">
-                            <div className="text-5xl font-bold text-gray-900">4.5</div>
-                            <div className="flex items-center justify-center mt-2">
-                                <Star className="w-5 h-5 fill-current text-yellow-400" />
-                                <Star className="w-5 h-5 fill-current text-yellow-400" />
-                                <Star className="w-5 h-5 fill-current text-yellow-400" />
-                                <Star className="w-5 h-5 fill-current text-yellow-400" />
-                                <StarHalf className="w-5 h-5 fill-current text-yellow-400" />
-                            </div>
-                            <div className="text-sm text-gray-500 mt-1">Based on 128 reviews</div>
-                        </div>
-                        
-                        {/* Rating Bars */}
-                        <div className="flex-1 max-w-md">
-                            {[5, 4, 3, 2, 1].map((rating) => (
-                                <div key={rating} className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-600 w-6">{rating}</span>
-                                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-yellow-400 rounded-full"
-                                            style={{ 
-                                                width: `${rating === 5 ? 70 : 
-                                                        rating === 4 ? 20 : 
-                                                        rating === 3 ? 5 : 
-                                                        rating === 2 ? 3 : 2}%` 
-                                            }}
-                                        />
-                                    </div>
-                                    <span className="text-sm text-gray-500 w-8">
-                                        {rating === 5 ? '70%' : 
-                                         rating === 4 ? '20%' : 
-                                         rating === 3 ? '5%' : 
-                                         rating === 2 ? '3%' : '2%'}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Filter Options */}
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        <Button 
-                            variant="outline" 
-                            className="whitespace-nowrap rounded-full px-6"
-                        >
-                            Most Popular
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            className="whitespace-nowrap rounded-full px-6"
-                        >
-                            Most Recent
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            className="whitespace-nowrap rounded-full px-6"
-                        >
-                            Most Critical
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            className="whitespace-nowrap rounded-full px-6"
-                        >
-                            Most Positive
-                        </Button>
-                    </div>
-
-                    {/* Individual Reviews */}
-                    <div className="space-y-6">
-                        {[
-                            {
-                                name: "Sarah Johnson",
-                                rating: 5,
-                                date: "1 month ago",
-                                verified: true,
-                                review: "Absolutely love this product! The quality is exceptional and it exceeded my expectations. The delivery was quick and the packaging was excellent.",
-                                helpful: 24
-                            },
-                            {
-                                name: "Michael Chen",
-                                rating: 4,
-                                date: "2 months ago",
-                                verified: true,
-                                review: "Great product overall. The only minor issue is that the color is slightly different from what's shown in the pictures. Otherwise, very satisfied with the purchase.",
-                                helpful: 15
-                            },
-                            {
-                                name: "Emma Wilson",
-                                rating: 3,
-                                date: "3 months ago",
-                                verified: true,
-                                review: "Decent product but took longer than expected to arrive. The quality is good but I feel it's a bit overpriced for what you get.",
-                                helpful: 8
-                            }
-                        ].map((review, index) => (
-                            <div key={index} className="border-b border-gray-200 pb-6">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="flex">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star 
-                                                key={i} 
-                                                className={`w-4 h-4 ${i < review.rating ? 'fill-current text-yellow-400' : 'text-gray-300'}`}
-                                            />
-                                        ))}
-                                    </div>
-                                    <span className="text-sm font-medium">{review.name}</span>
-                                    {review.verified && (
-                                        <span style={{textAlign: 'center'}} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
-                                            Verified Purchase
-                                        </span>
-                                    )}
-                                    <span className="text-sm text-gray-500">· {review.date}</span>
-                                </div>
-                                <p className="text-gray-600 mb-3">{review.review}</p>
-                                <div className="flex items-center gap-2">
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        className="text-xs"
-                                    >
-                                        Helpful ({review.helpful})
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        className="text-xs text-gray-500"
-                                    >
-                                        Report
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Load More Button */}
-                    <div className="text-center">
-                        <Button 
-                            variant="outline" 
-                            className="px-8"
-                        >
-                            Load More Reviews
-                        </Button>
-                    </div>
-                </div>
+                <Reviews productId={product.id} />
             </div>
         </div>
     );

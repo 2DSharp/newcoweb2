@@ -704,6 +704,23 @@ export const apiService = {
             return response.data;
         }
     },
+
+    reviews: {
+        getProductReviews: async (productId) => {
+            const buyerData = localStorage.getItem('buyer_data');
+            if (buyerData) {
+                const response = await authenticatedApiClient.get(`/reviews/product/${productId}`);
+                return response.data;
+            } else {
+                const response = await unauthenticatedApiClient.get(`/public/reviews/product/${productId}`);
+                return response.data;
+            }
+        },
+        addReview: async (reviewData) => {
+            const response = await authenticatedApiClient.post('/buy/reviews/add', reviewData);
+            return response.data;
+        }
+    },
 };
 
 export default apiService;

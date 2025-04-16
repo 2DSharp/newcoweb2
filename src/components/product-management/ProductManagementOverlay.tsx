@@ -135,7 +135,7 @@ export function ProductManagementOverlay({ productId, isOpen, onClose }: Product
           ) : (
             <Accordion type="single" collapsible className="w-full space-y-4 mt-6">
               <AccordionItem value="product-info">
-                <AccordionTrigger>Product Information</AccordionTrigger>
+                <AccordionTrigger><h4>Product Information</h4></AccordionTrigger>
                 <AccordionContent>
                   <ProductInfoForm
                     formData={formData}
@@ -154,7 +154,7 @@ export function ProductManagementOverlay({ productId, isOpen, onClose }: Product
               </AccordionItem>
 
               <AccordionItem value="variations">
-                <AccordionTrigger>Variations</AccordionTrigger>
+                <AccordionTrigger><h4>Variations</h4></AccordionTrigger>
                 <AccordionContent>
                   <ProductVariationsForm
                     formData={formData}
@@ -173,7 +173,7 @@ export function ProductManagementOverlay({ productId, isOpen, onClose }: Product
               </AccordionItem>
 
               <AccordionItem value="searchability">
-                <AccordionTrigger>Searchability</AccordionTrigger>
+                <AccordionTrigger><h4>Searchability</h4></AccordionTrigger>
                 <AccordionContent>
                   <SearchabilityDetailsForm
                     formData={formData}
