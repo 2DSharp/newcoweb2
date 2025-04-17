@@ -18,10 +18,10 @@ export default function AuthLayout({
                 </div>
                 <div className="relative z-10">
                     <h1 className="text-4xl font-bold mb-6">
-                        Grow Your Business With Us
+                        You make art, we do the rest
                     </h1>
                     <p className="text-xl mb-8 text-indigo-100">
-                        Join thousands of successful sellers who have transformed their business using our platform.
+                        Join our community of artisans and craftspeople and turn your passion into a business.
                     </p>
                     <ul className="space-y-4">
                         <li className="flex items-center text-lg">

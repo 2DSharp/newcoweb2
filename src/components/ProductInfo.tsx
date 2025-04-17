@@ -154,8 +154,8 @@ export function ProductInfo({ product, initialVariantId }: ProductInfoProps) {
                             href={`/store/${product.storeId}`}
                             className="inline-block text-sm text-gray-500 hover:text-gray-700 hover:underline"
                         >
-                            <b>Sold by {product.storeName}</b>
-                        </Link>
+                            <b>Handcrafted by {product.storeName}</b>
+                        </Link>, sold by Craftisque
                         <div className="hidden lg:block">{product.stock.variations.length > 1 &&
                             <VariantSelector
                                 variants={product.stock.variations}

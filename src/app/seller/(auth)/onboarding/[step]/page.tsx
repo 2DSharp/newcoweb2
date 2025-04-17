@@ -57,7 +57,7 @@ export default function OnboardingHome({ params }: { params: { step: string } })
                     {/*    <Store className="w-8 h-8 text-white"/>*/}
                     {/*</div>*/}
                     <h1 className="text-3xl font-bold text-gray-900">Create a seller account</h1>
-                    <p className="text-gray-600 mt-2">Join thousands of successful sellers on our platform</p>
+                    <p className="text-gray-600 mt-2">Sign up as a creator and let us help you grow your business</p>
                 </div>
 
                 <OnboardingForm initialStep={currentStep}/>

@@ -5,8 +5,8 @@ import { NavbarWrapper } from '@/components/NavbarWrapper';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Buy special handmade items',
-  description: 'Join thousands of successful sellers on our platform',
+  title: 'Shop for special handmade items in India: Jewellery, Home Decor, Art, Clothing and more',
+  description: 'Craftisque.com: Join the community of artisans and craftspeople. Free shipping and Cash On Delivery on all orders. Authentic, Unique, and Made with Love',
 };
 
 export default function RootLayout({

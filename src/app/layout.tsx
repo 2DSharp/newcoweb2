@@ -11,8 +11,8 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Seller Onboarding',
-  description: 'Join thousands of successful sellers on our platform',
+  title: 'Shop for special handmade items in India: Jewellery, Home Decor, Art, Clothing and more',
+  description: 'Craftisque.com: Join the community of artisans and craftspeople. Free shipping and Cash On Delivery on all orders. Authentic, Unique, and Made with Love',
   icons: {
     icon: '/icon.png',
   },
