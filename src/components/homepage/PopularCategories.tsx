@@ -23,7 +23,7 @@ export default function PopularCategories({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         
         {categories.map((category, index) => (
-          <Link href={`/c/${category.path}?category=${encodeURIComponent(category.name)}`} key={index}>
+          <Link href={`/c/${category.path}?category2=${encodeURIComponent(category.name)}`} key={index}>
           <div key={index} className="relative overflow-hidden rounded-lg shadow-md h-40">
             <Image
               src={category.image}
